@@ -1,0 +1,28 @@
+<h1 id="tableLabel">Projects</h1>
+
+<p>This component demonstrates fetching data from the server.</p>
+
+<p *ngIf="!projects"><em>Loading...</em></p>
+
+<table class='table table-striped' aria-labelledby="tableLabel" *ngIf="projects">
+  <thead>
+    <tr>
+      <th>Id</th>
+      <th>Project Name</th>
+      <th>Start Date</th>
+      <th>Completed Tasks</th>
+      <th>Tasks For Approval</th>
+      <th>Is Complete</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr *ngFor="let project of projects">
+      <td>{{ project.Id }}</td>
+      <td>{{ project.ProjectName }}</td>
+      <td>{{ project.StartDate }}</td>
+      <td>{{ project.CompletedTasks }}</td>
+      <td>{{ project.TasksForApproval }}</td>
+      <td>{{ project.IsComplete }}</td>
+    </tr>
+  </tbody>
+</table>
