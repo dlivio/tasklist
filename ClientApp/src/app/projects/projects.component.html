@@ -1,9 +1,30 @@
 <h1 id="tableLabel">Projects</h1>
 
-<p>This component demonstrates fetching data from the server.</p>
-
 <p *ngIf="!projects"><em>Loading...</em></p>
 
+<div *ngIf="projects" style="padding-top: 10px;">
+  <div class="card w-100" *ngFor="let project of projects" style="background-color: rgba(0,0,0,.03)">
+    <div class="card-body">
+      <h5 class="card-title"><b>{{ project.projectName }}</b></h5>
+
+      <div class="row">
+        <div class="col" style="margin: auto">
+          <p class="card-text">Tasks to be approved: {{ project.tasksForApproval.length }}</p>
+        </div>
+        <div class="col" style="margin: auto">
+          <p class="card-text" *ngIf="project.isComplete">Status: <a style="color:red;">Closed</a> </p>
+          <p class="card-text" *ngIf="!project.isComplete">Status: <a style="color:green;">Open</a> </p>
+        </div>
+        <div class="col">
+          <a class="btn btn-primary" (click)="goToProjectDetails(project)" style="float:right">Open Project</a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!--
 <table class='table table-striped' aria-labelledby="tableLabel" *ngIf="projects">
   <thead>
     <tr>
@@ -17,12 +38,13 @@
   </thead>
   <tbody>
     <tr *ngFor="let project of projects">
-      <td>{{ project.Id }}</td>
-      <td>{{ project.ProjectName }}</td>
-      <td>{{ project.StartDate }}</td>
-      <td>{{ project.CompletedTasks }}</td>
-      <td>{{ project.TasksForApproval }}</td>
-      <td>{{ project.IsComplete }}</td>
+      <td>{{ project.id }}</td>
+      <td>{{ project.projectName }}</td>
+      <td>{{ project.startDate }}</td>
+      <td>{{ project.completedTasks }}</td>
+      <td>{{ project.tasksForApproval }}</td>
+      <td>{{ project.isComplete }}</td>
     </tr>
   </tbody>
 </table>
+-->

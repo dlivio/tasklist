@@ -1,5 +1,8 @@
 import { Component, Inject, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { Router, NavigationExtras } from '@angular/router';
+
+import { Project } from '../project';
 
 @Component({
   selector: 'app-projects',
@@ -10,8 +13,8 @@ export class ProjectsComponent implements OnInit {
 
   public projects: Project[];
 
-  constructor(http: HttpClient, @Inject('BASE_URL') baseUrl: string) {
-    http.get<Project[]>(baseUrl + '/api/Projects').subscribe(result => {
+  constructor(http: HttpClient, @Inject('BASE_URL') baseUrl: string, private router: Router) {
+    http.get<Project[]>(baseUrl + 'api/Projects').subscribe(result => {
       this.projects = result;
     }, error => console.error(error));
   }
@@ -19,13 +22,13 @@ export class ProjectsComponent implements OnInit {
   ngOnInit() {
   }
 
-}
+  goToProjectDetails(project: Project) {
+    let navigationExtras: NavigationExtras = {
+      state: {
+        project: project
+      }
+    };
+    this.router.navigate(['/project-details/' + project.id], navigationExtras);
+  }
 
-interface Project {
-  Id: string;
-  ProjectName: string;
-  StartDate: string;
-  CompletedTasks: string[];
-  TasksForApproval: string[];
-  IsComplete: boolean;
 }

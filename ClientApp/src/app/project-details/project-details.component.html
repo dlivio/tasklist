@@ -1,0 +1,21 @@
+<p *ngIf="!project"><em>Loading Project...</em></p>
+
+<div *ngIf="project">
+  <h1 id="projectName">{{ project.projectName }}</h1>
+
+  <div id="projectDescription">
+    <h5 id="clientName"><b>Client name: </b>John Doe</h5>
+    <p><b>Started at: </b>{{ project.startDate }}</p>
+    <p><b>Last task approved by: </b>Jane Doe</p>
+  </div>
+
+  <hr>
+
+  <div id="tasksForApproval">
+    <h5>Tasks awaiting approval</h5>
+  </div>
+
+  <div id="tasksCompleted">
+    <h5>Tasks completed</h5>
+  </div>
+</div>
