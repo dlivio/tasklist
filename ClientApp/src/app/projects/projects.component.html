@@ -9,7 +9,7 @@
 
       <div class="row">
         <div class="col" style="margin: auto">
-          <p class="card-text">Tasks to be approved: {{ project.tasksForApproval.length }}</p>
+          <p class="card-text">Tasks waiting to be approved: {{ project.noTasksToApprove }}</p>
         </div>
         <div class="col" style="margin: auto">
           <p class="card-text" *ngIf="project.isComplete">Status: <a style="color:red;">Closed</a> </p>
@@ -41,8 +41,6 @@
       <td>{{ project.id }}</td>
       <td>{{ project.projectName }}</td>
       <td>{{ project.startDate }}</td>
-      <td>{{ project.completedTasks }}</td>
-      <td>{{ project.tasksForApproval }}</td>
       <td>{{ project.isComplete }}</td>
     </tr>
   </tbody>

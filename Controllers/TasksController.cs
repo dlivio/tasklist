@@ -38,6 +38,26 @@ namespace tasklist.Controllers
             return task;
         }
 
+        // GET: api/Tasks/ProjectIdActive/5
+        [HttpGet("ProjectIdActive/{projectId:length(24)}", Name = "GetTaskByProjectIdActive")]
+        public ActionResult<List<Task>> GetByProjectIdActive(string projectId) =>
+            _taskService.GetByProjectIdActive(projectId);
+
+        // GET: api/Tasks/ProjectIdActive/5/Count
+        [HttpGet("ProjectIdActive/{projectId:length(24)}/Count", Name = "GetCountTasksByProjectIdActive")]
+        public ActionResult<long> GetCountByProjectIdActive(string projectId) =>
+            _taskService.CountByProjectIdActive(projectId);
+
+        // GET: api/Tasks/ProjectIdComplete/5
+        [HttpGet("ProjectIdComplete/{projectId:length(24)}", Name = "GetTaskByProjectIdComplete")]
+        public ActionResult<List<Task>> GetByProjectIdComplete(string projectId) =>
+            _taskService.GetByProjectIdCompleted(projectId);
+
+        // GET: api/Tasks/ProjectIdComplete/5/Count
+        [HttpGet("ProjectIdComplete/{projectId:length(24)}/Count", Name = "GetCountTasksByProjectIdComplete")]
+        public ActionResult<long> GetCountByProjectIdComplete(string projectId) =>
+            _taskService.CountByProjectIdCompleted(projectId);
+
         // PUT: api/Tasks/5
         [HttpPut("{id:length(24)}")]
         public IActionResult Update(string id, Task taskIn)

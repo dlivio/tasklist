@@ -13,10 +13,15 @@ namespace tasklist.Models
         [BsonId]
         [BsonRepresentation(BsonType.ObjectId)]
         public string Id { get; set; }
+
         [BsonElement("taskName")]
         public string TaskName { get; set; }
-        [BsonElement("parentId")]
+
+        [BsonElement("projectId")]
         [BsonRepresentation(BsonType.ObjectId)]
-        public string ParentId { get; set; }
+        public string ProjectId { get; set; }
+
+        [BsonElement("completed")]
+        public bool Completed { get; set; }
     }
 }

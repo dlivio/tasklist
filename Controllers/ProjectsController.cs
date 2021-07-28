@@ -13,16 +13,37 @@ namespace tasklist.Controllers
     public class ProjectsController : ControllerBase
     {
         private readonly ProjectService _projectService;
+        private readonly TaskService _taskService;
 
-        public ProjectsController(ProjectService projectService)
+        public ProjectsController(ProjectService projectService, TaskService taskService)
         {
             _projectService = projectService;
+            _taskService = taskService;
         }
 
         // GET: api/Projects
         [HttpGet]
-        public ActionResult<List<Project>> Get() =>
-            _projectService.Get();
+        public ActionResult<List<ProjectDTO>> Get()
+        {
+            var projects = _projectService.Get();
+
+            List<ProjectDTO> projectDTOs = new();
+            long noTasksCompleted, noTasksToApprove;
+
+            foreach(Project project in projects)
+            {
+                var test = _taskService.GetByProjectId(project.Id);
+
+                noTasksToApprove = _taskService.CountByProjectIdActive(project.Id);
+                noTasksCompleted = _taskService.CountByProjectIdCompleted(project.Id);
+
+                projectDTOs.Add(new ProjectDTO(project, noTasksCompleted, noTasksToApprove));
+            }
+
+
+            return projectDTOs;
+        }
+           
 
         // GET: api/Projects/5
         [HttpGet("{id:length(24)}", Name = "GetProject")]

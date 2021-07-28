@@ -4,18 +4,46 @@
   <h1 id="projectName">{{ project.projectName }}</h1>
 
   <div id="projectDescription">
-    <h5 id="clientName"><b>Client name: </b>John Doe</h5>
     <p><b>Started at: </b>{{ project.startDate }}</p>
-    <p><b>Last task approved by: </b>Jane Doe</p>
+    <p><b>Tasks waiting to be approved: </b>{{ project.noTasksToApprove }}</p>
+    <p><b>Tasks completed: </b>{{ project.noTasksCompleted }}</p>
   </div>
 
   <hr>
 
-  <div id="tasksForApproval">
-    <h5>Tasks awaiting approval</h5>
+  <div class="container" *ngIf="tasksForApproval.length > 0">
+    <div class="row" style="margin-bottom: 10px;">
+      <div class="col">
+        <h5>Tasks awaiting approval</h5>
+      </div>
+      <div class="col">
+        <button type="button" class="btn btn-primary" style="float: right;">Approve tasks</button>
+      </div>
+    </div>
+
+    <div class="row" *ngFor="let task of tasksForApproval">
+      <div class="card" style="margin: auto; width: 90% !important; ">
+        <div class="card-body">
+          <div class="row">
+            <div class="col">
+              <p class="card-text">{{ task.taskName }}</p>
+            </div>
+            <div class="col">
+              <div class="form-check" style="float: right;">
+                <input class="form-check-input" type="checkbox" value="">
+              </div>
+            </div>
+          </div>
+          <div class="row" style="margin-top: 10px;">
+            <div class="col">
+              <label for="myfile"></label>
+              <input type="file" id="myfile" name="myfile" multiple>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
   </div>
 
-  <div id="tasksCompleted">
-    <h5>Tasks completed</h5>
-  </div>
 </div>

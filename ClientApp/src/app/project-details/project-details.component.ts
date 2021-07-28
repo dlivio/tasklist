@@ -21,7 +21,6 @@ export class ProjectDetailsComponent implements OnInit {
     // get the selected Project info
     if (this.router.getCurrentNavigation().extras.state) {
       this.project = this.router.getCurrentNavigation().extras.state.project;
-      console.log(this.project);
 
     } else { // retrieve the project by id from url
       // get id from url
@@ -34,6 +33,11 @@ export class ProjectDetailsComponent implements OnInit {
       }, error => console.error(error));
 
     }
+
+    http.get<Task[]>(baseUrl + 'api/Tasks/ProjectIdActive/' + this.project.id).subscribe(result => {
+      this.tasksForApproval = result;
+      console.error(this.tasksForApproval);
+    }, error => console.error(error));
     
   }
 

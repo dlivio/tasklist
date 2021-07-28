@@ -13,15 +13,14 @@ namespace tasklist.Models
         [BsonId]
         [BsonRepresentation(BsonType.ObjectId)]
         public string Id { get; set; }
+
         [BsonElement("projectName")]
         public string ProjectName { get; set; }
+
         [BsonElement("startDate")]
         [DataType(DataType.Date)]
         public DateTime StartDate { get; set; }
-        [BsonElement("completedTasksIds")]
-        public List<String> CompletedTasks { get; set; }
-        [BsonElement("taskForApprovalIds")]
-        public List<String> TasksForApproval { get; set; }
+
         [BsonElement("isComplete")]
         public bool IsComplete { get; set; }
     }
