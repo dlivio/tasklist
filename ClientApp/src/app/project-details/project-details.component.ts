@@ -1,4 +1,4 @@
-import { Component, Inject, OnInit } from '@angular/core';
+import { Component, Inject, OnInit, ViewEncapsulation } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router, ActivatedRoute } from '@angular/router';
 
@@ -9,12 +9,19 @@ import { Task } from '../task';
   selector: 'app-project-details',
   templateUrl: './project-details.component.html',
   styleUrls: ['./project-details.component.css']
+  ,
+  encapsulation: ViewEncapsulation.None
 })
 export class ProjectDetailsComponent implements OnInit {
 
   public project: Project;
   public projectId: string;
   public tasksForApproval: Task[];
+
+  title = 'bpmn-js-angular';
+  diagramUrl = 'https://cdn.staticaly.com/gh/bpmn-io/bpmn-js-examples/dfceecba/starter/diagram.bpmn';
+  //diagramUrl = './base_flow.bpmn';
+  importError?: Error;
 
   constructor(http: HttpClient, @Inject('BASE_URL') baseUrl: string, private router: Router, private activatedRoute: ActivatedRoute) {
 
@@ -36,12 +43,31 @@ export class ProjectDetailsComponent implements OnInit {
 
     http.get<Task[]>(baseUrl + 'api/Tasks/ProjectIdActive/' + this.project.id).subscribe(result => {
       this.tasksForApproval = result;
-      console.error(this.tasksForApproval);
+      //console.error(this.tasksForApproval);
     }, error => console.error(error));
     
   }
 
   ngOnInit() {
+  }
+
+  handleImported(event) {
+
+    const {
+      type,
+      error,
+      warnings
+    } = event;
+
+    if (type === 'success') {
+      console.log(`Rendered diagram (%s warnings)`, warnings.length);
+    }
+
+    if (type === 'error') {
+      console.error('Failed to render diagram', error);
+    }
+
+    this.importError = error;
   }
 
 }

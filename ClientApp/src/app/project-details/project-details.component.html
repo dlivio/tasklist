@@ -10,7 +10,7 @@
   </div>
 
   <hr>
-
+  <!--
   <div class="container" *ngIf="tasksForApproval.length > 0">
     <div class="row" style="margin-bottom: 10px;">
       <div class="col">
@@ -45,5 +45,16 @@
 
     </div>
   </div>
+  -->
+
+<div class="diagram-parent" style="background-color: lightgray; height: 60vh;">
+  <app-diagram [url]="diagramUrl" (importDone)="handleImported($event)"></app-diagram>
+
+  <div class="import-error" *ngIf="importError">
+    <strong>Failed to render diagram: </strong>
+    {{ importError.message }}
+  </div>
+</div>
+
 
 </div>

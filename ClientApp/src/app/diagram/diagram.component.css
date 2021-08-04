@@ -1,3 +1,3 @@
 .highlight:not(.djs-connection) .djs-visual > :nth-child(1) {
-  fill: aqua !important; /* color elements as green */
+  fill: green !important; /* color elements as green */
 }
