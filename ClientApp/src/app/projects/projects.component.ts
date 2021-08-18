@@ -1,5 +1,5 @@
 import { Component, Inject, OnInit } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Router, NavigationExtras } from '@angular/router';
 
 import { Project } from '../project';
@@ -17,6 +17,7 @@ export class ProjectsComponent implements OnInit {
     http.get<Project[]>(baseUrl + 'api/Projects').subscribe(result => {
       this.projects = result;
     }, error => console.error(error));
+
   }
 
   ngOnInit() {

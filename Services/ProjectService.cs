@@ -22,6 +22,13 @@ namespace tasklist.Services
         public List<Project> Get() =>
             _projects.Find(project => true).ToList();
 
+        /// <summary>
+        /// Get all the ongoing Projects in the database. 
+        /// </summary>
+        /// <returns>A List with all the open projects.</returns>
+        public List<Project> GetOpenProjects() =>
+            _projects.Find(project => project.IsComplete == false).ToList();
+
         public Project Get(string id) =>
             _projects.Find<Project>(project => project.Id == id).FirstOrDefault();
 

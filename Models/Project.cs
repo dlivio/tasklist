@@ -23,5 +23,16 @@ namespace tasklist.Models
 
         [BsonElement("isComplete")]
         public bool IsComplete { get; set; }
+
+        [BsonElement("caseInstanceId")]
+        public string CaseInstanceId { get; set; }
+
+        public Project(string projectName, DateTime startDate, string caseInstanceId)
+        {
+            this.ProjectName = projectName;
+            this.StartDate = startDate;
+            this.IsComplete = false;
+            this.CaseInstanceId = caseInstanceId;
+        }
     }
 }

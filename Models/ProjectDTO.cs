@@ -10,20 +10,17 @@ namespace tasklist.Models
 
         public DateTime StartDate { get; set; }
 
-        public long NoTasksCompleted { get; set; }
-
-        public long NoTasksToApprove { get; set; }
-
         public bool IsComplete { get; set; }
 
-        public ProjectDTO(Project project, long noTasksCompleted, long noTasksToApprove)
+        public string NextTaskName { get; set; }
+
+        public ProjectDTO(Project project, string nextTaskName)
         {
             Id = project.Id;
             ProjectName = project.ProjectName;
             StartDate = project.StartDate;
             IsComplete = project.IsComplete;
-            NoTasksCompleted = noTasksCompleted;
-            NoTasksToApprove = noTasksToApprove;
+            NextTaskName = nextTaskName;
         }
 
     }

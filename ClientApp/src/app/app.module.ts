@@ -12,6 +12,7 @@ import { FetchDataComponent } from './fetch-data/fetch-data.component';
 import { ProjectsComponent } from './projects/projects.component';
 import { ProjectDetailsComponent } from './project-details/project-details.component';
 import { DiagramComponent } from './diagram/diagram.component';
+import { ProjectFormComponent } from './project-form/project-form.component';
 
 @NgModule({
   declarations: [
@@ -22,7 +23,8 @@ import { DiagramComponent } from './diagram/diagram.component';
     FetchDataComponent,
     ProjectsComponent,
     ProjectDetailsComponent,
-    DiagramComponent
+    DiagramComponent,
+    ProjectFormComponent
   ],
   imports: [
     BrowserModule.withServerTransition({ appId: 'ng-cli-universal' }),
@@ -33,6 +35,7 @@ import { DiagramComponent } from './diagram/diagram.component';
       { path: 'counter', component: CounterComponent },
       { path: 'fetch-data', component: FetchDataComponent },
       { path: 'projects', component: ProjectsComponent },
+      { path: 'projects/new', component: ProjectFormComponent },
       { path: 'project-details/:projectId', component: ProjectDetailsComponent }
     ])
   ],

@@ -42,7 +42,6 @@ import { from, Observable, Subscription } from 'rxjs';
 })
 export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy {
   private bpmnJS: BpmnJS;
-
   @ViewChild('ref', { static: true }) private el: ElementRef;
   @Output() private importDone: EventEmitter<any> = new EventEmitter();
 
@@ -52,7 +51,20 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
     'element.click'
   ];
 
+  private nextPossibleIds: string[];
+  private clickedIds: string[];
+
   constructor(private http: HttpClient) {
+
+    // retrieve current task to complete from the process instance
+     
+
+    // get current diagram from json of the task
+
+    // retrieve process instance history
+
+    // color in the diagram all the tasks from the history from that specific diagram
+
 
     this.bpmnJS = new BpmnJS();
 
@@ -60,11 +72,23 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
       if (!error) {
         this.bpmnJS.get('canvas').zoom('fit-viewport');
       }
+
+      var elementRegistry = this.bpmnJS.get('elementRegistry');
+      console.log("elements");
+
+      // get the start event of the diagram
+      var foundEl = elementRegistry.filter(function (el) { return el.type == "bpmn:StartEvent" })[0];
+
+      foundEl.outgoing.forEach(function (connectedElem) { console.log(connectedElem) });
+
+      console.log(foundEl);
+      console.log("end elements");
     });
 
     var eventBus = this.bpmnJS.get('eventBus');
 
     var canvas = this.bpmnJS.get('canvas');
+
 
     this.events.forEach(function (event) {
 
@@ -73,12 +97,13 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
         // e.gfx = the graphical element
         console.log(event, 'on', e.element.type);
 
-
         if (e.element.type == "bpmn:Task") {
           if (!canvas.hasMarker(e.element.id, 'highlight')) {
             canvas.addMarker(e.element.id, 'highlight');
+            
           } else {
             canvas.removeMarker(e.element.id, 'highlight');
+
           }
           
         }
