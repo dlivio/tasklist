@@ -9,7 +9,8 @@ import {
   ViewChild,
   SimpleChanges,
   EventEmitter,
-  ViewEncapsulation
+  ViewEncapsulation,
+  Inject
 } from '@angular/core';
 
 import { HttpClient } from '@angular/common/http';
@@ -47,33 +48,37 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
 
   @Input() private url: string;
 
+  @Input() private caseInstanceId: string;
+
   private events = [
     'element.click'
   ];
 
+  private taskHistoryIds: string[];
+
   private nextPossibleIds: string[];
   private clickedIds: string[];
 
-  constructor(private http: HttpClient) {
-
-    // retrieve current task to complete from the process instance
-     
-
-    // get current diagram from json of the task
+  constructor(private http: HttpClient, @Inject('BASE_URL') baseUrl: string) {
 
     // retrieve process instance history
 
     // color in the diagram all the tasks from the history from that specific diagram
 
-
     this.bpmnJS = new BpmnJS();
+
+    var eventBus = this.bpmnJS.get('eventBus');
+
+    var canvas = this.bpmnJS.get('canvas');
 
     this.bpmnJS.on('import.done', ({ error }) => {
       if (!error) {
         this.bpmnJS.get('canvas').zoom('fit-viewport');
       }
 
+      
       var elementRegistry = this.bpmnJS.get('elementRegistry');
+      /*
       console.log("elements");
 
       // get the start event of the diagram
@@ -83,12 +88,34 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
 
       console.log(foundEl);
       console.log("end elements");
+      */
+
+      // get the correct diagram for the instance
+      http.get<string[]>(baseUrl + 'api/Projects/' + this.caseInstanceId + '/Diagram/History').subscribe(result => {
+
+        this.taskHistoryIds = result;
+        // filter the elements in the diagram to limit those who are clickable
+        var tasksFound = elementRegistry.filter(function (el) {
+          return (el.type == "bpmn:Task" || el.type == "bpmn:UserTask" || el.type == "bpmn:ManualTask")
+        });
+        // add color to all the elements in the history
+        for (let i = 0; i < tasksFound.length; i++) {
+          if (result.indexOf(tasksFound[i].id) > -1 && !canvas.hasMarker(tasksFound[i].id, 'highlight-history')) {
+            canvas.addMarker(tasksFound[i].id, 'highlight-history');
+          }
+        }
+
+      }, error => console.error(error));
+
+      /*
+      tasksFound.forEach(function (task) {
+        if (this.taskHistoryIds.indexOf(task.id) > -1 && !canvas.hasMarker(task.id, 'highlight')) {
+          canvas.addMarker(task.id, 'highlight');
+        }
+      });
+      */
+
     });
-
-    var eventBus = this.bpmnJS.get('eventBus');
-
-    var canvas = this.bpmnJS.get('canvas');
-
 
     this.events.forEach(function (event) {
 
@@ -97,7 +124,9 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
         // e.gfx = the graphical element
         console.log(event, 'on', e.element.type);
 
-        if (e.element.type == "bpmn:Task") {
+        if ((e.element.type == "bpmn:Task" || e.element.type == "bpmn:UserTask" || e.element.type == "bpmn:ManualTask")
+          && !canvas.hasMarker(e.element.id, 'highlight-history')) {
+
           if (!canvas.hasMarker(e.element.id, 'highlight')) {
             canvas.addMarker(e.element.id, 'highlight');
             

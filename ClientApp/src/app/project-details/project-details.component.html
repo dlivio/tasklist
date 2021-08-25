@@ -5,8 +5,7 @@
 
   <div id="projectDescription">
     <p><b>Started at: </b>{{ project.startDate }}</p>
-    <p><b>Tasks waiting to be approved: </b>{{ project.noTasksToApprove }}</p>
-    <p><b>Tasks completed: </b>{{ project.noTasksCompleted }}</p>
+    <p><b>Task awaiting approval: </b>{{ project.nextTaskName }}</p>
   </div>
 
   <hr>
@@ -48,7 +47,7 @@
   -->
 
 <div class="diagram-parent" style="background-color: lightgray; height: 60vh;">
-  <app-diagram [url]="diagramUrl" (importDone)="handleImported($event)"></app-diagram>
+  <app-diagram [url]="diagramUrl" [caseInstanceId]="camundaCaseInstanceId" (importDone)="handleImported($event)"></app-diagram>
 
   <div class="import-error" *ngIf="importError">
     <strong>Failed to render diagram: </strong>

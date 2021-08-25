@@ -32,6 +32,14 @@ namespace tasklist.Services
         public Project Get(string id) =>
             _projects.Find<Project>(project => project.Id == id).FirstOrDefault();
 
+        /// <summary>
+        /// Get the Project with CaseInstanceId equal to the requested caseInstanceId.
+        /// </summary>
+        /// <param name="caseInstanceId"></param>
+        /// <returns>The Project with the requested CaseInstanceId.</returns>
+        public Project GetByCaseInstanceId(string caseInstanceId) =>
+            _projects.Find<Project>(project => project.CaseInstanceId == caseInstanceId).FirstOrDefault();
+
         public Project Create(Project project)
         {
             _projects.InsertOne(project);

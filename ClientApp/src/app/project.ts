@@ -14,6 +14,7 @@ export class Project {
     public projectName: string,
     public startDate: string,
     public isComplete: boolean,
+    public caseInstanceId: string,
     public nextTaskName: string
   ) { }
 }

@@ -4,6 +4,7 @@ import { Router, ActivatedRoute } from '@angular/router';
 
 import { Project } from '../project';
 import { Task } from '../task';
+import { DiagramXML } from '../diagram';
 
 @Component({
   selector: 'app-project-details',
@@ -22,16 +23,14 @@ export class ProjectDetailsComponent implements OnInit {
   diagramUrl = 'https://cdn.staticaly.com/gh/bpmn-io/bpmn-js-examples/dfceecba/starter/diagram.bpmn';
   importError?: Error;
 
+  camundaCaseInstanceId = "";
+
   constructor(http: HttpClient, @Inject('BASE_URL') baseUrl: string, private router: Router, private activatedRoute: ActivatedRoute) {
-
-    http.get<Task[]>(baseUrl + 'api/Tasks/ProjectIdActive/' + this.projectId).subscribe(result => {
-      this.tasksForApproval = result;
-      //console.error(this.tasksForApproval);
-    }, error => console.error(error));
-
 
     // get the selected Project info
     if (this.router.getCurrentNavigation().extras.state) {
+      console.log("by state");
+
       this.project = this.router.getCurrentNavigation().extras.state.project;
 
     } else { // retrieve the project by id from url
@@ -48,11 +47,15 @@ export class ProjectDetailsComponent implements OnInit {
 
     }
 
-    http.get<Task[]>(baseUrl + 'api/Tasks/ProjectIdActive/' + this.projectId).subscribe(result => {
-      this.tasksForApproval = result;
-      //console.error(this.tasksForApproval);
-    }, error => console.error(error));
-    
+    console.log(this.project);
+
+    // get the correct diagram for the instance
+    this.diagramUrl = baseUrl + 'api/Projects/' + this.project.caseInstanceId + '/Diagram';
+    console.log(this.diagramUrl);
+
+    // fill the Camunda's caseInstanceId
+    this.camundaCaseInstanceId = this.project.caseInstanceId;
+
   }
 
   ngOnInit() {

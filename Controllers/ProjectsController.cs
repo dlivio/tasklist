@@ -27,9 +27,14 @@ namespace tasklist.Controllers
             _camundaService = camundaService;
         }
 
-        // GET: api/Projects  //TODO
+        // GET: api/Projects
+        /// <summary>
+        /// Method that retrieves all open Projects and the currently open Tasks in Camunda to build objects containing both the 
+        /// Project properties and the name of the next Task awaiting approval.
+        /// </summary>
+        /// <returns>A list of Projects with the next Task name.</returns>
         [HttpGet]
-        public async Task<ActionResult<List<ProjectDTO>>> GetAsync()
+        public async Task<ActionResult<IEnumerable<ProjectDTO>>> GetAsync()
         {
             // get the tasks from Camunda
             List<CamundaTask> tasks = await _camundaService.GetOpenTasksAsync();
@@ -37,11 +42,14 @@ namespace tasklist.Controllers
             // get the projects created in the system
             List<Project> projects = _projectService.GetOpenProjects();
 
+            //List<ProjectDTO> projectDTOs = tasks.Select(t => new ProjectDTO(projects.Find(p => p.CaseInstanceId == t.CaseInstanceId), t.Name)).ToList();
+
             List<ProjectDTO> projectDTOs = new();
 
+            
             foreach (CamundaTask task in tasks)
             {
-                Project foundProject = projects.Find(project => project.CaseInstanceId == task.CaseInstanceId);
+                Project foundProject = projects.Find(p => p.CaseInstanceId == task.CaseInstanceId);
 
                 if (foundProject != null)
                 {
@@ -49,26 +57,10 @@ namespace tasklist.Controllers
                 }
   
             }
-
             
-            /*
-            List<ProjectDTO> projectDTOs = new();
-            long noTasksCompleted, noTasksToApprove;
-
-            foreach(Project project in projects)
-            {
-                var test = _taskService.GetByProjectId(project.Id);
-
-                noTasksToApprove = _taskService.CountByProjectIdActive(project.Id);
-                noTasksCompleted = _taskService.CountByProjectIdCompleted(project.Id);
-
-                projectDTOs.Add(new ProjectDTO(project, "testID"));
-            }
-            */
 
             return projectDTOs;
         }
-           
 
         // GET: api/Projects/5
         [HttpGet("{id:length(24)}", Name = "GetProject")]
@@ -82,6 +74,52 @@ namespace tasklist.Controllers
             }
 
             return project;
+        }
+
+        // GET: api/Projects/invoice:112/Diagram
+        /// <summary>
+        /// Method that retrieves the current XML Diagram in which the task from the requested caseInstanceId is currently in.
+        /// </summary>
+        /// <param name="caseInstanceId"></param>
+        /// <returns>The XML of the Diagram of the current found task.</returns>
+        [HttpGet("{caseInstanceId}/Diagram", Name = "GetCurrentDiagram")]
+        public async Task<ActionResult<string>> GetCurrentDiagramAsync(string caseInstanceId)
+        {
+            // get the project with the requested caseInstanceId
+            Project project = _projectService.GetByCaseInstanceId(caseInstanceId);
+
+            // get the task from Camunda
+            CamundaTask task = (await _camundaService.GetOpenTasksAsync()).Find(t => t.CaseInstanceId == caseInstanceId);
+
+            if (task == null) { 
+                return NotFound(); 
+            
+            } else
+            {
+                // if the current ProcessInstanceId is not on the list add it and update the object (useful when retrieving history)
+                if (task.ProcessInstanceId != project.ProcessInstanceIds.LastOrDefault())
+                {
+                    project.ProcessInstanceIds.Add(task.ProcessInstanceId);
+
+                    _projectService.Update(project.Id, project);
+                } 
+            }
+
+            // get the diagram xml from Camunda
+            CamundaDiagramXML xml = await _camundaService.GetXMLAsync(task.ProcessDefinitionId);
+
+            return xml.Bpmn20Xml;
+        }
+
+        [HttpGet("{caseInstanceId}/Diagram/History", Name = "GetCurrentDiagramHistory")]
+        public async Task<ActionResult<IEnumerable<string>>> GetCurrentDiagramHistoryAsync(string caseInstanceId)
+        {
+            // get the last processDefinitionId from the project with the requested caseInstanceId
+            string processInstanceId = _projectService.GetByCaseInstanceId(caseInstanceId).ProcessInstanceIds.LastOrDefault();
+
+            if (processInstanceId == null) return NotFound(); 
+
+            return await _camundaService.GetDiagramTaskHistoryAsync(processInstanceId); 
         }
 
         // PUT: api/Projects/5
@@ -100,17 +138,6 @@ namespace tasklist.Controllers
             return NoContent();
         }
 
-        /// <summary>
-        /// https://stackoverflow.com/questions/3984138/hash-string-in-c-sharp
-        /// </summary>
-        /// <param name="s"></param>
-        /// <returns></returns>
-        private static string SHA256ToString(string s)
-        {
-            using (var alg = SHA256.Create())
-                return alg.ComputeHash(Encoding.UTF8.GetBytes(s)).Aggregate(new StringBuilder(), (sb, x) => sb.Append(x.ToString("x2"))).ToString();
-        }
-
         // POST: api/Projects
         [HttpPost]
         public async Task<ActionResult<Project>> CreateAsync(ProjectFormDTO projectForm)
@@ -124,7 +151,7 @@ namespace tasklist.Controllers
 
             _projectService.Create(project);
             // start the process in Camunda with the generated ID
-            await _camundaService.StartProcessInstanceAsync("HelpLafayetteEscape", generatedId);
+            await _camundaService.StartProcessInstanceAsync("HelpLafayetteEscape", generatedId); // TO BE CHANGED
 
             return CreatedAtRoute("GetProject", new { id = project.Id.ToString() }, project);
         }

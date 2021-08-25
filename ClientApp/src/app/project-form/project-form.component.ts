@@ -21,7 +21,7 @@ export class ProjectFormComponent implements OnInit {
     this.route = router;
   }
 
-  model = new Project("-1", "", "", false, "");
+  model = new Project("-1", "", "", false, "", "");
 
   projectName: string = "";
 
@@ -37,10 +37,10 @@ export class ProjectFormComponent implements OnInit {
     // build an object with the project name and creation datetime
     let proj = new ProjectForm(this.projectName, new Date().toISOString());
 
-    // change to post
+    // 
     this.client.post<ProjectForm>(this.baseUrl + 'api/Projects', proj).subscribe(result => {
       let response = result;
-      this.route.navigate(['/projects ']);
+      this.route.navigate(['/projects']);
     }, error => console.error(error));
 
   }

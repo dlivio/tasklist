@@ -62,7 +62,7 @@ namespace tasklist.Services
 
             string caseInstanceId = null;
 
-            HttpResponseMessage response = await _client.PostAsync(BASE_URL + "process-definition/key/" + processId 
+            HttpResponseMessage response = await _client.PostAsync(BASE_URL + "process-definition/key/" + processId
                 + "/start", requestContent);
             if (response.IsSuccessStatusCode)
             {
@@ -73,5 +73,45 @@ namespace tasklist.Services
 
             return caseInstanceId;
         }
+
+        /// <summary>
+        /// Make a request to Camunda Workflow Engine to retrieve the diagram related to the requested 
+        /// processDefinitionId.
+        /// </summary>
+        /// <param name="processDefinitionId"></param>
+        /// <returns>An object containing an ID and the XML of the diagram requested</returns>
+        public async Task<CamundaDiagramXML> GetXMLAsync(string processDefinitionId)
+        {
+            CamundaDiagramXML xml = null;
+
+            HttpResponseMessage response = await _client.GetAsync(BASE_URL + "process-definition/" + processDefinitionId + "/xml");
+            if (response.IsSuccessStatusCode)
+            {
+                xml = await response.Content.ReadFromJsonAsync<CamundaDiagramXML>();
+            }
+
+            return xml;
+        }
+
+
+        public async Task<List<string>> GetDiagramTaskHistoryAsync(string processInstanceId)
+        {
+            List<CamundaHistoryTask> history = new();
+
+            // history/activity-instance?processInstanceId=3a57a92b-04f3-11ec-8247-0242ac110003
+            HttpResponseMessage response = await _client.GetAsync(BASE_URL + "history/activity-instance?processInstanceId=" + processInstanceId);
+            if (response.IsSuccessStatusCode)
+            {
+                history = await response.Content.ReadFromJsonAsync<List<CamundaHistoryTask>>();
+            }
+
+            // get all activityId's that correspond to UserTasks, ManualTasks or unassigned Tasks
+            List<string> taskIds = history.Where(t => t.ActivityType == "userTask" || t.ActivityType == "manualTask" 
+                || t.ActivityType == "task").Select(t => t.ActivityId).ToList();
+
+            return taskIds;
+        }
+
+
     }
 }

@@ -12,6 +12,8 @@ namespace tasklist.Models
 
         public bool IsComplete { get; set; }
 
+        public string CaseInstanceId { get; set; }
+
         public string NextTaskName { get; set; }
 
         public ProjectDTO(Project project, string nextTaskName)
@@ -20,6 +22,7 @@ namespace tasklist.Models
             ProjectName = project.ProjectName;
             StartDate = project.StartDate;
             IsComplete = project.IsComplete;
+            CaseInstanceId = project.CaseInstanceId;
             NextTaskName = nextTaskName;
         }
 

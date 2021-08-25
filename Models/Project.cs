@@ -27,12 +27,16 @@ namespace tasklist.Models
         [BsonElement("caseInstanceId")]
         public string CaseInstanceId { get; set; }
 
+        [BsonElement("processDefinitionId")]
+        public List<string> ProcessInstanceIds { get; set; }
+
         public Project(string projectName, DateTime startDate, string caseInstanceId)
         {
             this.ProjectName = projectName;
             this.StartDate = startDate;
             this.IsComplete = false;
             this.CaseInstanceId = caseInstanceId;
+            this.ProcessInstanceIds = new List<string>();
         }
     }
 }
