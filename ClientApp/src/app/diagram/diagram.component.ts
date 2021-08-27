@@ -54,12 +54,18 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
     'element.click'
   ];
 
+  // the history of activity id's of the current diagram
   private taskHistoryIds: string[];
+  // the current task activity id available to click
+  private currentTaskIds: string[];
 
-  private nextPossibleIds: string[];
-  private clickedIds: string[];
+  private tasksToSubmit: string[];
 
   constructor(private http: HttpClient, @Inject('BASE_URL') baseUrl: string) {
+     
+    this.taskHistoryIds = [];
+    this.currentTaskIds = [];
+    this.tasksToSubmit = [];
 
     // retrieve process instance history
 
@@ -75,9 +81,31 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
       if (!error) {
         this.bpmnJS.get('canvas').zoom('fit-viewport');
       }
-
       
       var elementRegistry = this.bpmnJS.get('elementRegistry');
+
+      // get the tasks completed in the current diagram
+      http.get<string[]>(baseUrl + 'api/Projects/' + this.caseInstanceId + '/Diagram/History').subscribe(result => {
+
+        this.taskHistoryIds = result;
+
+        // remove the current task to be approved from the list and save it
+        this.currentTaskIds.push(this.taskHistoryIds.pop());                                // TODO: needs to be changed to retrieve current tasks
+
+        // filter the elements in the diagram to limit those who are clickable
+        var tasksFound = elementRegistry.filter(function (el) {
+          return (el.type == "bpmn:Task" || el.type == "bpmn:UserTask" || el.type == "bpmn:ManualTask")
+        });
+        // add color to all the elements in the history
+        for (let i = 0; i < tasksFound.length; i++) {
+          if (result.indexOf(tasksFound[i].id) > -1) { //&& !canvas.hasMarker(tasksFound[i].id, 'highlight-history')) {
+            canvas.addMarker(tasksFound[i].id, 'highlight-history');
+          }
+
+        }
+
+      }, error => console.error(error));
+
       /*
       console.log("elements");
 
@@ -90,22 +118,6 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
       console.log("end elements");
       */
 
-      // get the correct diagram for the instance
-      http.get<string[]>(baseUrl + 'api/Projects/' + this.caseInstanceId + '/Diagram/History').subscribe(result => {
-
-        this.taskHistoryIds = result;
-        // filter the elements in the diagram to limit those who are clickable
-        var tasksFound = elementRegistry.filter(function (el) {
-          return (el.type == "bpmn:Task" || el.type == "bpmn:UserTask" || el.type == "bpmn:ManualTask")
-        });
-        // add color to all the elements in the history
-        for (let i = 0; i < tasksFound.length; i++) {
-          if (result.indexOf(tasksFound[i].id) > -1 && !canvas.hasMarker(tasksFound[i].id, 'highlight-history')) {
-            canvas.addMarker(tasksFound[i].id, 'highlight-history');
-          }
-        }
-
-      }, error => console.error(error));
 
       /*
       tasksFound.forEach(function (task) {
@@ -117,9 +129,9 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
 
     });
 
-    this.events.forEach(function (event) {
+    this.events.forEach(event => {
 
-      eventBus.on(event, function (e) {
+      eventBus.on(event, e => {
         // e.element = the model element
         // e.gfx = the graphical element
         console.log(event, 'on', e.element.type);
@@ -129,17 +141,18 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
 
           if (!canvas.hasMarker(e.element.id, 'highlight')) {
             canvas.addMarker(e.element.id, 'highlight');
-            
+            this.tasksToSubmit.push(e.element.id);
+
           } else {
             canvas.removeMarker(e.element.id, 'highlight');
-
+            this.tasksToSubmit = this.tasksToSubmit.filter(t => t != e.element.id);
           }
-          
         }
 
         console.log(event, 'on', e.element);
 
       });
+
     });
   }
 

@@ -3,5 +3,9 @@
 }
 
 .highlight-history:not(.djs-connection) .djs-visual > :nth-child(1) {
-  fill: forestgreen !important; /* color elements as green */
+  fill: #1CAC78 !important; /* color elements as green */
+}
+
+.highlight-current:not(.djs-connection) .djs-visual > :nth-child(1) {
+  fill: #F0E68C !important; /* color elements as green */
 }

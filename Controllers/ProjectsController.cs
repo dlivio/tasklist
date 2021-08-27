@@ -46,7 +46,6 @@ namespace tasklist.Controllers
 
             List<ProjectDTO> projectDTOs = new();
 
-            
             foreach (CamundaTask task in tasks)
             {
                 Project foundProject = projects.Find(p => p.CaseInstanceId == task.CaseInstanceId);
@@ -57,7 +56,6 @@ namespace tasklist.Controllers
                 }
   
             }
-            
 
             return projectDTOs;
         }
@@ -111,6 +109,12 @@ namespace tasklist.Controllers
             return xml.Bpmn20Xml;
         }
 
+        // GET: api/Projects/invoice:112/Diagram/History
+        /// <summary>
+        /// Method that retrieves the history of tasks in the Diagram in which the task from the requested caseInstanceId is currently in.
+        /// </summary>
+        /// <param name="caseInstanceId"></param>
+        /// <returns>A List with the id's of the tasks completed in the diagram.</returns>
         [HttpGet("{caseInstanceId}/Diagram/History", Name = "GetCurrentDiagramHistory")]
         public async Task<ActionResult<IEnumerable<string>>> GetCurrentDiagramHistoryAsync(string caseInstanceId)
         {
@@ -143,8 +147,8 @@ namespace tasklist.Controllers
         public async Task<ActionResult<Project>> CreateAsync(ProjectFormDTO projectForm)
         {
             // make a unique key to use while starting the process in Camunda
-            //string hash = projectForm.ProjectName + "_" + SHA256ToString(projectForm.ProjectName + projectForm.StartDate);
-            int noProjects = _projectService.Get().Count();
+            // string hash = projectForm.ProjectName + "_" + SHA256ToString(projectForm.ProjectName + projectForm.StartDate);
+            int noProjects = _projectService.Get().Count;
             string generatedId = projectForm.ProjectName + "_" + noProjects;
 
             Project project = new Project(projectForm.ProjectName, projectForm.StartDate, generatedId);

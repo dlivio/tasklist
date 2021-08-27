@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using tasklist.Models;
 using tasklist.Services;
 using Task = tasklist.Models.Task;
 
@@ -13,10 +14,12 @@ namespace tasklist.Controllers
     public class TasksController : ControllerBase
     {
         private readonly TaskService _taskService;
+        private readonly CamundaService _camundaService;
 
-        public TasksController(TaskService taskService)
+        public TasksController(TaskService taskService, CamundaService camundaService)
         {
             _taskService = taskService;
+            _camundaService = camundaService;
         }
 
         // GET: api/Tasks
@@ -36,6 +39,25 @@ namespace tasklist.Controllers
             }
 
             return task;
+        }
+
+        // GET: api/Tasks/Open/invoice:112
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="caseInstanceId"></param>
+        /// <returns>A List with the id's of the tasks completed in the diagram.</returns>
+        [HttpGet("Open/{caseInstanceId}", Name = "GetOpenTasksWithCaseInstanceId")]
+        public async Task<ActionResult<IEnumerable<string>>> GetCurrentDiagramHistoryAsync(string caseInstanceId)
+        {
+            // get the tasks from Camunda
+            List<CamundaTask> tasks = await _camundaService.GetOpenTasksAsync();
+
+            tasks = tasks.FindAll(t => t.CaseInstanceId == caseInstanceId);
+
+            if (tasks.Count == 0) return NotFound();
+
+            return new List<string>();
         }
 
         // GET: api/Tasks/ProjectIdActive/5

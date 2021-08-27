@@ -43,6 +43,26 @@ namespace tasklist.Services
         }
 
         /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="caseInstanceId"></param>
+        /// <returns></returns>
+        public async Task<List<CamundaTask>> GetOpenTasksFromProcessAsync(string caseInstanceId)
+        {
+            List<CamundaTask> tasks = new();
+
+            HttpResponseMessage response = await _client.GetAsync(BASE_URL + "task");
+            if (response.IsSuccessStatusCode)
+            {
+                tasks = await response.Content.ReadFromJsonAsync<List<CamundaTask>>();
+            }
+
+            tasks = tasks.FindAll(t => t.CaseInstanceId == caseInstanceId);
+
+            return tasks;
+        }
+
+        /// <summary>
         /// Make a request to Camunda Workflow Engine to start a process with the given 'processId' and a 
         /// given 'caseInstanceId'.
         /// </summary>
@@ -93,17 +113,24 @@ namespace tasklist.Services
             return xml;
         }
 
-
+        /// <summary>
+        /// Make a request to Camunda Workflow Engine to retrieve the task history of the diagram related 
+        /// to the requested processDefinitionId.
+        /// </summary>
+        /// <param name="processInstanceId"></param>
+        /// <returns>A List of id's of the tasks in the diagram related to the processInstanceId.</returns>
         public async Task<List<string>> GetDiagramTaskHistoryAsync(string processInstanceId)
         {
             List<CamundaHistoryTask> history = new();
 
-            // history/activity-instance?processInstanceId=3a57a92b-04f3-11ec-8247-0242ac110003
             HttpResponseMessage response = await _client.GetAsync(BASE_URL + "history/activity-instance?processInstanceId=" + processInstanceId);
             if (response.IsSuccessStatusCode)
             {
                 history = await response.Content.ReadFromJsonAsync<List<CamundaHistoryTask>>();
             }
+
+            // sort the list to order the elements by execution
+            history = history.OrderBy(t => t.StartTime).ToList();
 
             // get all activityId's that correspond to UserTasks, ManualTasks or unassigned Tasks
             List<string> taskIds = history.Where(t => t.ActivityType == "userTask" || t.ActivityType == "manualTask" 
