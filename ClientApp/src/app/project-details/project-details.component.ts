@@ -20,7 +20,7 @@ export class ProjectDetailsComponent implements OnInit {
   public tasksForApproval: Task[];
 
   title = 'bpmn-js-angular';
-  diagramUrl = 'https://cdn.staticaly.com/gh/bpmn-io/bpmn-js-examples/dfceecba/starter/diagram.bpmn';
+  diagramUrl = '';//'https://cdn.staticaly.com/gh/bpmn-io/bpmn-js-examples/dfceecba/starter/diagram.bpmn';
   importError?: Error;
 
   camundaCaseInstanceId = "";

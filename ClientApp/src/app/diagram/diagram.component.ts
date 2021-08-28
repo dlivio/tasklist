@@ -61,6 +61,8 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
 
   private tasksToSubmit: string[];
 
+  private currentNode: DiagramNode;
+
   constructor(private http: HttpClient, @Inject('BASE_URL') baseUrl: string) {
      
     this.taskHistoryIds = [];
@@ -92,6 +94,9 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
         // remove the current task to be approved from the list and save it
         this.currentTaskIds.push(this.taskHistoryIds.pop());                                // TODO: needs to be changed to retrieve current tasks
 
+        console.log(this.currentTaskIds);
+        console.log(this.currentTaskIds[0]);
+
         // filter the elements in the diagram to limit those who are clickable
         var tasksFound = elementRegistry.filter(function (el) {
           return (el.type == "bpmn:Task" || el.type == "bpmn:UserTask" || el.type == "bpmn:ManualTask")
@@ -104,19 +109,25 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
 
         }
 
-      }, error => console.error(error));
+      }, error => console.error(error)
+        , () => { // on complete this path is activated
 
-      /*
-      console.log("elements");
+          // get the start event of the diagram
+          var foundEl = elementRegistry.filter(el => el.id == this.currentTaskIds[0])[0];
 
-      // get the start event of the diagram
-      var foundEl = elementRegistry.filter(function (el) { return el.type == "bpmn:StartEvent" })[0];
+          this.currentNode = this.parseNode(foundEl);
 
-      foundEl.outgoing.forEach(function (connectedElem) { console.log(connectedElem) });
+          console.log(this.currentNode);
 
-      console.log(foundEl);
-      console.log("end elements");
-      */
+        });
+
+     
+
+      // build the node graph
+
+      var nodes: Array<DiagramNode> = new Array<DiagramNode>(10);
+
+      var currentNode: DiagramNode;
 
 
       /*
@@ -206,4 +217,92 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
   private importDiagram(xml: string): Observable<{ warnings: Array<any> }> {
     return from(this.bpmnJS.importXML(xml) as Promise<{ warnings: Array<any> }>);
   }
+
+  /**
+   * 
+   * @param object
+   */
+  private parseNode(node: any): DiagramNode {
+
+    switch (node.type) {
+      case "bpmn:UserTask":
+        return this.parseUserTask(node);
+        break;
+      case "bpmn:ExclusiveGateway":
+        return this.parseExclusiveGateway(node);
+        break;
+      case "bpmn:InclusiveGateway":
+        return this.parseInclusiveGateway(node);
+        break;
+      case "bpmn:ParallelGateway":
+        return this.parseParallelGateway(node);
+        break;
+      case "bpmn:SequenceFlow":
+        return this.parseNode(node.businessObject.targetRef);
+        break;
+      default:
+        
+        break;
+    }
+  }
+
+  private parseUserTask(node: any): DiagramNode {
+    var nextNode: DiagramNode = this.parseNode(node.outgoing[0]);
+
+    return new BasicNode(nextNode, false, node.id);
+  }
+
+  /**
+   * Auxiliar method to retrieve the object containing the joining gateway of the requested type.
+   * 
+   * @param beginningGatewayNode
+   * @param gatewayType
+   */
+  private getLastGateway(beginningGatewayNode: any, gatewayType: string) {
+    var node = beginningGatewayNode.outgoing[0];
+
+    while (node.type != gatewayType) {
+      if (node.type == "bpmn:SequenceFlow") {
+        node = node.businessObject.targetRef;
+      } else {
+        node = node.outgoing[0];
+      }
+    }
+
+    return node;
+  }
+
+  private parseExclusiveGateway(node: any): DiagramNode {
+    var branches: Array<DiagramNode> = new Array<DiagramNode>();
+    node.outgoing.forEach(obj => branches.push(this.parseNode(obj)));
+
+    var endGateway = this.getLastGateway(node, "bpmn:ExclusiveGateway");
+
+    var nextNode: DiagramNode = this.parseNode(endGateway.outgoing[0]);
+
+    return new ExclusiveNode(nextNode, false, branches);
+  }
+
+  private parseInclusiveGateway(node: any): DiagramNode {
+    var branches: Array<DiagramNode> = new Array<DiagramNode>();
+    node.outgoing.forEach(obj => branches.push(this.parseNode(obj)));
+
+    var endGateway = this.getLastGateway(node, "bpmn:InclusiveGateway");
+
+    var nextNode: DiagramNode = this.parseNode(endGateway.outgoing[0]);
+
+    return new InclusiveNode(nextNode, false, branches);
+  }
+
+  private parseParallelGateway(node: any): DiagramNode {
+    var branches: Array<DiagramNode> = new Array<DiagramNode>();
+    node.outgoing.forEach(obj => branches.push(this.parseNode(obj)));
+
+    var endGateway = this.getLastGateway(node, "bpmn:SequenceFlow");
+
+    var nextNode: DiagramNode = this.parseNode(endGateway.outgoing[0]);
+
+    return new ParallelNode(nextNode, false, branches);
+  }
+
 }
