@@ -1,4 +1,7 @@
-class ExclusiveNode extends GatewayNode {
+import { DiagramNode } from "./diagram-node";
+import { GatewayNode } from "./gateway-node";
+
+export class ExclusiveNode extends GatewayNode {
 
   public canEnable(): DiagramNode[] {
     var canEnable: Array<DiagramNode> = new Array<DiagramNode>();

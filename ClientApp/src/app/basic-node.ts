@@ -1,4 +1,6 @@
-class BasicNode extends DiagramNode {
+import { DiagramNode } from "./diagram-node";
+
+export class BasicNode extends DiagramNode {
   // the activityId that identifies the task/node
   public activityId: string;
 

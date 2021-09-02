@@ -1,4 +1,6 @@
-abstract class GatewayNode extends DiagramNode {
+import { DiagramNode } from "./diagram-node";
+
+export abstract class GatewayNode extends DiagramNode {
   // array with the first node of each branch of the gateway
   public branches: Array<DiagramNode>;
 

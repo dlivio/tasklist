@@ -26,6 +26,11 @@ import { map, switchMap } from 'rxjs/operators';
 import * as BpmnJS from 'src/app/diagram/bpmn-navigated-viewer.development.js';
 
 import { from, Observable, Subscription } from 'rxjs';
+import { BasicNode } from '../basic-node';
+import { DiagramNode } from '../diagram-node';
+import { ExclusiveNode } from '../exclusive-node';
+import { InclusiveNode } from '../inclusive-node';
+import { ParallelNode } from '../parallel-node';
 
 @Component({
   selector: 'app-diagram',
@@ -220,34 +225,77 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
 
   /**
    * 
-   * @param object
+   * @param node 
+   * @param stoppingNode, the criteria to stop parsing the node
+   * @returns 
    */
-  private parseNode(node: any): DiagramNode {
+  private parseNode(node: any, stoppingNode: any = null): DiagramNode {
 
-    switch (node.type) {
+    if (stoppingNode != null) {
+      console.log("current parse: " + node.id + " stopping parse: " + stoppingNode.id);
+    }
+    
+
+    if (stoppingNode != null && node.id == stoppingNode.id) return null; 
+
+    var nodeType: string = this.getNodeType(node);
+
+    console.log("before switch");
+    console.log(node);
+
+    switch (nodeType) {
       case "bpmn:UserTask":
-        return this.parseUserTask(node);
+        return this.parseUserTask(node, stoppingNode);
         break;
       case "bpmn:ExclusiveGateway":
-        return this.parseExclusiveGateway(node);
+        return this.parseExclusiveGateway(node, stoppingNode);
         break;
       case "bpmn:InclusiveGateway":
-        return this.parseInclusiveGateway(node);
+        return this.parseInclusiveGateway(node, stoppingNode);
         break;
       case "bpmn:ParallelGateway":
-        return this.parseParallelGateway(node);
+        return this.parseParallelGateway(node, stoppingNode);
         break;
       case "bpmn:SequenceFlow":
-        return this.parseNode(node.businessObject.targetRef);
+        return this.parseNode(this.getSequenceFlowOutgoing(node), stoppingNode);
+        break;
+      case "bpmn:EndEvent":
+        return null;
         break;
       default:
-        
+        console.log("Andre says Oi");
         break;
     }
   }
 
-  private parseUserTask(node: any): DiagramNode {
-    var nextNode: DiagramNode = this.parseNode(node.outgoing[0]);
+  /**
+   * 
+   * @param sequenceFlowNode
+   */
+  private getSequenceFlowOutgoing(sequenceFlowNode: any): any {
+    if (sequenceFlowNode.businessObject != undefined) {
+      return sequenceFlowNode.businessObject.targetRef;
+    }
+    return sequenceFlowNode.targetRef;
+  }
+
+  /**
+   *
+   * @param node
+   */
+  private getNodeType(node: any): string {
+    console.log(node);
+
+    var nodeType: string = node.type;
+    if (nodeType == undefined) {
+      nodeType = node.$type;
+    }
+
+    return nodeType;
+  }
+
+  private parseUserTask(node: any, stoppingNode: any = null): DiagramNode {
+    var nextNode: DiagramNode = this.parseNode(node.outgoing[0], stoppingNode);
 
     return new BasicNode(nextNode, false, node.id);
   }
@@ -258,49 +306,82 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
    * @param beginningGatewayNode
    * @param gatewayType
    */
-  private getLastGateway(beginningGatewayNode: any, gatewayType: string) {
-    var node = beginningGatewayNode.outgoing[0];
+  private getLastGateway(beginningGatewayNode: any, gatewayType: string): any {
+    console.log("inside last gateway");
+    console.log(beginningGatewayNode);
 
-    while (node.type != gatewayType) {
-      if (node.type == "bpmn:SequenceFlow") {
-        node = node.businessObject.targetRef;
+    var node = beginningGatewayNode.outgoing[0];
+    var nodeDepth: number = 1;
+
+    console.log(node);
+    console.log("before while");
+
+    while (nodeDepth > 0) {
+      var nodeType: string = this.getNodeType(node);
+      console.log("type: " + nodeType);
+
+      if (nodeType == gatewayType) {
+        if (node.outgoing.length == 1) {
+          nodeDepth--;
+        } else {
+          nodeDepth++;
+        }
+        // if the stopping condition is reached, don't override current found node
+        if (nodeDepth != 0) node = node.outgoing[0];
+
+      } else if (nodeType == "bpmn:SequenceFlow") {
+        node = this.getSequenceFlowOutgoing(node);
       } else {
+        console.log("error here");
+        console.log(node);
         node = node.outgoing[0];
       }
+      console.log(node);
     }
+    console.log("after while");
+    console.log("last gateway result");
+    console.log(node);
 
     return node;
   }
 
-  private parseExclusiveGateway(node: any): DiagramNode {
+  private parseExclusiveGateway(node: any, stoppingNode: any = null): DiagramNode {
+    var endGateway = this.getLastGateway(node, this.getNodeType(node));
+
     var branches: Array<DiagramNode> = new Array<DiagramNode>();
-    node.outgoing.forEach(obj => branches.push(this.parseNode(obj)));
+    node.outgoing.forEach(obj => {
+      branches.push(this.parseNode(obj, endGateway));
+      console.log("for each branch end");
+    });
 
-    var endGateway = this.getLastGateway(node, "bpmn:ExclusiveGateway");
-
-    var nextNode: DiagramNode = this.parseNode(endGateway.outgoing[0]);
+    var nextNode: DiagramNode = this.parseNode(endGateway.outgoing[0], stoppingNode);
 
     return new ExclusiveNode(nextNode, false, branches);
   }
 
-  private parseInclusiveGateway(node: any): DiagramNode {
+  private parseInclusiveGateway(node: any, stoppingNode: any = null): DiagramNode {
+    var endGateway = this.getLastGateway(node, this.getNodeType(node));
+
     var branches: Array<DiagramNode> = new Array<DiagramNode>();
-    node.outgoing.forEach(obj => branches.push(this.parseNode(obj)));
+    node.outgoing.forEach(obj => {
+      console.log("branch here: ");
+      console.log(obj);
+      branches.push(this.parseNode(obj, endGateway));
+      console.log("for each branch end");
+    });
 
-    var endGateway = this.getLastGateway(node, "bpmn:InclusiveGateway");
-
-    var nextNode: DiagramNode = this.parseNode(endGateway.outgoing[0]);
+    var nextNode: DiagramNode = this.parseNode(endGateway.outgoing[0], stoppingNode);
 
     return new InclusiveNode(nextNode, false, branches);
   }
 
-  private parseParallelGateway(node: any): DiagramNode {
+  private parseParallelGateway(node: any, stoppingNode: any = null): DiagramNode {
+    var endGateway = this.getLastGateway(node, this.getNodeType(node));
+
     var branches: Array<DiagramNode> = new Array<DiagramNode>();
-    node.outgoing.forEach(obj => branches.push(this.parseNode(obj)));
+    node.outgoing.forEach(obj => branches.push(this.parseNode(obj, endGateway)));
 
-    var endGateway = this.getLastGateway(node, "bpmn:SequenceFlow");
-
-    var nextNode: DiagramNode = this.parseNode(endGateway.outgoing[0]);
+    var nextNode: DiagramNode = this.parseNode(endGateway.outgoing[0], stoppingNode);
 
     return new ParallelNode(nextNode, false, branches);
   }

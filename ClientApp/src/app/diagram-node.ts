@@ -1,4 +1,6 @@
-abstract class DiagramNode {
+import { GatewayNode } from "./gateway-node";
+
+export abstract class DiagramNode {
   // identifies if a node is validly selected
   protected greenLight: boolean;
   // next node connected
