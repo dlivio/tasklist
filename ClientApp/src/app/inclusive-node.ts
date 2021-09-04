@@ -1,17 +1,21 @@
+import { BasicNode } from "./basic-node";
 import { DiagramNode } from "./diagram-node";
 import { GatewayNode } from "./gateway-node";
 
 export class InclusiveNode extends GatewayNode {
 
-  public canEnable(): DiagramNode[] {
-    var canEnable: Array<DiagramNode> = new Array<DiagramNode>();
-    this.branches.forEach(br => canEnable.concat(br.canEnable()));
+  public canEnable(): BasicNode[] {
+    var canEnable: Array<BasicNode> = new Array<BasicNode>();
+    this.branches.forEach(br => canEnable = canEnable.concat(br.canEnable()) );
 
     return canEnable;
   }
 
-  public canDisable(): DiagramNode[] {
-    throw new Error("Method not implemented.");
+  public canDisable(): BasicNode[] {
+    var canDisable: Array<BasicNode> = new Array<BasicNode>();
+    this.branches.forEach(br => canDisable = canDisable.concat(br.canDisable()) );
+
+    return canDisable;
   }
 
   public enable(): void {

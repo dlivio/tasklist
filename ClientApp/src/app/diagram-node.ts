@@ -1,3 +1,4 @@
+import { BasicNode } from "./basic-node";
 import { GatewayNode } from "./gateway-node";
 
 export abstract class DiagramNode {
@@ -17,10 +18,10 @@ export abstract class DiagramNode {
     this.parentGatewayNode = gatewayNode;
   }
 
-  public abstract canEnable(): Array<DiagramNode>;
-  public abstract canDisable(): Array<DiagramNode>; // TODO
+  public abstract canEnable(): Array<BasicNode>;
+  public abstract canDisable(): Array<BasicNode>; // TODO
   public abstract enable(): void; // TODO
-  public abstract disable(): void;
+  public abstract disable(): Array<BasicNode>;
   public abstract clone(): DiagramNode;
   public abstract getGreenLight(): boolean;
 

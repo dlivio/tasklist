@@ -66,18 +66,24 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
 
   private tasksToSubmit: string[];
 
+  
+
   private currentNode: DiagramNode;
+  // nodes that can be clicked
+  private nodesEnableable: BasicNode[];
+
+  private nodesDisableable: BasicNode[];
 
   constructor(private http: HttpClient, @Inject('BASE_URL') baseUrl: string) {
-     
+    // Global variables init
     this.taskHistoryIds = [];
     this.currentTaskIds = [];
     this.tasksToSubmit = [];
 
-    // retrieve process instance history
+    this.nodesEnableable = [];
+    this.nodesDisableable = [];
 
-    // color in the diagram all the tasks from the history from that specific diagram
-
+    // bpmn.io variables
     this.bpmnJS = new BpmnJS();
 
     var eventBus = this.bpmnJS.get('eventBus');
@@ -119,10 +125,17 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
 
           // get the start event of the diagram
           var foundEl = elementRegistry.filter(el => el.id == this.currentTaskIds[0])[0];
-
+          // parse the diagram be calling the parseNode on the pseudo-root (first task to approve)
           this.currentNode = this.parseNode(foundEl);
 
           console.log(this.currentNode);
+
+          var nodesAbleToSelect: Array<BasicNode> = this.currentNode.canEnable();
+
+          nodesAbleToSelect.forEach(n => this.currentTaskIds.push(n.activityId));
+
+          this.nodesEnableable = this.currentNode.canEnable();
+          console.log(this.nodesEnableable);
 
         });
 
@@ -150,8 +163,77 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
       eventBus.on(event, e => {
         // e.element = the model element
         // e.gfx = the graphical element
-        console.log(event, 'on', e.element.type);
+        console.log(event, 'on', e.element);
+        console.log(this.currentTaskIds);
+        console.log("nodes enableable:");
+        console.log(this.nodesEnableable);
 
+        var nodeForEnableFound: DiagramNode = this.nodesEnableable.find(n => n.activityId == e.element.id);
+
+        var nodeForDisableFound: DiagramNode = this.nodesDisableable.find(n => n.activityId == e.element.id);
+
+        if (nodeForEnableFound != undefined) {
+          console.log("found it enable");
+          if (!canvas.hasMarker(e.element.id, 'highlight')) {
+            canvas.addMarker(e.element.id, 'highlight');
+            
+            // select the node and get the new array with nodes available to select
+            nodeForEnableFound.enable();
+
+            this.nodesEnableable = this.currentNode.canEnable();
+
+            console.log("new nodes enableable:");
+            console.log(this.nodesEnableable);
+
+            this.nodesDisableable = this.currentNode.canDisable();
+
+            console.log("new nodes disableable:");
+            console.log(this.nodesDisableable);
+
+          }
+        }
+
+        if (nodeForDisableFound != undefined) {
+          console.log("found it disable");
+          if (canvas.hasMarker(e.element.id, 'highlight')) {
+            canvas.removeMarker(e.element.id, 'highlight');
+            
+            // unselect the node and update the array with nodes available to select
+            var nodesDisabled = nodeForDisableFound.disable();
+
+            // trigger a function to cleanup colored nodes that have been removed
+            this.disableColorCleanup(canvas, nodesDisabled);
+
+            console.log("nodes disabled");
+            console.log(nodesDisabled);
+
+            this.nodesEnableable = this.currentNode.canEnable();
+
+            console.log("new nodes enableable:");
+            console.log(this.nodesEnableable);
+
+            this.nodesDisableable = this.currentNode.canDisable();
+
+            console.log("new nodes disableable:");
+            console.log(this.nodesDisableable);
+
+          }
+        }
+
+        /*
+        if (this.currentTaskIds.findIndex(tId =>tId == e.element.id) != -1) {
+          console.log("found it");
+          if (!canvas.hasMarker(e.element.id, 'highlight')) {
+            canvas.addMarker(e.element.id, 'highlight');
+            this.tasksToSubmit.push(e.element.id);
+
+          } else {
+            canvas.removeMarker(e.element.id, 'highlight');
+            this.tasksToSubmit = this.tasksToSubmit.filter(t => t != e.element.id);
+          }
+        }
+        */
+        /*
         if ((e.element.type == "bpmn:Task" || e.element.type == "bpmn:UserTask" || e.element.type == "bpmn:ManualTask")
           && !canvas.hasMarker(e.element.id, 'highlight-history')) {
 
@@ -164,6 +246,7 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
             this.tasksToSubmit = this.tasksToSubmit.filter(t => t != e.element.id);
           }
         }
+        */
 
         console.log(event, 'on', e.element);
 
@@ -230,18 +313,9 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
    * @returns 
    */
   private parseNode(node: any, stoppingNode: any = null): DiagramNode {
-
-    if (stoppingNode != null) {
-      console.log("current parse: " + node.id + " stopping parse: " + stoppingNode.id);
-    }
-    
-
     if (stoppingNode != null && node.id == stoppingNode.id) return null; 
 
     var nodeType: string = this.getNodeType(node);
-
-    console.log("before switch");
-    console.log(node);
 
     switch (nodeType) {
       case "bpmn:UserTask":
@@ -284,8 +358,6 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
    * @param node
    */
   private getNodeType(node: any): string {
-    console.log(node);
-
     var nodeType: string = node.type;
     if (nodeType == undefined) {
       nodeType = node.$type;
@@ -307,18 +379,11 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
    * @param gatewayType
    */
   private getLastGateway(beginningGatewayNode: any, gatewayType: string): any {
-    console.log("inside last gateway");
-    console.log(beginningGatewayNode);
-
     var node = beginningGatewayNode.outgoing[0];
     var nodeDepth: number = 1;
 
-    console.log(node);
-    console.log("before while");
-
     while (nodeDepth > 0) {
       var nodeType: string = this.getNodeType(node);
-      console.log("type: " + nodeType);
 
       if (nodeType == gatewayType) {
         if (node.outgoing.length == 1) {
@@ -332,15 +397,9 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
       } else if (nodeType == "bpmn:SequenceFlow") {
         node = this.getSequenceFlowOutgoing(node);
       } else {
-        console.log("error here");
-        console.log(node);
         node = node.outgoing[0];
       }
-      console.log(node);
     }
-    console.log("after while");
-    console.log("last gateway result");
-    console.log(node);
 
     return node;
   }
@@ -349,10 +408,7 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
     var endGateway = this.getLastGateway(node, this.getNodeType(node));
 
     var branches: Array<DiagramNode> = new Array<DiagramNode>();
-    node.outgoing.forEach(obj => {
-      branches.push(this.parseNode(obj, endGateway));
-      console.log("for each branch end");
-    });
+    node.outgoing.forEach(obj => branches.push(this.parseNode(obj, endGateway)));
 
     var nextNode: DiagramNode = this.parseNode(endGateway.outgoing[0], stoppingNode);
 
@@ -363,12 +419,7 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
     var endGateway = this.getLastGateway(node, this.getNodeType(node));
 
     var branches: Array<DiagramNode> = new Array<DiagramNode>();
-    node.outgoing.forEach(obj => {
-      console.log("branch here: ");
-      console.log(obj);
-      branches.push(this.parseNode(obj, endGateway));
-      console.log("for each branch end");
-    });
+    node.outgoing.forEach(obj => branches.push(this.parseNode(obj, endGateway)));
 
     var nextNode: DiagramNode = this.parseNode(endGateway.outgoing[0], stoppingNode);
 
@@ -384,6 +435,10 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
     var nextNode: DiagramNode = this.parseNode(endGateway.outgoing[0], stoppingNode);
 
     return new ParallelNode(nextNode, false, branches);
+  }
+
+  private disableColorCleanup(canvas: any, nodesToUncolor: BasicNode[]): void {
+    //TODO
   }
 
 }

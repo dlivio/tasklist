@@ -9,39 +9,54 @@ export class BasicNode extends DiagramNode {
     this.activityId = activityId;
   }
 
-  public canEnable(): DiagramNode[] {
+  public canEnable(): BasicNode[] {
     if (this.greenLight == false)
       return [this];
     if (this.nextNode != null)
       return this.nextNode.canEnable();
 
-    return new Array<DiagramNode>();
+    return new Array<BasicNode>();
   }
 
-  public canDisable(): DiagramNode[] {
-    throw new Error("Method not implemented.");
+  public canDisable(): BasicNode[] {
+    var canDisable: Array<BasicNode> = new Array<BasicNode>();
+    if (this.greenLight == true) 
+      canDisable.push(this);
+      if (this.nextNode != null)
+        canDisable = canDisable.concat(this.nextNode.canDisable());
+
+    return canDisable;
   }
 
   public enable(): void {
-    throw new Error("Method not implemented.");
+    this.greenLight = true;
   }
 
-  public disable(): void {
-    this.greenLight = false;
+  public disable(): Array<BasicNode> {
+    var nodesDisabled: Array<BasicNode> = new Array<BasicNode>();
+    
+    if (this.greenLight == true) {
+      nodesDisabled = [this];
+      this.greenLight = false;
+    }
 
     if (this.nextNode != null) {
-      this.nextNode.disable();
+      nodesDisabled = nodesDisabled.concat(this.nextNode.disable());
     }
     else {
       var currentParentGatewayNode: DiagramNode = this.parentGatewayNode;
+      // disable the next nodes if the disabling of the current node has changed the green light
+      // of the parent gateway node
       while (currentParentGatewayNode != null && !currentParentGatewayNode.getGreenLight()) {
         if (currentParentGatewayNode.nextNode != null)
-          currentParentGatewayNode.nextNode.disable();
+          nodesDisabled = nodesDisabled.concat(currentParentGatewayNode.nextNode.disable()); 
 
         currentParentGatewayNode = currentParentGatewayNode.parentGatewayNode;
       }
 
     }
+
+    return nodesDisabled;
   }
 
   public clone(): BasicNode {

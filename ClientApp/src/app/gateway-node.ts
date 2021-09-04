@@ -1,3 +1,4 @@
+import { BasicNode } from "./basic-node";
 import { DiagramNode } from "./diagram-node";
 
 export abstract class GatewayNode extends DiagramNode {
@@ -19,8 +20,11 @@ export abstract class GatewayNode extends DiagramNode {
     }
   }
 
-  public disable(): void {
-    this.branches.forEach(br => br.disable());
+  public disable(): Array<BasicNode> {
+    var nodesDisabled: Array<BasicNode> = new Array<BasicNode>();
+    this.branches.forEach(br => nodesDisabled = nodesDisabled.concat(br.disable()) );
+
+    return nodesDisabled;
   }
 
   public completedBranches(): number {

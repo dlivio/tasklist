@@ -1,16 +1,17 @@
+import { BasicNode } from "./basic-node";
 import { DiagramNode } from "./diagram-node";
 import { GatewayNode } from "./gateway-node";
 
 export class ExclusiveNode extends GatewayNode {
 
-  public canEnable(): DiagramNode[] {
-    var canEnable: Array<DiagramNode> = new Array<DiagramNode>();
-    this.branches.forEach(br => canEnable.concat(br.canEnable()));
+  public canEnable(): BasicNode[] {
+    var canEnable: Array<BasicNode> = new Array<BasicNode>();
+    this.branches.forEach(br => canEnable = canEnable.concat(br.canEnable()));
 
     return canEnable;
   }
 
-  public canDisable(): DiagramNode[] {
+  public canDisable(): BasicNode[] {
     throw new Error("Method not implemented.");
   }
 
