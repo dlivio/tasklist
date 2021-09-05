@@ -438,7 +438,7 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
   }
 
   private disableColorCleanup(canvas: any, nodesToUncolor: BasicNode[]): void {
-    //TODO
+    nodesToUncolor.forEach(n => canvas.removeMarker(n.activityId, 'highlight') );
   }
 
 }
