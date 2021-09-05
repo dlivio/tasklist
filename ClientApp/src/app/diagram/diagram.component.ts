@@ -64,21 +64,18 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
   // the current task activity id available to click
   private currentTaskIds: string[];
 
-  private tasksToSubmit: string[];
-
   
-
+  // the starting node that can be approved
   private currentNode: DiagramNode;
-  // nodes that can be clicked
+  // nodes that can be selected
   private nodesEnableable: BasicNode[];
-
+  // nodes that can be unselected
   private nodesDisableable: BasicNode[];
 
   constructor(private http: HttpClient, @Inject('BASE_URL') baseUrl: string) {
     // Global variables init
     this.taskHistoryIds = [];
     this.currentTaskIds = [];
-    this.tasksToSubmit = [];
 
     this.nodesEnableable = [];
     this.nodesDisableable = [];
@@ -138,23 +135,6 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
           console.log(this.nodesEnableable);
 
         });
-
-     
-
-      // build the node graph
-
-      var nodes: Array<DiagramNode> = new Array<DiagramNode>(10);
-
-      var currentNode: DiagramNode;
-
-
-      /*
-      tasksFound.forEach(function (task) {
-        if (this.taskHistoryIds.indexOf(task.id) > -1 && !canvas.hasMarker(task.id, 'highlight')) {
-          canvas.addMarker(task.id, 'highlight');
-        }
-      });
-      */
 
     });
 
@@ -220,34 +200,6 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
           }
         }
 
-        /*
-        if (this.currentTaskIds.findIndex(tId =>tId == e.element.id) != -1) {
-          console.log("found it");
-          if (!canvas.hasMarker(e.element.id, 'highlight')) {
-            canvas.addMarker(e.element.id, 'highlight');
-            this.tasksToSubmit.push(e.element.id);
-
-          } else {
-            canvas.removeMarker(e.element.id, 'highlight');
-            this.tasksToSubmit = this.tasksToSubmit.filter(t => t != e.element.id);
-          }
-        }
-        */
-        /*
-        if ((e.element.type == "bpmn:Task" || e.element.type == "bpmn:UserTask" || e.element.type == "bpmn:ManualTask")
-          && !canvas.hasMarker(e.element.id, 'highlight-history')) {
-
-          if (!canvas.hasMarker(e.element.id, 'highlight')) {
-            canvas.addMarker(e.element.id, 'highlight');
-            this.tasksToSubmit.push(e.element.id);
-
-          } else {
-            canvas.removeMarker(e.element.id, 'highlight');
-            this.tasksToSubmit = this.tasksToSubmit.filter(t => t != e.element.id);
-          }
-        }
-        */
-
         console.log(event, 'on', e.element);
 
       });
@@ -307,10 +259,12 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
   }
 
   /**
+   * Method to build the graph recursively through the call of the parsing of the root (or first) node 
+   * in the graph.
    * 
    * @param node 
-   * @param stoppingNode, the criteria to stop parsing the node
-   * @returns 
+   * @param stoppingNode, the node that serves as criteria to stop the parsing
+   * @returns the built 'node' called with the entire graph built
    */
   private parseNode(node: any, stoppingNode: any = null): DiagramNode {
     if (stoppingNode != null && node.id == stoppingNode.id) return null; 
@@ -343,6 +297,9 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
   }
 
   /**
+   * Auxiliary method to retrive the next node in the case of a sequence flow. This is needed due to the 
+   * existance of a 'businessObject' property in the outer nodes that is seemingly inexistant in the inner 
+   * nodes, in which case to retrieve the next node the property 'targetRef' is needed to be called.
    * 
    * @param sequenceFlowNode
    */
@@ -354,7 +311,8 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
   }
 
   /**
-   *
+   * Auxiliary method to retrieve the node type of a requested node.
+   * 
    * @param node
    */
   private getNodeType(node: any): string {
@@ -366,6 +324,13 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
     return nodeType;
   }
 
+  /**
+   * Method to build a node of type BasicNode (which correlates to a 'UserTask' in BPMN).
+   * 
+   * @param node 
+   * @param stoppingNode, the node that serves as criteria to stop the parsing
+   * @returns 
+   */
   private parseUserTask(node: any, stoppingNode: any = null): DiagramNode {
     var nextNode: DiagramNode = this.parseNode(node.outgoing[0], stoppingNode);
 
@@ -373,7 +338,7 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
   }
 
   /**
-   * Auxiliar method to retrieve the object containing the joining gateway of the requested type.
+   * Auxiliary method to retrieve the object containing the joining gateway of the requested type.
    * 
    * @param beginningGatewayNode
    * @param gatewayType
@@ -426,6 +391,12 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
     return new InclusiveNode(nextNode, false, branches);
   }
 
+  /**
+   * 
+   * @param node 
+   * @param stoppingNode 
+   * @returns 
+   */
   private parseParallelGateway(node: any, stoppingNode: any = null): DiagramNode {
     var endGateway = this.getLastGateway(node, this.getNodeType(node));
 
@@ -437,6 +408,13 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
     return new ParallelNode(nextNode, false, branches);
   }
 
+  /**
+   * Method to remove the coloring of the tasks that have been unselected by an action on previous 
+   * nodes (i.e. unselecting a node before another should automatically unselect the next one, if it was selected)
+   * 
+   * @param canvas 
+   * @param nodesToUncolor
+   */
   private disableColorCleanup(canvas: any, nodesToUncolor: BasicNode[]): void {
     nodesToUncolor.forEach(n => canvas.removeMarker(n.activityId, 'highlight') );
   }
