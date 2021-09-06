@@ -3,9 +3,20 @@
 <div *ngIf="project">
   <h1 id="projectName">{{ project.projectName }}</h1>
 
-  <div id="projectDescription">
-    <p><b>Started at: </b>{{ project.startDate }}</p>
-    <p><b>Task awaiting approval: </b>{{ project.nextTaskName }}</p>
+  <div class="col" id="projectDescription">
+    <div class="row">
+      <div class="col">
+        <p><b>Started at: </b>{{ project.startDate }}</p>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col">
+        <p><b>Task awaiting approval: </b>{{ project.nextTaskName }}</p>
+      </div>
+      <div class="col">
+        <a class="btn btn-primary" (click)="submitTasks()" style="float:right">Submit tasks</a>
+      </div>
+    </div>
   </div>
 
   <hr>

@@ -19,8 +19,9 @@ export abstract class DiagramNode {
   }
 
   public abstract canEnable(): Array<BasicNode>;
-  public abstract canDisable(): Array<BasicNode>; // TODO
-  public abstract enable(): void; // TODO
+  public abstract canDisable(): Array<BasicNode>;
+  public abstract canBeValidated(): boolean;
+  public abstract enable(): void;
   public abstract disable(): Array<BasicNode>;
   public abstract clone(): DiagramNode;
   public abstract getGreenLight(): boolean;

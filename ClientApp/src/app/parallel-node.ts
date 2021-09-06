@@ -12,7 +12,28 @@ export class ParallelNode extends GatewayNode {
   }
 
   public canDisable(): BasicNode[] {
-    throw new Error("Method not implemented.");
+    var canDisable: Array<BasicNode> = new Array<BasicNode>();
+    this.branches.forEach(br => canDisable = canDisable.concat(br.canDisable()) );
+
+    if (this.nextNode != null)
+      canDisable = canDisable.concat(this.nextNode.canDisable());
+
+    return canDisable;
+  }
+
+  public canBeValidated(): boolean {
+    var selectedBranchCount: number = 0;
+    // check if the nodes selected can be submited by verifying that, if a node is selected before a 
+    // gateway, at least on node is selected inside the gateway
+    this.branches.forEach(br => { 
+      if (br.getGreenLight() && br.canBeValidated()) selectedBranchCount++;
+    });
+
+    if (selectedBranchCount < 1) return false;
+
+    if (this.nextNode != null) return this.nextNode.canBeValidated();
+
+    return true;
   }
 
   public enable(): void {

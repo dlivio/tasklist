@@ -122,6 +122,7 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
 
           // get the start event of the diagram
           var foundEl = elementRegistry.filter(el => el.id == this.currentTaskIds[0])[0];
+
           // parse the diagram be calling the parseNode on the pseudo-root (first task to approve)
           this.currentNode = this.parseNode(foundEl);
 
@@ -222,6 +223,11 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
     this.bpmnJS.destroy();
   }
 
+  submitTasks(): void {
+    if (!this.currentNode.canBeValidated()) 
+      alert("Please select a task inside de decision or remove the last selected task.");
+  }
+
   /**
    * Load diagram from URL and emit completion event
    */
@@ -276,13 +282,13 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
         return this.parseUserTask(node, stoppingNode);
         break;
       case "bpmn:ExclusiveGateway":
-        return this.parseExclusiveGateway(node, stoppingNode);
+        return this.parseGateway(node, stoppingNode, "exclusive");
         break;
       case "bpmn:InclusiveGateway":
-        return this.parseInclusiveGateway(node, stoppingNode);
+        return this.parseGateway(node, stoppingNode, "inclusive");
         break;
       case "bpmn:ParallelGateway":
-        return this.parseParallelGateway(node, stoppingNode);
+        return this.parseGateway(node, stoppingNode, "parallel");
         break;
       case "bpmn:SequenceFlow":
         return this.parseNode(this.getSequenceFlowOutgoing(node), stoppingNode);
@@ -292,6 +298,7 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
         break;
       default:
         console.log("Andre says Oi");
+        return null;
         break;
     }
   }
@@ -344,6 +351,11 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
    * @param gatewayType
    */
   private getLastGateway(beginningGatewayNode: any, gatewayType: string): any {
+    // check if the beginningGatewayNode is the ending node of a gateway
+    if (beginningGatewayNode.incoming.length > 1 && beginningGatewayNode.outgoing.length == 1) {
+      return beginningGatewayNode;
+    }
+
     var node = beginningGatewayNode.outgoing[0];
     var nodeDepth: number = 1;
 
@@ -369,43 +381,36 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
     return node;
   }
 
-  private parseExclusiveGateway(node: any, stoppingNode: any = null): DiagramNode {
+  private parseGateway(node: any, stoppingNode: any = null, gatewayType: string) {
     var endGateway = this.getLastGateway(node, this.getNodeType(node));
+
+    // if the gateway found equals the endGateway, the first node of the graph is inside a gateway;
+    // in this case we want to skip the interpretation of the gateway as a gatewayNode and just interpret 
+    // it as a regular node
+    if (node.id == endGateway.id) {
+      return this.parseNode(node.outgoing[0], stoppingNode);
+    }
 
     var branches: Array<DiagramNode> = new Array<DiagramNode>();
     node.outgoing.forEach(obj => branches.push(this.parseNode(obj, endGateway)));
 
     var nextNode: DiagramNode = this.parseNode(endGateway.outgoing[0], stoppingNode);
 
-    return new ExclusiveNode(nextNode, false, branches);
-  }
+    switch (gatewayType) {
+      case "exclusive":
+        return new ExclusiveNode(nextNode, false, branches);
+        break;
+      case "inclusive":
+        return new InclusiveNode(nextNode, false, branches);
+        break;
+      case "parallel":
+        return new ParallelNode(nextNode, false, branches);
+        break;
+      default:
+        console.log("Andre says Oi");
+        break;
+    }
 
-  private parseInclusiveGateway(node: any, stoppingNode: any = null): DiagramNode {
-    var endGateway = this.getLastGateway(node, this.getNodeType(node));
-
-    var branches: Array<DiagramNode> = new Array<DiagramNode>();
-    node.outgoing.forEach(obj => branches.push(this.parseNode(obj, endGateway)));
-
-    var nextNode: DiagramNode = this.parseNode(endGateway.outgoing[0], stoppingNode);
-
-    return new InclusiveNode(nextNode, false, branches);
-  }
-
-  /**
-   * 
-   * @param node 
-   * @param stoppingNode 
-   * @returns 
-   */
-  private parseParallelGateway(node: any, stoppingNode: any = null): DiagramNode {
-    var endGateway = this.getLastGateway(node, this.getNodeType(node));
-
-    var branches: Array<DiagramNode> = new Array<DiagramNode>();
-    node.outgoing.forEach(obj => branches.push(this.parseNode(obj, endGateway)));
-
-    var nextNode: DiagramNode = this.parseNode(endGateway.outgoing[0], stoppingNode);
-
-    return new ParallelNode(nextNode, false, branches);
   }
 
   /**

@@ -1,10 +1,11 @@
-import { Component, Inject, OnInit, ViewEncapsulation } from '@angular/core';
+import { Component, Inject, OnInit, ViewChild, ViewChildren, ViewEncapsulation } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router, ActivatedRoute } from '@angular/router';
 
 import { Project } from '../project';
 import { Task } from '../task';
 import { DiagramXML } from '../diagram';
+import { DiagramComponent } from '../diagram/diagram.component';
 
 @Component({
   selector: 'app-project-details',
@@ -14,6 +15,10 @@ import { DiagramXML } from '../diagram';
   encapsulation: ViewEncapsulation.None
 })
 export class ProjectDetailsComponent implements OnInit {
+
+
+  @ViewChild(DiagramComponent, {static: false})
+  private diagramComponent!: DiagramComponent;
 
   public project: Project;
   public projectId: string;
@@ -59,6 +64,11 @@ export class ProjectDetailsComponent implements OnInit {
   }
 
   ngOnInit() {
+  }
+
+  submitTasks() {
+    console.log("Submit tasks was clicked");
+    this.diagramComponent.submitTasks();
   }
 
   handleImported(event) {

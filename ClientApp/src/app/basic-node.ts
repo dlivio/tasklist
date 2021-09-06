@@ -28,6 +28,13 @@ export class BasicNode extends DiagramNode {
     return canDisable;
   }
 
+  public canBeValidated(): boolean {
+    if (this.greenLight == true && this.nextNode != null) 
+      return this.nextNode.canBeValidated();
+
+    return true;
+  }
+
   public enable(): void {
     this.greenLight = true;
   }
