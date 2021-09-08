@@ -5,20 +5,24 @@ import { GatewayNode } from "./gateway-node";
 export class ExclusiveNode extends GatewayNode {
 
   public canEnable(): BasicNode[] {
+    var selectedNode: DiagramNode = null;
+    // do a first iteration to see if there is already as selected path and prevent the others from 
+    // entering the canEnable array
+    this.branches.forEach(br => {
+      if (selectedNode == null && br.getGreenLight() == true) selectedNode = br;
+    });
+
     var canEnable: Array<BasicNode> = new Array<BasicNode>();
-    this.branches.forEach(br => canEnable = canEnable.concat(br.canEnable()));
+
+    if (selectedNode != null) 
+      canEnable = canEnable.concat(selectedNode.canEnable());
+    else 
+      this.branches.forEach(br => canEnable = canEnable.concat(br.canEnable()) );
+
+    if (this.getGreenLight() && this.nextNode != null)
+      canEnable = canEnable.concat(this.nextNode.canEnable());
 
     return canEnable;
-  }
-
-  public canDisable(): BasicNode[] {
-    var canDisable: Array<BasicNode> = new Array<BasicNode>();
-    this.branches.forEach(br => canDisable = canDisable.concat(br.canDisable()) );
-
-    if (this.nextNode != null)
-      canDisable = canDisable.concat(this.nextNode.canDisable());
-
-    return canDisable;
   }
 
   public canBeValidated(): boolean {
@@ -29,15 +33,11 @@ export class ExclusiveNode extends GatewayNode {
       if (br.getGreenLight() && br.canBeValidated()) selectedBranchCount++;
     });
 
-    if (selectedBranchCount < 1) return false;
+    if (selectedBranchCount != 1) return false;
 
     if (this.nextNode != null) return this.nextNode.canBeValidated();
 
     return true;
-  }
-
-  public enable(): void {
-    throw new Error("Method not implemented.");
   }
 
   public clone(): DiagramNode {
@@ -45,10 +45,10 @@ export class ExclusiveNode extends GatewayNode {
     this.branches.forEach(br => clonedBranches.push(br.clone()));
 
     if (this.nextNode == null)
-      return new ExclusiveNode(null, this.greenLight, clonedBranches);
+      return new ExclusiveNode(null, this.greenLight, clonedBranches, this.gatewayId, this.pathVariables);
 
     var nextNodeClone: DiagramNode = this.nextNode.clone();
-    return new ExclusiveNode(nextNodeClone, this.greenLight, clonedBranches);
+    return new ExclusiveNode(nextNodeClone, this.greenLight, clonedBranches, this.gatewayId, this.pathVariables);
   }
 
   public getGreenLight(): boolean {

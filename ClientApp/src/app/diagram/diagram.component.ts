@@ -392,19 +392,31 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
     }
 
     var branches: Array<DiagramNode> = new Array<DiagramNode>();
-    node.outgoing.forEach(obj => branches.push(this.parseNode(obj, endGateway)));
+    var pathVariables: Array<string> = new Array<string>();
+    node.outgoing.forEach(obj => {
+
+      var nodeType: string = this.getNodeType(obj);
+
+      if (nodeType == "bpmn:SequenceFlow") {
+        var name: string = obj.name.replace(/\s/g, "_").substring(0, 15);
+
+        pathVariables.push(name);
+      }
+
+      branches.push(this.parseNode(obj, endGateway)); // TODO: add parentGateway
+    });
 
     var nextNode: DiagramNode = this.parseNode(endGateway.outgoing[0], stoppingNode);
 
     switch (gatewayType) {
       case "exclusive":
-        return new ExclusiveNode(nextNode, false, branches);
+        return new ExclusiveNode(nextNode, false, branches, node.id, pathVariables);
         break;
       case "inclusive":
-        return new InclusiveNode(nextNode, false, branches);
+        return new InclusiveNode(nextNode, false, branches, node.id, pathVariables);
         break;
       case "parallel":
-        return new ParallelNode(nextNode, false, branches);
+        return new ParallelNode(nextNode, false, branches, node.id, pathVariables);
         break;
       default:
         console.log("Andre says Oi");

@@ -1,4 +1,5 @@
 import { DiagramNode } from "./diagram-node";
+import { GatewayNode } from "./gateway-node";
 
 export class BasicNode extends DiagramNode {
   // the activityId that identifies the task/node
@@ -51,7 +52,7 @@ export class BasicNode extends DiagramNode {
       nodesDisabled = nodesDisabled.concat(this.nextNode.disable());
     }
     else {
-      var currentParentGatewayNode: DiagramNode = this.parentGatewayNode;
+      var currentParentGatewayNode: GatewayNode = this.parentGatewayNode;
       // disable the next nodes if the disabling of the current node has changed the green light
       // of the parent gateway node
       while (currentParentGatewayNode != null && !currentParentGatewayNode.getGreenLight()) {

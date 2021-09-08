@@ -6,19 +6,12 @@ export class InclusiveNode extends GatewayNode {
 
   public canEnable(): BasicNode[] {
     var canEnable: Array<BasicNode> = new Array<BasicNode>();
-    this.branches.forEach(br => canEnable = canEnable.concat(br.canEnable()) );
+    this.branches.forEach(br => canEnable = canEnable.concat(br.canEnable()));
+
+    if (this.getGreenLight() && this.nextNode != null)
+      canEnable = canEnable.concat(this.nextNode.canEnable());
 
     return canEnable;
-  }
-
-  public canDisable(): BasicNode[] {
-    var canDisable: Array<BasicNode> = new Array<BasicNode>();
-    this.branches.forEach(br => canDisable = canDisable.concat(br.canDisable()) );
-
-    if (this.nextNode != null)
-      canDisable = canDisable.concat(this.nextNode.canDisable());
-
-    return canDisable;
   }
 
   public canBeValidated(): boolean {
@@ -36,20 +29,15 @@ export class InclusiveNode extends GatewayNode {
     return true;
   }
 
-
-  public enable(): void {
-    throw new Error("Method not implemented.");
-  }
-
   public clone(): DiagramNode {
     var clonedBranches: Array<DiagramNode> = new Array<DiagramNode>(this.branches.length);
     this.branches.forEach(br => clonedBranches.push(br.clone()) );
 
     if (this.nextNode == null)
-      return new InclusiveNode(null, this.greenLight, clonedBranches);
+      return new InclusiveNode(null, this.greenLight, clonedBranches, this.gatewayId, this.pathVariables);
 
     var nextNodeClone: DiagramNode = this.nextNode.clone();
-    return new InclusiveNode(nextNodeClone, this.greenLight, clonedBranches);
+    return new InclusiveNode(nextNodeClone, this.greenLight, clonedBranches, this.gatewayId, this.pathVariables);
   }
 
   public getGreenLight(): boolean {

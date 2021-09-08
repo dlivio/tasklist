@@ -8,17 +8,10 @@ export class ParallelNode extends GatewayNode {
     var canEnable: Array<BasicNode> = new Array<BasicNode>();
     this.branches.forEach(br => canEnable = canEnable.concat(br.canEnable()));
 
+    if (this.getGreenLight() && this.nextNode != null)
+      canEnable = canEnable.concat(this.nextNode.canEnable());
+
     return canEnable;
-  }
-
-  public canDisable(): BasicNode[] {
-    var canDisable: Array<BasicNode> = new Array<BasicNode>();
-    this.branches.forEach(br => canDisable = canDisable.concat(br.canDisable()) );
-
-    if (this.nextNode != null)
-      canDisable = canDisable.concat(this.nextNode.canDisable());
-
-    return canDisable;
   }
 
   public canBeValidated(): boolean {
@@ -29,15 +22,11 @@ export class ParallelNode extends GatewayNode {
       if (br.getGreenLight() && br.canBeValidated()) selectedBranchCount++;
     });
 
-    if (selectedBranchCount < 1) return false;
+    if (selectedBranchCount == this.branches.length) return false;
 
     if (this.nextNode != null) return this.nextNode.canBeValidated();
 
     return true;
-  }
-
-  public enable(): void {
-    throw new Error("Method not implemented.");
   }
 
   public clone(): DiagramNode {
@@ -45,10 +34,10 @@ export class ParallelNode extends GatewayNode {
     this.branches.forEach(br => clonedBranches.push(br.clone()));
 
     if (this.nextNode == null)
-      return new ParallelNode(null, this.greenLight, clonedBranches);
+      return new ParallelNode(null, this.greenLight, clonedBranches, this.gatewayId, this.pathVariables);
 
     var nextNodeClone: DiagramNode = this.nextNode.clone();
-    return new ParallelNode(nextNodeClone, this.greenLight, clonedBranches);
+    return new ParallelNode(nextNodeClone, this.greenLight, clonedBranches, this.gatewayId, this.pathVariables);
   }
 
   public getGreenLight(): boolean {
