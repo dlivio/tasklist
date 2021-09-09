@@ -22,9 +22,15 @@ export class ParallelNode extends GatewayNode {
       if (br.getGreenLight() && br.canBeValidated()) selectedBranchCount++;
     });
 
-    if (selectedBranchCount == this.branches.length) return false;
+    console.log("can be validated");
+    console.log(this);
+    console.log(selectedBranchCount);
+    console.log(this.branches.length);
+    console.log(this.getGreenLight());
 
-    if (this.nextNode != null) return this.nextNode.canBeValidated();
+    if (selectedBranchCount != this.branches.length) return false;
+
+    if (this.nextNode != null && this.getGreenLight()) return this.nextNode.canBeValidated();
 
     return true;
   }
@@ -41,7 +47,7 @@ export class ParallelNode extends GatewayNode {
   }
 
   public getGreenLight(): boolean {
-    return this.completedBranches() == 1;
+    return this.completedBranches() == this.branches.length;
   }
 
 }

@@ -42,6 +42,26 @@ namespace tasklist.Controllers
             // get the projects created in the system
             List<Project> projects = _projectService.GetOpenProjects();
 
+            List<ProjectDTO> projectDTOs = new();
+
+            foreach (Project project in projects)
+            {
+                List<CamundaTask> foundTasks = tasks.FindAll(t => t.CaseInstanceId == project.CaseInstanceId);
+
+                if (foundTasks.Count > 0)
+                    projectDTOs.Add(new ProjectDTO(project, foundTasks));
+
+            }
+
+            return projectDTOs;
+
+            /*
+            // get the tasks from Camunda
+            List<CamundaTask> tasks = await _camundaService.GetOpenTasksAsync();
+
+            // get the projects created in the system
+            List<Project> projects = _projectService.GetOpenProjects();
+
             //List<ProjectDTO> projectDTOs = tasks.Select(t => new ProjectDTO(projects.Find(p => p.CaseInstanceId == t.CaseInstanceId), t.Name)).ToList();
 
             List<ProjectDTO> projectDTOs = new();
@@ -58,6 +78,7 @@ namespace tasklist.Controllers
             }
 
             return projectDTOs;
+            */
         }
 
         // GET: api/Projects/5

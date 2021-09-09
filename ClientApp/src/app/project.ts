@@ -15,7 +15,7 @@ export class Project {
     public startDate: string,
     public isComplete: boolean,
     public caseInstanceId: string,
-    public nextTaskName: string
+    public nextTaskName: string[]
   ) { }
 }
 

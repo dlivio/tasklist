@@ -22,9 +22,14 @@ export class InclusiveNode extends GatewayNode {
       if (br.getGreenLight() && br.canBeValidated()) selectedBranchCount++;
     });
 
+    console.log("can be validated");
+    console.log(this);
+    console.log(selectedBranchCount);
+    console.log(this.getGreenLight());
+
     if (selectedBranchCount < 1) return false;
 
-    if (this.nextNode != null) return this.nextNode.canBeValidated();
+    if (this.nextNode != null && this.getGreenLight()) return this.nextNode.canBeValidated();
 
     return true;
   }

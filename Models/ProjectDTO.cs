@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace tasklist.Models
 {
@@ -14,16 +15,19 @@ namespace tasklist.Models
 
         public string CaseInstanceId { get; set; }
 
-        public string NextTaskName { get; set; }
+        public List<string> NextTaskName { get; set; }
 
-        public ProjectDTO(Project project, string nextTaskName)
+        public ProjectDTO(Project project, List<CamundaTask> nextTasks)
         {
             Id = project.Id;
             ProjectName = project.ProjectName;
             StartDate = project.StartDate;
             IsComplete = project.IsComplete;
             CaseInstanceId = project.CaseInstanceId;
-            NextTaskName = nextTaskName;
+
+            NextTaskName = new List<string>();
+            foreach (CamundaTask task in nextTasks)
+                NextTaskName.Add(task.Name);
         }
 
     }
