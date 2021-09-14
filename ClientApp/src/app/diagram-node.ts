@@ -25,5 +25,6 @@ export abstract class DiagramNode {
   public abstract disable(): Array<BasicNode>;
   public abstract clone(): DiagramNode;
   public abstract getGreenLight(): boolean;
+  public abstract isSubmitted(): boolean;
 
 }

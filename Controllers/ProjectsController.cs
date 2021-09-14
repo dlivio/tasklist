@@ -137,14 +137,26 @@ namespace tasklist.Controllers
         /// <param name="caseInstanceId"></param>
         /// <returns>A List with the id's of the tasks completed in the diagram.</returns>
         [HttpGet("{caseInstanceId}/Diagram/History", Name = "GetCurrentDiagramHistory")]
-        public async Task<ActionResult<IEnumerable<string>>> GetCurrentDiagramHistoryAsync(string caseInstanceId)
+        public async Task<ActionResult<HistoryTasks>> GetCurrentDiagramHistoryAsync(string caseInstanceId)
         {
             // get the last processDefinitionId from the project with the requested caseInstanceId
             string processInstanceId = _projectService.GetByCaseInstanceId(caseInstanceId).ProcessInstanceIds.LastOrDefault();
 
-            if (processInstanceId == null) return NotFound(); 
+            if (processInstanceId == null) return NotFound();
 
-            return await _camundaService.GetDiagramTaskHistoryAsync(processInstanceId); 
+            List<CamundaHistoryTask> historyTasks = await _camundaService.GetDiagramTaskHistoryAsync(processInstanceId);
+
+            List<CamundaHistoryTask> currentTasks = historyTasks.Where(t => t.EndTime == null).ToList();
+
+            List<string> currentTasksActivityIds = new();
+
+            foreach(CamundaHistoryTask task in currentTasks) {
+                currentTasksActivityIds.Add(task.ActivityId);
+                historyTasks.Remove(task);
+                
+            }
+
+            return new HistoryTasks(currentTasksActivityIds, historyTasks.Select(t => t.ActivityId).ToList());
         }
 
         // PUT: api/Projects/5
@@ -154,9 +166,7 @@ namespace tasklist.Controllers
             var project = _projectService.Get(id);
 
             if (project == null)
-            {
                 return NotFound();
-            }
 
             _projectService.Update(id, projectIn);
 

@@ -68,4 +68,7 @@ export abstract class GatewayNode extends DiagramNode {
     return completedBranches;
   }
 
+  public isSubmitted(): boolean {
+    return false;
+  }
 }

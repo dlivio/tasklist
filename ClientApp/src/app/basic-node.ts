@@ -79,4 +79,8 @@ export class BasicNode extends DiagramNode {
     return this.greenLight;
   }
 
+  public isSubmitted(): boolean {
+    return false;
+  }
+
 }

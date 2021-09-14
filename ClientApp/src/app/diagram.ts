@@ -4,3 +4,10 @@ export class DiagramXML {
     public bpmn20Xml: string
   ) { }
 }
+
+export class HistoryTasks {
+  constructor(
+    public currentActivityIds: string[],
+    public historyActivityIds: string[]
+  ) { }
+}

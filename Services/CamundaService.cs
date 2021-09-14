@@ -63,6 +63,24 @@ namespace tasklist.Services
         }
 
         /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="processInstanceId"></param>
+        /// <returns></returns>
+        public async Task<List<CamundaTask>> GetOpenTasksByProcessInstanceIDAsync(string processInstanceId)
+        {
+            List<CamundaTask> tasks = new();
+
+            HttpResponseMessage response = await _client.GetAsync(BASE_URL + "task?processInstanceId=" + processInstanceId);
+            if (response.IsSuccessStatusCode)
+            {
+                tasks = await response.Content.ReadFromJsonAsync<List<CamundaTask>>();
+            }
+
+            return tasks;
+        }
+
+        /// <summary>
         /// Make a request to Camunda Workflow Engine to start a process with the given 'processId' and a 
         /// given 'caseInstanceId'.
         /// </summary>
@@ -119,7 +137,7 @@ namespace tasklist.Services
         /// </summary>
         /// <param name="processInstanceId"></param>
         /// <returns>A List of id's of the tasks in the diagram related to the processInstanceId.</returns>
-        public async Task<List<string>> GetDiagramTaskHistoryAsync(string processInstanceId)
+        public async Task<List<CamundaHistoryTask>> GetDiagramTaskHistoryAsync(string processInstanceId)
         {
             List<CamundaHistoryTask> history = new();
 
@@ -132,11 +150,17 @@ namespace tasklist.Services
             // sort the list to order the elements by execution
             history = history.OrderBy(t => t.StartTime).ToList();
 
+            /*
             // get all activityId's that correspond to UserTasks, ManualTasks or unassigned Tasks
             List<string> taskIds = history.Where(t => t.ActivityType == "userTask" || t.ActivityType == "manualTask" 
                 || t.ActivityType == "task").Select(t => t.ActivityId).ToList();
+            */
 
-            return taskIds;
+            // get all activityId's that correspond to UserTasks, ManualTasks or unassigned Tasks
+            history = history.Where(t => t.ActivityType == "userTask" || t.ActivityType == "manualTask"
+                || t.ActivityType == "task" || t.ActivityType == "callActivity" || t.ActivityType == "businessRuleTask").ToList();
+
+            return history;
         }
 
 

@@ -25,12 +25,14 @@ import { map, switchMap } from 'rxjs/operators';
  */
 import * as BpmnJS from 'src/app/diagram/bpmn-navigated-viewer.development.js';
 
-import { from, Observable, Subscription } from 'rxjs';
+import { from, Observable, Subscriber, Subscription } from 'rxjs';
 import { BasicNode } from '../basic-node';
 import { DiagramNode } from '../diagram-node';
 import { ExclusiveNode } from '../exclusive-node';
 import { InclusiveNode } from '../inclusive-node';
 import { ParallelNode } from '../parallel-node';
+import { HistoryTasks } from '../diagram';
+import { SubmittedNode } from '../submitted-node';
 
 @Component({
   selector: 'app-diagram',
@@ -95,12 +97,12 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
       var elementRegistry = this.bpmnJS.get('elementRegistry');
 
       // get the tasks completed in the current diagram
-      http.get<string[]>(baseUrl + 'api/Projects/' + this.caseInstanceId + '/Diagram/History').subscribe(result => {
+      http.get<HistoryTasks>(baseUrl + 'api/Projects/' + this.caseInstanceId + '/Diagram/History').subscribe(result => {
 
-        this.taskHistoryIds = result;
+        this.taskHistoryIds = result.historyActivityIds;
 
         // remove the current task to be approved from the list and save it
-        this.currentTaskIds.push(this.taskHistoryIds.pop());                                // TODO: needs to be changed to retrieve current tasks
+        this.currentTaskIds = result.currentActivityIds;                               // TODO: needs to be changed to retrieve current tasks hereeeee
 
         console.log(this.currentTaskIds);
         console.log(this.currentTaskIds[0]);
@@ -111,7 +113,7 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
         });
         // add color to all the elements in the history
         for (let i = 0; i < tasksFound.length; i++) {
-          if (result.indexOf(tasksFound[i].id) > -1) { //&& !canvas.hasMarker(tasksFound[i].id, 'highlight-history')) {
+          if (this.taskHistoryIds.indexOf(tasksFound[i].id) > -1) { //&& !canvas.hasMarker(tasksFound[i].id, 'highlight-history')) {
             canvas.addMarker(tasksFound[i].id, 'highlight-history');
           }
 
@@ -121,10 +123,11 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
         , () => { // on complete this path is activated
 
           // get the start event of the diagram
-          var foundEl = elementRegistry.filter(el => el.id == this.currentTaskIds[0])[0];
+          //var foundEl = elementRegistry.filter(el => el.id == this.currentTaskIds[0])[0];
+          var foundEl = elementRegistry.filter(el => el.type == "bpmn:StartEvent")[0];
 
           // parse the diagram be calling the parseNode on the pseudo-root (first task to approve)
-          this.currentNode = this.parseNode(foundEl);
+          this.currentNode = this.parseNode(foundEl.outgoing[0]);                                                 // change var name
 
           console.log(this.currentNode);
 
@@ -293,6 +296,12 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
       case "bpmn:SequenceFlow":
         return this.parseNode(this.getSequenceFlowOutgoing(node), stoppingNode);
         break;
+      case "bpmn:ManualTask":
+        return this.parseManualTask(node, stoppingNode);
+        break;
+      case "bpmn:BusinessTask":
+        return this.parseBusinessTask(node, stoppingNode);
+        break;
       case "bpmn:EndEvent":
         return null;
         break;
@@ -340,6 +349,10 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
    */
   private parseUserTask(node: any, stoppingNode: any = null): DiagramNode {
     var nextNode: DiagramNode = this.parseNode(node.outgoing[0], stoppingNode);
+
+    // if node is in historyNodes then return new SubmittedNode
+    if (this.taskHistoryIds.indexOf(node.id) != -1) 
+      return new SubmittedNode(nextNode);
 
     return new BasicNode(nextNode, false, node.id);
   }
@@ -408,6 +421,23 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
 
     var nextNode: DiagramNode = this.parseNode(endGateway.outgoing[0], stoppingNode);
 
+    // bool = false
+    // foreach branch
+    //    bool = bool V branch.isSubmited
+    //
+    // if bool then return new SubmitedNode(nextNode)
+    // else gatewayNode...
+
+    var submitted: boolean = false;
+    
+    branches.forEach(node => {
+      submitted = submitted || node.isSubmitted();
+    });
+
+    if (submitted) 
+      return new SubmittedNode(nextNode);
+
+
     switch (gatewayType) {
       case "exclusive":
         return new ExclusiveNode(nextNode, false, branches, node.id, pathVariables);
@@ -423,6 +453,26 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
         break;
     }
 
+  }
+
+  private parseManualTask(node: any, stoppingNode: any = null): DiagramNode {       // TODO: shouldn't exist
+    var nextNode: DiagramNode = this.parseNode(node.outgoing[0], stoppingNode);
+
+    // if node is in historyNodes then return new SubmittedNode
+    if (this.taskHistoryIds.indexOf(node.id) != -1) 
+      return new SubmittedNode(nextNode);
+
+      throw new Error("Method not implemented.");
+  }
+
+  private parseBusinessTask(node: any, stoppingNode: any = null): DiagramNode {
+    var nextNode: DiagramNode = this.parseNode(node.outgoing[0], stoppingNode);
+
+    // if node is in historyNodes then return new SubmittedNode
+    if (this.taskHistoryIds.indexOf(node.id) != -1) 
+      return new SubmittedNode(nextNode);
+
+    return null;
   }
 
   /**
