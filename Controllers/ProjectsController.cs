@@ -55,30 +55,6 @@ namespace tasklist.Controllers
 
             return projectDTOs;
 
-            /*
-            // get the tasks from Camunda
-            List<CamundaTask> tasks = await _camundaService.GetOpenTasksAsync();
-
-            // get the projects created in the system
-            List<Project> projects = _projectService.GetOpenProjects();
-
-            //List<ProjectDTO> projectDTOs = tasks.Select(t => new ProjectDTO(projects.Find(p => p.CaseInstanceId == t.CaseInstanceId), t.Name)).ToList();
-
-            List<ProjectDTO> projectDTOs = new();
-
-            foreach (CamundaTask task in tasks)
-            {
-                Project foundProject = projects.Find(p => p.CaseInstanceId == task.CaseInstanceId);
-
-                if (foundProject != null)
-                {
-                    projectDTOs.Add(new ProjectDTO(foundProject, task.Name));
-                }
-  
-            }
-
-            return projectDTOs;
-            */
         }
 
         // GET: api/Projects/5
@@ -128,35 +104,6 @@ namespace tasklist.Controllers
             CamundaDiagramXML xml = await _camundaService.GetXMLAsync(task.ProcessDefinitionId);
 
             return xml.Bpmn20Xml;
-        }
-
-        // GET: api/Projects/invoice:112/Diagram/History
-        /// <summary>
-        /// Method that retrieves the history of tasks in the Diagram in which the task from the requested caseInstanceId is currently in.
-        /// </summary>
-        /// <param name="caseInstanceId"></param>
-        /// <returns>A List with the id's of the tasks completed in the diagram.</returns>
-        [HttpGet("{caseInstanceId}/Diagram/History", Name = "GetCurrentDiagramHistory")]
-        public async Task<ActionResult<HistoryTasks>> GetCurrentDiagramHistoryAsync(string caseInstanceId)
-        {
-            // get the last processDefinitionId from the project with the requested caseInstanceId
-            string processInstanceId = _projectService.GetByCaseInstanceId(caseInstanceId).ProcessInstanceIds.LastOrDefault();
-
-            if (processInstanceId == null) return NotFound();
-
-            List<CamundaHistoryTask> historyTasks = await _camundaService.GetDiagramTaskHistoryAsync(processInstanceId);
-
-            List<CamundaHistoryTask> currentTasks = historyTasks.Where(t => t.EndTime == null).ToList();
-
-            List<string> currentTasksActivityIds = new();
-
-            foreach(CamundaHistoryTask task in currentTasks) {
-                currentTasksActivityIds.Add(task.ActivityId);
-                historyTasks.Remove(task);
-                
-            }
-
-            return new HistoryTasks(currentTasksActivityIds, historyTasks.Select(t => t.ActivityId).ToList());
         }
 
         // PUT: api/Projects/5

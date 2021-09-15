@@ -1,13 +1,3 @@
-/*
-export interface Project {
-  id: string;
-  projectName: string;
-  startDate: string;
-  isComplete: boolean;
-  nextTaskName: string;
-}
-*/
-
 export class Project {
   constructor(
     public id: string,

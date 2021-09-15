@@ -33,11 +33,6 @@ export class ExclusiveNode extends GatewayNode {
       if (br.getGreenLight() && br.canBeValidated()) selectedBranchCount++;
     });
 
-    console.log("can be validated");
-    console.log(this);
-    console.log(selectedBranchCount);
-    console.log(this.getGreenLight());
-
     if (selectedBranchCount != 1) return false;
 
     if (this.nextNode != null && this.getGreenLight()) return this.nextNode.canBeValidated();
@@ -58,6 +53,29 @@ export class ExclusiveNode extends GatewayNode {
 
   public getGreenLight(): boolean {
     return this.completedBranches() == 1;
+  }
+
+  public getVariables(): Map<string, string> {
+    var variables: Map<string, string> = new Map<string, string>();
+
+    var variableIndex: number = 0;
+    
+    this.branches.forEach(br => { 
+      if (br.getGreenLight() && !br.isSubmitted()) 
+        variables.set(this.gatewayId + variableIndex, this.pathVariables[variableIndex]);
+      
+      variableIndex++;
+    });
+
+    console.log("inside get variables exclusive");
+    console.log(variables);
+
+    if (variables.size != 1) throw new Error("Exclusive gateway has more than 1 path.");
+
+    if (this.nextNode != null && this.getGreenLight()) 
+      variables = new Map<string, string>({...variables, ...this.nextNode.getVariables()});
+
+    return variables;
   }
 
 }

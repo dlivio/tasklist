@@ -163,6 +163,34 @@ namespace tasklist.Services
             return history;
         }
 
+		public async Task<string> CompleteCamundaTask(string id)
+		{
+            Dictionary<string, PairKeyValue> variables = new Dictionary<string, PairKeyValue>();
 
-    }
+            variables.Add("var1", new PairKeyValue() { Value = "val1"});
+            variables.Add("var2", new PairKeyValue() { Value = "val2" });
+            variables.Add("var3", new PairKeyValue() { Value = "val3" });
+
+            var processArgs = new CamundaTaskApprove() {
+                Variables = variables,
+                WithVariablesInReturn = true
+            };
+            var serializeOptions = new JsonSerializerOptions
+            {
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                WriteIndented = true
+            };
+            var processArgsSerialized = JsonSerializer.Serialize(processArgs, serializeOptions);
+            var requestContent = new StringContent(processArgsSerialized, Encoding.UTF8, "application/json");
+
+            HttpResponseMessage response = await _client.PostAsync(BASE_URL + "task/" + id 
+                + "/complete", requestContent);
+            if (response.IsSuccessStatusCode)
+            {
+                var res = response.Content.ReadAsStringAsync();
+            }
+
+            return id;
+        }
+	}
 }

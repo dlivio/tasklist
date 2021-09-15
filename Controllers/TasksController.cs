@@ -14,11 +14,13 @@ namespace tasklist.Controllers
     public class TasksController : ControllerBase
     {
         private readonly TaskService _taskService;
+        private readonly ProjectService _projectService;
         private readonly CamundaService _camundaService;
 
-        public TasksController(TaskService taskService, CamundaService camundaService)
+        public TasksController(TaskService taskService, ProjectService projectService, CamundaService camundaService)
         {
             _taskService = taskService;
+            _projectService = projectService;
             _camundaService = camundaService;
         }
 
@@ -41,23 +43,34 @@ namespace tasklist.Controllers
             return task;
         }
 
-        // GET: api/Tasks/Open/invoice:112
+        // GET: api/Tasks/invoice:112/Diagram/History
         /// <summary>
-        /// 
+        /// Method that retrieves the history of tasks in the Diagram in which the task from the requested caseInstanceId is currently in.
         /// </summary>
         /// <param name="caseInstanceId"></param>
         /// <returns>A List with the id's of the tasks completed in the diagram.</returns>
-        [HttpGet("Open/{caseInstanceId}", Name = "GetOpenTasksWithCaseInstanceId")]
-        public async Task<ActionResult<IEnumerable<string>>> GetCurrentDiagramHistoryAsync(string caseInstanceId)
+        [HttpGet("{caseInstanceId}/Diagram/History", Name = "GetCurrentDiagramHistory")]
+        public async Task<ActionResult<HistoryTasks>> GetCurrentDiagramHistoryAsync(string caseInstanceId)
         {
-            // get the tasks from Camunda
-            List<CamundaTask> tasks = await _camundaService.GetOpenTasksAsync();
+            // get the last processDefinitionId from the project with the requested caseInstanceId
+            string processInstanceId = _projectService.GetByCaseInstanceId(caseInstanceId).ProcessInstanceIds.LastOrDefault();
 
-            tasks = tasks.FindAll(t => t.CaseInstanceId == caseInstanceId);
+            if (processInstanceId == null) return NotFound();
 
-            if (tasks.Count == 0) return NotFound();
+            List<CamundaHistoryTask> historyTasks = await _camundaService.GetDiagramTaskHistoryAsync(processInstanceId);
 
-            return new List<string>();
+            List<CamundaHistoryTask> currentTasks = historyTasks.Where(t => t.EndTime == null).ToList();
+
+            List<string> currentTasksActivityIds = new();
+
+            foreach (CamundaHistoryTask task in currentTasks)
+            {
+                currentTasksActivityIds.Add(task.ActivityId);
+                historyTasks.Remove(task);
+
+            }
+
+            return new HistoryTasks(currentTasksActivityIds, historyTasks.Select(t => t.ActivityId).ToList());
         }
 
         // GET: api/Tasks/ProjectIdActive/5
@@ -103,6 +116,52 @@ namespace tasklist.Controllers
             _taskService.Create(task);
 
             return CreatedAtRoute("GetTask", new { id = task.Id.ToString() }, task);
+        }
+
+        // POST: api/Tasks/5/Approve
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="projectId"></param>
+        /// <param name="activityIds"></param>
+        /// <returns></returns>
+        [HttpPost("{projectId}/Approve")]
+        public async Task<ActionResult<Task>> ApproveCamundaTasksAsync(string projectId, string[] activityIds)
+        {
+            // get the process instance from the Project object
+            string currentProcessInstanceId = _projectService.Get(projectId).ProcessInstanceIds.Last();
+
+            List<string> activityIdsList = activityIds.ToList();
+
+            List<CamundaTask> currentTasks = await _camundaService.GetOpenTasksByProcessInstanceIDAsync(currentProcessInstanceId);
+
+            int activityIdCount = activityIdsList.Count;
+            while (activityIdsList.Count > 0)
+			{
+                string currentActivityId = activityIdsList.FirstOrDefault();
+
+                foreach (CamundaTask t in currentTasks) {
+                    if (t.TaskDefinitionKey == currentActivityId)
+                    {
+                        await _camundaService.CompleteCamundaTask(t.Id);
+
+                        activityIdsList.Remove(currentActivityId);
+                        break;
+                    }
+                }
+
+                if (activityIdCount != activityIdsList.Count)
+				{
+                    currentTasks = await _camundaService.GetOpenTasksByProcessInstanceIDAsync(currentProcessInstanceId);
+                    activityIdCount--;
+                }
+
+            }
+            
+
+            //_taskService.Create(task);
+
+            return new Task();
         }
 
         // DELETE: api/Tasks/5

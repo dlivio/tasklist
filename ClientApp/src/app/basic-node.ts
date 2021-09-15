@@ -83,4 +83,11 @@ export class BasicNode extends DiagramNode {
     return false;
   }
 
+  public getVariables(): Map<string, string> {
+    if (this.nextNode != null)
+      return this.nextNode.getVariables();
+    
+    return new Map<string, string>();
+  }
+
 }

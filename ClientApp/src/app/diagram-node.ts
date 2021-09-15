@@ -26,5 +26,6 @@ export abstract class DiagramNode {
   public abstract clone(): DiagramNode;
   public abstract getGreenLight(): boolean;
   public abstract isSubmitted(): boolean;
+  public abstract getVariables(): Map<string, string>;
 
 }

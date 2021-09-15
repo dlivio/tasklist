@@ -33,6 +33,7 @@ import { InclusiveNode } from '../inclusive-node';
 import { ParallelNode } from '../parallel-node';
 import { HistoryTasks } from '../diagram';
 import { SubmittedNode } from '../submitted-node';
+import { TasksToApprove } from '../task';
 
 @Component({
   selector: 'app-diagram',
@@ -74,6 +75,8 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
   // nodes that can be unselected
   private nodesDisableable: BasicNode[];
 
+  private currentBaseUrl: string;
+
   constructor(private http: HttpClient, @Inject('BASE_URL') baseUrl: string) {
     // Global variables init
     this.taskHistoryIds = [];
@@ -81,6 +84,8 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
 
     this.nodesEnableable = [];
     this.nodesDisableable = [];
+
+    this.currentBaseUrl = baseUrl;
 
     // bpmn.io variables
     this.bpmnJS = new BpmnJS();
@@ -97,7 +102,7 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
       var elementRegistry = this.bpmnJS.get('elementRegistry');
 
       // get the tasks completed in the current diagram
-      http.get<HistoryTasks>(baseUrl + 'api/Projects/' + this.caseInstanceId + '/Diagram/History').subscribe(result => {
+      http.get<HistoryTasks>(baseUrl + 'api/Tasks/' + this.caseInstanceId + '/Diagram/History').subscribe(result => {
 
         this.taskHistoryIds = result.historyActivityIds;
 
@@ -226,9 +231,46 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
     this.bpmnJS.destroy();
   }
 
-  submitTasks(): void {
-    if (!this.currentNode.canBeValidated()) 
+  /**
+   * Method called by the clicking of the button 'Submit tasks' in the parent component.
+   * This method sends an object containing all the clicked diagram tasks to the server for them
+   * to be approved in the Camunda Workflow Engine.
+   */
+  submitTasks(projectId: string): void {
+    if (!this.currentNode.canBeValidated()) {
       alert("Please select a task inside de decision or remove the last selected task.");
+      return;
+    }
+
+    console.log("inside submit tasks");
+
+    console.log(this.currentNode.canDisable());
+
+    var nodesSelected: BasicNode[] = this.currentNode.canDisable();
+
+    var variablesToSend: Map<string, string> = this.currentNode.getVariables();
+
+    console.log("variables map hereeeeee");
+    console.log(variablesToSend);
+
+    // if the list to submit is empty do nothing
+    if (nodesSelected.length == 0) return; 
+
+    var activityIds: string[] = [];
+    nodesSelected.forEach(node => activityIds.push(node.activityId) );
+
+    console.log(activityIds);
+
+    var tasksToApprove: TasksToApprove = new TasksToApprove(activityIds, variablesToSend);
+    
+    console.log(tasksToApprove);
+
+    // get the tasks completed in the current diagram
+    //this.http.post<string[]>(this.currentBaseUrl + 'api/Tasks/' + projectId + '/Approve', activityIds).subscribe(result => {
+      
+      
+    //});
+    
   }
 
   /**
@@ -351,8 +393,10 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
     var nextNode: DiagramNode = this.parseNode(node.outgoing[0], stoppingNode);
 
     // if node is in historyNodes then return new SubmittedNode
-    if (this.taskHistoryIds.indexOf(node.id) != -1) 
+    if (this.taskHistoryIds.indexOf(node.id) != -1) {
+      console.log("user task " + node.id + " parsed as submitted node");
       return new SubmittedNode(nextNode);
+    }
 
     return new BasicNode(nextNode, false, node.id);
   }
@@ -429,13 +473,24 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
     // else gatewayNode...
 
     var submitted: boolean = false;
+    var startedPaths: number = 0;
+    var submittedPaths: number = 0;
     
+    console.log("parsing gateway: " + node.id + "before submitted judgement");
     branches.forEach(node => {
-      submitted = submitted || node.isSubmitted();
+      if (node.getGreenLight()) startedPaths++;
+
+      if (node.isSubmitted()) submittedPaths++;
+
+      //console.log(node);
+      //console.log("submited: " + node.isSubmitted());
+      //submitted = submitted || node.isSubmitted();
     });
 
-    if (submitted) 
+    if (submittedPaths > 0 && startedPaths == submittedPaths) { //if (submitted) {
+      console.log("gateway " + node.id + " was parsed as a submitted node");
       return new SubmittedNode(nextNode);
+    }
 
 
     switch (gatewayType) {

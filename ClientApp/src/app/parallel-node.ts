@@ -50,4 +50,25 @@ export class ParallelNode extends GatewayNode {
     return this.completedBranches() == this.branches.length;
   }
 
+  public getVariables(): Map<string, string> {
+    var variables: Map<string, string> = new Map<string, string>();
+
+    var variableIndex: number = 0;
+    
+    this.branches.forEach(br => { 
+      if (br.getGreenLight() && !br.isSubmitted()) 
+        variables.set(this.gatewayId + variableIndex, this.pathVariables[variableIndex]);
+      
+      variableIndex++;
+    });
+
+    console.log("inside get variables parallel");
+    console.log(variables);
+
+    if (this.nextNode != null && this.getGreenLight()) 
+      variables = new Map<string, string>({...variables, ...this.nextNode.getVariables()});
+
+    return variables;
+  }
+
 }

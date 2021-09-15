@@ -68,7 +68,8 @@ export class ProjectDetailsComponent implements OnInit {
 
   submitTasks() {
     console.log("Submit tasks was clicked");
-    this.diagramComponent.submitTasks();
+    console.log(this.project.id);
+    this.diagramComponent.submitTasks(this.project.id);
   }
 
   handleImported(event) {
