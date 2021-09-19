@@ -101,6 +101,8 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
       
       var elementRegistry = this.bpmnJS.get('elementRegistry');
 
+      this.importDiagramHistory(canvas, elementRegistry); // hereeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+      /*
       // get the tasks completed in the current diagram
       http.get<HistoryTasks>(baseUrl + 'api/Tasks/' + this.caseInstanceId + '/Diagram/History').subscribe(result => {
 
@@ -145,6 +147,7 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
 
         });
 
+      */
     });
 
     this.events.forEach(event => {
@@ -261,15 +264,16 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
 
     console.log(activityIds);
 
-    var tasksToApprove: TasksToApprove = new TasksToApprove(activityIds, variablesToSend);
+    var variablesArray = Array.from(variablesToSend.entries());
+
+    var tasksToApprove: TasksToApprove = new TasksToApprove(activityIds, variablesArray);
     
     console.log(tasksToApprove);
 
     // get the tasks completed in the current diagram
-    //this.http.post<string[]>(this.currentBaseUrl + 'api/Tasks/' + projectId + '/Approve', activityIds).subscribe(result => {
+    this.http.post<TasksToApprove>(this.currentBaseUrl + 'api/Tasks/' + projectId + '/Approve', tasksToApprove).subscribe(result => {
       
-      
-    //});
+    }, error => console.error(error));
     
   }
 
@@ -307,6 +311,53 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
    */
   private importDiagram(xml: string): Observable<{ warnings: Array<any> }> {
     return from(this.bpmnJS.importXML(xml) as Promise<{ warnings: Array<any> }>);
+  }
+
+
+  private importDiagramHistory(canvas: any, elementRegistry: any) {
+    // get the tasks completed in the current diagram
+    this.http.get<HistoryTasks>(this.currentBaseUrl + 'api/Tasks/' + this.caseInstanceId + '/Diagram/History').subscribe(result => {
+
+      this.taskHistoryIds = result.historyActivityIds;
+
+      // remove the current task to be approved from the list and save it
+      this.currentTaskIds = result.currentActivityIds;                               // TODO: needs to be changed to retrieve current tasks hereeeee
+
+      console.log(this.currentTaskIds);
+      console.log(this.currentTaskIds[0]);
+
+      // filter the elements in the diagram to limit those who are clickable
+      var tasksFound = elementRegistry.filter(function (el) {
+        return (el.type == "bpmn:Task" || el.type == "bpmn:UserTask" || el.type == "bpmn:ManualTask")
+      });
+      // add color to all the elements in the history
+      for (let i = 0; i < tasksFound.length; i++) {
+        if (this.taskHistoryIds.indexOf(tasksFound[i].id) > -1) { //&& !canvas.hasMarker(tasksFound[i].id, 'highlight-history')) {
+          canvas.addMarker(tasksFound[i].id, 'highlight-history');
+        }
+
+      }
+
+    }, error => console.error(error)
+      , () => { // on complete this path is activated
+
+        // get the start event of the diagram
+        //var foundEl = elementRegistry.filter(el => el.id == this.currentTaskIds[0])[0];
+        var foundEl = elementRegistry.filter(el => el.type == "bpmn:StartEvent")[0];
+
+        // parse the diagram be calling the parseNode on the pseudo-root (first task to approve)
+        this.currentNode = this.parseNode(foundEl.outgoing[0]);                                                 // change var name
+        console.log("Built graph:");
+        console.log(this.currentNode);
+
+        var nodesAbleToSelect: Array<BasicNode> = this.currentNode.canEnable();
+
+        nodesAbleToSelect.forEach(n => this.currentTaskIds.push(n.activityId));
+
+        this.nodesEnableable = this.currentNode.canEnable();
+        console.log(this.nodesEnableable);
+
+      });
   }
 
   /**
@@ -475,10 +526,10 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
     var submitted: boolean = false;
     var startedPaths: number = 0;
     var submittedPaths: number = 0;
-    
+    /*
     console.log("parsing gateway: " + node.id + "before submitted judgement");
     branches.forEach(node => {
-      if (node.getGreenLight()) startedPaths++;
+      if (node.getGreenLight() || this.taskHistoryIds.indexOf(node.id) != -1) startedPaths++;
 
       if (node.isSubmitted()) submittedPaths++;
 
@@ -491,17 +542,41 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
       console.log("gateway " + node.id + " was parsed as a submitted node");
       return new SubmittedNode(nextNode);
     }
-
+    */
 
     switch (gatewayType) {
       case "exclusive":
-        return new ExclusiveNode(nextNode, false, branches, node.id, pathVariables);
+        if (ExclusiveNode.inferGatewayInstance(nextNode, branches)) {
+          console.log("made an exclusive node from " + node.id);
+          return new ExclusiveNode(nextNode, false, branches, node.id, pathVariables);
+        }else {
+          console.log("made a submitted node from " + node.id);
+          return new SubmittedNode(nextNode);
+        }
+
+        // return new ExclusiveNode(nextNode, false, branches, node.id, pathVariables);
         break;
       case "inclusive":
-        return new InclusiveNode(nextNode, false, branches, node.id, pathVariables);
+        if (InclusiveNode.inferGatewayInstance(nextNode, branches, this.currentTaskIds)) {
+          console.log("made an inclusive node from " + node.id);
+          return new InclusiveNode(nextNode, false, branches, node.id, pathVariables);
+        }else {
+          console.log("made a submitted node from " + node.id);
+          return new SubmittedNode(nextNode);
+        }
+
+        //return new InclusiveNode(nextNode, false, branches, node.id, pathVariables);
         break;
       case "parallel":
-        return new ParallelNode(nextNode, false, branches, node.id, pathVariables);
+        if (ParallelNode.inferGatewayInstance(nextNode, branches)) {
+          console.log("made an parallel node from " + node.id);
+          return new ParallelNode(nextNode, false, branches, node.id, pathVariables);
+        }else {
+          console.log("made a submitted node from " + node.id);
+          return new SubmittedNode(nextNode);
+        }
+
+        //return new ParallelNode(nextNode, false, branches, node.id, pathVariables);
         break;
       default:
         console.log("Andre says Oi");
@@ -514,10 +589,12 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
     var nextNode: DiagramNode = this.parseNode(node.outgoing[0], stoppingNode);
 
     // if node is in historyNodes then return new SubmittedNode
-    if (this.taskHistoryIds.indexOf(node.id) != -1) 
+    if (this.taskHistoryIds.indexOf(node.id) != -1) {
+      console.log("manual task " + node.id + " parsed as submitted node");
       return new SubmittedNode(nextNode);
+    }
 
-      throw new Error("Method not implemented.");
+    return null;
   }
 
   private parseBusinessTask(node: any, stoppingNode: any = null): DiagramNode {

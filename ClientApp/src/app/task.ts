@@ -7,9 +7,9 @@ export interface Task {
 
 export class TasksToApprove {
   public activityIds: string[];
-  public variables: Map<string, string>;
+  public variables: string[][];//Map<string, string>;
 
-  constructor(activityIds: string[], variables: Map<string, string>) {
+  constructor(activityIds: string[], variables: string[][]) {
     this.activityIds = activityIds;
     this.variables = variables;
   }

@@ -1,6 +1,9 @@
+import { notDeepStrictEqual } from "assert";
 import { BasicNode } from "./basic-node";
 import { DiagramNode } from "./diagram-node";
 import { GatewayNode } from "./gateway-node";
+import { InclusiveNode } from "./inclusive-node";
+import { ParallelNode } from "./parallel-node";
 
 export class ExclusiveNode extends GatewayNode {
 
@@ -70,12 +73,104 @@ export class ExclusiveNode extends GatewayNode {
     console.log("inside get variables exclusive");
     console.log(variables);
 
-    if (variables.size != 1) throw new Error("Exclusive gateway has more than 1 path.");
+    if (variables.size > 1) throw new Error("Exclusive gateway has more than 1 path.");
 
-    if (this.nextNode != null && this.getGreenLight()) 
-      variables = new Map<string, string>({...variables, ...this.nextNode.getVariables()});
-
+    if (this.nextNode != null && this.getGreenLight())
+      this.nextNode.getVariables().forEach((v, k) => variables.set(k, v));
+    
     return variables;
+  }
+
+  public static inferGatewayInstance(nextNode: DiagramNode, branches: Array<DiagramNode>): boolean {
+    console.log("inside infer gateway exclusive");
+    console.log("next node");
+    console.log(nextNode);
+
+    // if the next node is already submitted, the gateway has to be a SubmittedNode
+    if (nextNode != null && nextNode.isSubmitted() ) {
+      console.log("next node was submitted");
+      console.log(nextNode);
+      return false;
+    }
+
+    var noSubmittedPath: boolean = true;
+
+    // one path has to be completely submitted to be a SubmittedNode
+    branches.forEach(node => { 
+      var currentNode: DiagramNode = node;
+
+      while (currentNode.isSubmitted() && currentNode.nextNode != null) {
+        currentNode = currentNode.nextNode;
+      }
+
+      if (currentNode.isSubmitted() ) {
+        console.log("found a submitted path");
+        noSubmittedPath = false;
+      }
+
+      /*
+      // verify if the path is fully submitted
+      if (node.isSubmitted() ) {
+        console.log("this node is submitted");
+        console.log(node);
+        var currentNode: DiagramNode = node.nextNode;
+
+        while (currentNode != null) {
+          if (currentNode.isSubmitted() ) { 
+            console.log("this node was submitted");
+            console.log(currentNode);
+
+            noSubmittedPath = false;//return true;
+          }
+          currentNode = currentNode.nextNode;
+        }
+
+        //return false;
+      }
+      */
+
+    });
+
+    return noSubmittedPath;//return true;
+
+    /*
+    var startedPaths: number = 0;
+    var submittedPaths: number = 0;
+
+    branches.forEach(node => {
+      
+      // check if the node has any of the current activity id's 
+      if (node instanceof BasicNode) {
+        if (currentActivityIds.indexOf(node.activityId) != -1)
+          return true;
+
+      } else if (node instanceof ExclusiveNode) {
+        if (ExclusiveNode.inferGatewayInstance(node.branches, currentActivityIds) ) 
+          return true;
+
+      } else if (node instanceof InclusiveNode) {
+        if (InclusiveNode.inferGatewayInstance(node.branches, currentActivityIds) ) 
+          return true;
+        
+      } else if (node instanceof ParallelNode) {
+        if (ParallelNode.inferGatewayInstance(node.branches, currentActivityIds) ) 
+          return true;
+        
+      }
+
+      if (node.getGreenLight()) startedPaths++;
+
+      if (node.isSubmitted()) submittedPaths++;
+
+    });
+
+    if (submittedPaths > 0 && startedPaths == submittedPaths) {
+      return false;
+    }
+
+    
+    return true;
+    */
   }
 
 }

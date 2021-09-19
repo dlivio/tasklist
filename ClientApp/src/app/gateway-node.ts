@@ -71,4 +71,11 @@ export abstract class GatewayNode extends DiagramNode {
   public isSubmitted(): boolean {
     return false;
   }
+
+  public hasActivityId(activityId: string): boolean {
+    var activityIdFound: boolean = false;
+    this.branches.forEach(br => activityIdFound = activityIdFound || br.hasActivityId(activityId) );
+
+    return activityIdFound;
+  }
 }

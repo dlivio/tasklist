@@ -66,9 +66,65 @@ export class ParallelNode extends GatewayNode {
     console.log(variables);
 
     if (this.nextNode != null && this.getGreenLight()) 
-      variables = new Map<string, string>({...variables, ...this.nextNode.getVariables()});
+      this.nextNode.getVariables().forEach((v, k) => variables.set(k, v));
 
     return variables;
+  }
+
+  public static inferGatewayInstance(nextNode: DiagramNode, branches: Array<DiagramNode>): boolean {
+    console.log("inside infer gateway parallel");
+    console.log("next node");
+    console.log(nextNode);
+
+    // if the next node is already submitted, the gateway has to be a SubmittedNode
+    if (nextNode != null && nextNode.isSubmitted() ) {
+      console.log("next node was submitted");
+      console.log(nextNode);
+      return false;
+    }
+
+    var hasUnfinishedBranch: boolean = false;
+    
+    // one path has to be completely submitted to be a SubmittedNode
+    branches.forEach(node => { 
+      var currentNode: DiagramNode = node;
+
+      while (currentNode.isSubmitted() && currentNode.nextNode != null) {
+        currentNode = currentNode.nextNode;
+      }
+
+      if (!currentNode.isSubmitted() ) {
+        console.log("found a unsubmitted path");
+        hasUnfinishedBranch = true;
+      }
+
+      /*
+      // verify if the path is fully submitted
+      if (node.isSubmitted() ) {
+        console.log("this node is submitted");
+        console.log(node);
+        var currentNode: DiagramNode = node.nextNode;
+
+        while (currentNode != null) {
+          if (!currentNode.isSubmitted() ) { 
+            console.log("this node wasnt submitted");
+            console.log(currentNode);
+
+            hasUnfinishedBranch = true;//return true;
+          }
+          currentNode = currentNode.nextNode;
+        }
+
+      } 
+      /*
+      else {
+        return false;
+      }
+      */
+
+    });
+
+    return hasUnfinishedBranch;//return false;
   }
 
 }

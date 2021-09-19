@@ -90,4 +90,8 @@ export class BasicNode extends DiagramNode {
     return new Map<string, string>();
   }
 
+  public hasActivityId(activityId: string): boolean {
+    return activityId == this.activityId;
+  }
+
 }

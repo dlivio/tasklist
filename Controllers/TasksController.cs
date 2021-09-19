@@ -126,12 +126,15 @@ namespace tasklist.Controllers
         /// <param name="activityIds"></param>
         /// <returns></returns>
         [HttpPost("{projectId}/Approve")]
-        public async Task<ActionResult<Task>> ApproveCamundaTasksAsync(string projectId, string[] activityIds)
+        public async Task<IActionResult> ApproveCamundaTasksAsync(string projectId, TasksToApprove tasks)
         {
             // get the process instance from the Project object
             string currentProcessInstanceId = _projectService.Get(projectId).ProcessInstanceIds.Last();
 
-            List<string> activityIdsList = activityIds.ToList();
+            if (currentProcessInstanceId == null)
+                return NotFound();
+
+            List<string> activityIdsList = tasks.ActivityIds.ToList();
 
             List<CamundaTask> currentTasks = await _camundaService.GetOpenTasksByProcessInstanceIDAsync(currentProcessInstanceId);
 
@@ -143,7 +146,7 @@ namespace tasklist.Controllers
                 foreach (CamundaTask t in currentTasks) {
                     if (t.TaskDefinitionKey == currentActivityId)
                     {
-                        await _camundaService.CompleteCamundaTask(t.Id);
+                        await _camundaService.CompleteCamundaTask(t.Id, tasks.Variables);
 
                         activityIdsList.Remove(currentActivityId);
                         break;
@@ -157,11 +160,8 @@ namespace tasklist.Controllers
                 }
 
             }
-            
 
-            //_taskService.Create(task);
-
-            return new Task();
+            return NoContent();
         }
 
         // DELETE: api/Tasks/5

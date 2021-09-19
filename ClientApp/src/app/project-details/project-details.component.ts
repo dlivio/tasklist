@@ -16,7 +16,6 @@ import { DiagramComponent } from '../diagram/diagram.component';
 })
 export class ProjectDetailsComponent implements OnInit {
 
-
   @ViewChild(DiagramComponent, {static: false})
   private diagramComponent!: DiagramComponent;
 
@@ -30,7 +29,11 @@ export class ProjectDetailsComponent implements OnInit {
 
   camundaCaseInstanceId = "";
 
-  constructor(http: HttpClient, @Inject('BASE_URL') baseUrl: string, private router: Router, private activatedRoute: ActivatedRoute) {
+  private currentBaseUrl: string;
+
+  constructor(private http: HttpClient, @Inject('BASE_URL') baseUrl: string, private router: Router, private activatedRoute: ActivatedRoute) {
+
+    this.currentBaseUrl = baseUrl;
 
     // get the selected Project info
     if (this.router.getCurrentNavigation().extras.state) {
@@ -70,6 +73,10 @@ export class ProjectDetailsComponent implements OnInit {
     console.log("Submit tasks was clicked");
     console.log(this.project.id);
     this.diagramComponent.submitTasks(this.project.id);
+
+    this.http.get<Project>(this.currentBaseUrl + 'api/Projects/' + this.projectId).subscribe(result => {
+      this.project = result;
+    }, error => console.error(error));
   }
 
   handleImported(event) {

@@ -42,9 +42,12 @@ export class SubmittedNode extends DiagramNode{
     }
 
     public isSubmitted(): boolean {
+        /*
         if (this.nextNode == null) return true;
 
         return this.nextNode.isSubmitted();
+        */
+        return true;
     }
 
     public getVariables(): Map<string, string> {
@@ -52,7 +55,11 @@ export class SubmittedNode extends DiagramNode{
           return this.nextNode.getVariables();
         
         return new Map<string, string>();
-      }
+    }
+
+    public hasActivityId(activityId: string): boolean {
+        return false;
+    }
   
   }
   

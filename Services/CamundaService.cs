@@ -163,14 +163,15 @@ namespace tasklist.Services
             return history;
         }
 
-		public async Task<string> CompleteCamundaTask(string id)
+		public async Task<string> CompleteCamundaTask(string id, string[][] vars)
 		{
             Dictionary<string, PairKeyValue> variables = new Dictionary<string, PairKeyValue>();
 
-            variables.Add("var1", new PairKeyValue() { Value = "val1"});
-            variables.Add("var2", new PairKeyValue() { Value = "val2" });
-            variables.Add("var3", new PairKeyValue() { Value = "val3" });
-
+            foreach(string[] var in vars)
+			{
+                variables.Add(var[0], new PairKeyValue() { Value = var[1] });
+            }
+            
             var processArgs = new CamundaTaskApprove() {
                 Variables = variables,
                 WithVariablesInReturn = true
