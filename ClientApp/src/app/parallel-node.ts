@@ -53,6 +53,7 @@ export class ParallelNode extends GatewayNode {
   public getVariables(): Map<string, string> {
     var variables: Map<string, string> = new Map<string, string>();
 
+    /*
     var variableIndex: number = 0;
     
     this.branches.forEach(br => { 
@@ -67,7 +68,7 @@ export class ParallelNode extends GatewayNode {
 
     if (this.nextNode != null && this.getGreenLight()) 
       this.nextNode.getVariables().forEach((v, k) => variables.set(k, v));
-
+    */
     return variables;
   }
 

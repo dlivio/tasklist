@@ -72,10 +72,13 @@ export class ProjectDetailsComponent implements OnInit {
   submitTasks() {
     console.log("Submit tasks was clicked");
     console.log(this.project.id);
-    this.diagramComponent.submitTasks(this.project.id);
+    if (this.diagramComponent.submitTasks(this.project.id) ) {
+      this.diagramUrl = this.currentBaseUrl + 'api/Projects/' + this.project.caseInstanceId + '/Diagram';
+    }
 
-    this.http.get<Project>(this.currentBaseUrl + 'api/Projects/' + this.projectId).subscribe(result => {
-      this.project = result;
+    this.http.get<Project>(this.currentBaseUrl + 'api/Projects/' + this.project.id).subscribe(result => {
+      this.project = new Project(result.id, result.projectName, result.startDate, result.isComplete, 
+        result.caseInstanceId, result.nextTaskName);
     }, error => console.error(error));
   }
 

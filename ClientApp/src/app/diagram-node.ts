@@ -40,8 +40,18 @@ export abstract class DiagramNode {
    */
   public abstract canBeValidated(): boolean;
 
+  /**
+   * TODO: add description
+   * 
+   * @returns
+   */
   public abstract enable(): void;
 
+  /**
+   * TODO: add description
+   * 
+   * @returns
+   */
   public abstract disable(): Array<BasicNode>;
 
   public abstract clone(): DiagramNode;
@@ -76,4 +86,6 @@ export abstract class DiagramNode {
    */
   public abstract hasActivityId(activityId: string): boolean;
 
+
+  //public abstract where(predicate: (n: DiagramNode) => boolean): DiagramNode[];
 }

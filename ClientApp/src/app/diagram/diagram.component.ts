@@ -77,6 +77,10 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
 
   private currentBaseUrl: string;
 
+
+  private canvas: any;
+  private elementRegistry: any;
+
   constructor(private http: HttpClient, @Inject('BASE_URL') baseUrl: string) {
     // Global variables init
     this.taskHistoryIds = [];
@@ -92,16 +96,20 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
 
     var eventBus = this.bpmnJS.get('eventBus');
 
-    var canvas = this.bpmnJS.get('canvas');
+    //var canvas = this.bpmnJS.get('canvas');
+    this.canvas = this.bpmnJS.get('canvas');
+
+    //var elementRegistry = this.bpmnJS.get('elementRegistry');
+    this.elementRegistry = this.bpmnJS.get('elementRegistry');
 
     this.bpmnJS.on('import.done', ({ error }) => {
       if (!error) {
         this.bpmnJS.get('canvas').zoom('fit-viewport');
       }
       
-      var elementRegistry = this.bpmnJS.get('elementRegistry');
+      //var elementRegistry = this.bpmnJS.get('elementRegistry');
 
-      this.importDiagramHistory(canvas, elementRegistry); // hereeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+      this.importDiagramHistory(this.canvas, this.elementRegistry);
       /*
       // get the tasks completed in the current diagram
       http.get<HistoryTasks>(baseUrl + 'api/Tasks/' + this.caseInstanceId + '/Diagram/History').subscribe(result => {
@@ -166,8 +174,8 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
 
         if (nodeForEnableFound != undefined) {
           console.log("found it enable");
-          if (!canvas.hasMarker(e.element.id, 'highlight')) {
-            canvas.addMarker(e.element.id, 'highlight');
+          if (!this.canvas.hasMarker(e.element.id, 'highlight')) {
+            this.canvas.addMarker(e.element.id, 'highlight');
             
             // select the node and get the new array with nodes available to select
             nodeForEnableFound.enable();
@@ -187,14 +195,14 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
 
         if (nodeForDisableFound != undefined) {
           console.log("found it disable");
-          if (canvas.hasMarker(e.element.id, 'highlight')) {
-            canvas.removeMarker(e.element.id, 'highlight');
+          if (this.canvas.hasMarker(e.element.id, 'highlight')) {
+            this.canvas.removeMarker(e.element.id, 'highlight');
             
             // unselect the node and update the array with nodes available to select
             var nodesDisabled = nodeForDisableFound.disable();
 
             // trigger a function to cleanup colored nodes that have been removed
-            this.disableColorCleanup(canvas, nodesDisabled);
+            this.disableColorCleanup(this.canvas, nodesDisabled);
 
             console.log("nodes disabled");
             console.log(nodesDisabled);
@@ -209,6 +217,29 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
             console.log("new nodes disableable:");
             console.log(this.nodesDisableable);
 
+          }
+        }
+
+        // add the cursor html change to the new enableable nodes
+        if (nodeForEnableFound != undefined || nodeForDisableFound != undefined) {
+          // filter the elements in the diagram to limit those who are clickable
+          var tasksFound = this.elementRegistry.filter(function (el) {
+            return (el.type == "bpmn:UserTask")
+          });
+          // remove the 'pointer' property from all user tasks
+          for (let i = 0; i < tasksFound.length; i++) {
+            this.canvas.removeMarker(tasksFound[i].id, 'pointer');
+          }
+
+          // add the 'pointer' html property to the enableable nodes
+          for (let i = 0; i < tasksFound.length; i++) {
+            if (this.nodesEnableable.find(n => n.activityId == tasksFound[i].id) != undefined) 
+              this.canvas.addMarker(tasksFound[i].id, 'pointer');
+          }
+          // add the 'pointer' html property to the disableable nodes
+          for (let i = 0; i < tasksFound.length; i++) {
+            if (this.nodesDisableable.find(n => n.activityId == tasksFound[i].id) != undefined) 
+              this.canvas.addMarker(tasksFound[i].id, 'pointer');
           }
         }
 
@@ -239,10 +270,10 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
    * This method sends an object containing all the clicked diagram tasks to the server for them
    * to be approved in the Camunda Workflow Engine.
    */
-  submitTasks(projectId: string): void {
+  submitTasks(projectId: string): boolean {
     if (!this.currentNode.canBeValidated()) {
       alert("Please select a task inside de decision or remove the last selected task.");
-      return;
+      return false;
     }
 
     console.log("inside submit tasks");
@@ -252,6 +283,11 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
     var nodesSelected: BasicNode[] = this.currentNode.canDisable();
 
     var variablesToSend: Map<string, string> = this.currentNode.getVariables();
+
+    console.log("inside submit tasks variables");
+    console.log(variablesToSend);
+
+    //return; // temp
 
     console.log("variables map hereeeeee");
     console.log(variablesToSend);
@@ -272,9 +308,18 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
 
     // get the tasks completed in the current diagram
     this.http.post<TasksToApprove>(this.currentBaseUrl + 'api/Tasks/' + projectId + '/Approve', tasksToApprove).subscribe(result => {
-      
-    }, error => console.error(error));
+      alert("Tasks approved successfully.");
+      this.importDiagramHistory(this.canvas, this.elementRegistry);
+
+      this.loadUrl(this.url);
+      return true;
+
+    }, error => { 
+      alert("An error has occured with the task submission. Please refresh the page and try again.");
+      console.error(error);
+    });
     
+    return false;
   }
 
   /**
@@ -313,22 +358,36 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
     return from(this.bpmnJS.importXML(xml) as Promise<{ warnings: Array<any> }>);
   }
 
-
+  /**
+   * Method used to retrieve the diagram history for the current project and current diagram from Camunda Workflow Engine, and build 
+   * the graph accordingly. Additionally, it colors the tasks which have already been submitted for better user understanding.
+   * 
+   * @param canvas the canvas of the bpmnjs viewer
+   * @param elementRegistry the registry containing all the nodes, and enables their access
+   */
   private importDiagramHistory(canvas: any, elementRegistry: any) {
     // get the tasks completed in the current diagram
     this.http.get<HistoryTasks>(this.currentBaseUrl + 'api/Tasks/' + this.caseInstanceId + '/Diagram/History').subscribe(result => {
 
+      console.log("history request result");
+      console.log(result);
+
       this.taskHistoryIds = result.historyActivityIds;
+
+      console.log("history");
+      console.log(this.taskHistoryIds);
 
       // remove the current task to be approved from the list and save it
       this.currentTaskIds = result.currentActivityIds;                               // TODO: needs to be changed to retrieve current tasks hereeeee
 
+      console.log("current tasks");
       console.log(this.currentTaskIds);
       console.log(this.currentTaskIds[0]);
 
       // filter the elements in the diagram to limit those who are clickable
       var tasksFound = elementRegistry.filter(function (el) {
-        return (el.type == "bpmn:Task" || el.type == "bpmn:UserTask" || el.type == "bpmn:ManualTask")
+        return (el.type == "bpmn:Task" || el.type == "bpmn:UserTask" || el.type == "bpmn:ManualTask" || 
+          el.type == "bpmn:CallActivity" || el.type == "bpmn:CallActivity" || el.type == "bpmn:BusinessRuleTask");
       });
       // add color to all the elements in the history
       for (let i = 0; i < tasksFound.length; i++) {
@@ -356,6 +415,16 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
 
         this.nodesEnableable = this.currentNode.canEnable();
         console.log(this.nodesEnableable);
+
+        // filter the elements in the diagram to limit those who are clickable
+        var tasksFound = elementRegistry.filter(function (el) {
+          return (el.type == "bpmn:UserTask")
+        });
+        // add the 'pointer' html property to the enableable nodes
+        for (let i = 0; i < tasksFound.length; i++) {
+          if (this.nodesEnableable.find(n => n.activityId == tasksFound[i].id) != undefined) 
+            canvas.addMarker(tasksFound[i].id, 'pointer');
+        }
 
       });
   }
@@ -392,7 +461,10 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
       case "bpmn:ManualTask":
         return this.parseManualTask(node, stoppingNode);
         break;
-      case "bpmn:BusinessTask":
+      case "bpmn:BusinessRuleTask":
+        return this.parseBusinessTask(node, stoppingNode);
+        break;
+      case "bpmn:CallActivity":
         return this.parseBusinessTask(node, stoppingNode);
         break;
       case "bpmn:EndEvent":
@@ -506,12 +578,16 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
       var nodeType: string = this.getNodeType(obj);
 
       if (nodeType == "bpmn:SequenceFlow") {
-        var name: string = obj.name.replace(/\s/g, "_").substring(0, 15);
+        var flowId: string = obj.id;
 
-        pathVariables.push(name);
+        //var name: string = obj.name.replace(/\s/g, "_").substring(0, 15);
+
+        //var conditionExpression: string = obj.conditionExpression.body; // expression ------------------------------------------------
+
+        pathVariables.push(flowId);
       }
 
-      branches.push(this.parseNode(obj, endGateway)); // TODO: add parentGateway
+      branches.push(this.parseNode(obj, endGateway));
     });
 
     var nextNode: DiagramNode = this.parseNode(endGateway.outgoing[0], stoppingNode);
@@ -590,7 +666,6 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
 
     // if node is in historyNodes then return new SubmittedNode
     if (this.taskHistoryIds.indexOf(node.id) != -1) {
-      console.log("manual task " + node.id + " parsed as submitted node");
       return new SubmittedNode(nextNode);
     }
 
@@ -616,6 +691,18 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
    */
   private disableColorCleanup(canvas: any, nodesToUncolor: BasicNode[]): void {
     nodesToUncolor.forEach(n => canvas.removeMarker(n.activityId, 'highlight') );
+  }
+
+  private disablePointerCleanup(canvas: any, elementRegistry: any) {
+    // filter the elements in the diagram to limit those who are clickable
+    var tasksFound = elementRegistry.filter(function (el) {
+      return (el.type == "bpmn:UserTask")
+    });
+
+    // remove the 'pointer' property from all user tasks
+    for (let i = 0; i < tasksFound.length; i++) {
+      canvas.removeMarker(tasksFound[i].id, 'pointer');
+    }
   }
 
 }

@@ -189,9 +189,10 @@ namespace tasklist.Services
             if (response.IsSuccessStatusCode)
             {
                 var res = response.Content.ReadAsStringAsync();
+                return id;
             }
 
-            return id;
+            return null;
         }
 	}
 }

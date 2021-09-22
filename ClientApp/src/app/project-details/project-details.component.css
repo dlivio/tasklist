@@ -9,3 +9,5 @@
 .highlight-current:not(.djs-connection) .djs-visual > :nth-child(1) {
   fill: #F0E68C !important; /* color elements as green */
 }
+
+.pointer {cursor: pointer;}

@@ -29,14 +29,21 @@ export class ExclusiveNode extends GatewayNode {
   }
 
   public canBeValidated(): boolean {
+
+    var isValid: boolean = true;
+
     var selectedBranchCount: number = 0;
     // check if the nodes selected can be submited by verifying that, if a node is selected before a 
     // gateway, at least on node is selected inside the gateway
     this.branches.forEach(br => { 
-      if (br.getGreenLight() && br.canBeValidated()) selectedBranchCount++;
+      //if (br.getGreenLight() && br.canBeValidated()) selectedBranchCount++;
+      if (br.getGreenLight() ) {
+        selectedBranchCount++;
+        isValid = isValid && br.canBeValidated(); 
+      }
     });
 
-    if (selectedBranchCount != 1) return false;
+    if (selectedBranchCount != 1 || !isValid) return false;
 
     if (this.nextNode != null && this.getGreenLight()) return this.nextNode.canBeValidated();
 
@@ -63,17 +70,42 @@ export class ExclusiveNode extends GatewayNode {
 
     var variableIndex: number = 0;
     
+    console.log("inside get variables of exclusive gateway: " + this.gatewayId);
+    console.log(this.pathVariables);
+
     this.branches.forEach(br => { 
-      if (br.getGreenLight() && !br.isSubmitted()) 
-        variables.set(this.gatewayId + variableIndex, this.pathVariables[variableIndex]);
-      
+      if (br.getGreenLight() && !br.isSubmitted()) {
+        if (br instanceof BasicNode) {
+          variables.set(br.activityId, this.pathVariables[variableIndex]);
+
+        } else if (br instanceof GatewayNode) {
+          variables.set(br.gatewayId, this.pathVariables[variableIndex]);
+          if (br.nextNode != null)
+            br.nextNode.getVariables().forEach((v, k) => variables.set(k, v));
+        }
+
+      } else {
+        if (br instanceof BasicNode) {
+          variables.set(br.activityId, "");
+
+        } else if (br instanceof GatewayNode) {
+          variables.set(br.gatewayId, "");
+        }
+      }
       variableIndex++;
     });
 
+    /*
+    this.branches.forEach(br => { 
+      if (br.getGreenLight() && !br.isSubmitted()) {
+        variables.set(this.gatewayId + variableIndex, this.pathVariables[variableIndex]);
+      }
+      variableIndex++;
+    });
+    */
+
     console.log("inside get variables exclusive");
     console.log(variables);
-
-    if (variables.size > 1) throw new Error("Exclusive gateway has more than 1 path.");
 
     if (this.nextNode != null && this.getGreenLight())
       this.nextNode.getVariables().forEach((v, k) => variables.set(k, v));

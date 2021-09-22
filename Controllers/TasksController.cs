@@ -138,6 +138,28 @@ namespace tasklist.Controllers
 
             List<CamundaTask> currentTasks = await _camundaService.GetOpenTasksByProcessInstanceIDAsync(currentProcessInstanceId);
 
+            foreach (string activityId in activityIdsList)
+			{
+                foreach (CamundaTask t in currentTasks)
+                {
+                    if (t.TaskDefinitionKey == activityId)
+                    {
+                        string id = await _camundaService.CompleteCamundaTask(t.Id, tasks.Variables);
+
+                        if (id == null) 
+                            return NotFound();
+                        else
+                            currentTasks = await _camundaService.GetOpenTasksByProcessInstanceIDAsync(currentProcessInstanceId);
+
+                        //activityIdsList.Remove(activityId);
+                        break;
+                    }
+
+
+                }
+            }
+
+            /*
             int activityIdCount = activityIdsList.Count;
             while (activityIdsList.Count > 0)
 			{
@@ -146,7 +168,9 @@ namespace tasklist.Controllers
                 foreach (CamundaTask t in currentTasks) {
                     if (t.TaskDefinitionKey == currentActivityId)
                     {
-                        await _camundaService.CompleteCamundaTask(t.Id, tasks.Variables);
+                        string id = await _camundaService.CompleteCamundaTask(t.Id, tasks.Variables);
+
+                        if (id == null) return NotFound();
 
                         activityIdsList.Remove(currentActivityId);
                         break;
@@ -160,6 +184,7 @@ namespace tasklist.Controllers
                 }
 
             }
+            */
 
             return NoContent();
         }
