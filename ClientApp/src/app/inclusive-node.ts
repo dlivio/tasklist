@@ -43,7 +43,6 @@ export class InclusiveNode extends GatewayNode {
     // check if the nodes selected can be submited by verifying that, if a node is selected before a 
     // gateway, at least on node is selected inside the gateway
     this.branches.forEach(br => { 
-      //if (br.getGreenLight() && br.canBeValidated()) selectedBranchCount++;
       if (br.getGreenLight() ) {
         selectedBranchCount++;
         isValid = isValid && br.canBeValidated(); 
@@ -78,7 +77,6 @@ export class InclusiveNode extends GatewayNode {
       if (br.getGreenLight()) activatedBranches++;
     });
 
-    //return this.completedBranches() >= 1;
     return this.completedBranches() == activatedBranches;
   }
 
@@ -113,18 +111,6 @@ export class InclusiveNode extends GatewayNode {
       variableIndex++;
     });
 
-    /*
-    this.branches.forEach(br => { 
-      if (br.getGreenLight() && !br.isSubmitted()) 
-        variables.set(this.gatewayId + variableIndex, this.pathVariables[variableIndex]);
-      
-      variableIndex++;
-    });
-    */
-
-    console.log("inside get variables inclusive");
-    console.log(variables);
-
     if (this.nextNode != null && this.getGreenLight()) {
       if (variables.size > 0) 
         this.nextNode.getVariables().forEach((v, k) => variables.set(k, v));
@@ -137,13 +123,8 @@ export class InclusiveNode extends GatewayNode {
   }
 
   public static inferGatewayInstance(nextNode: DiagramNode, branches: Array<DiagramNode>, currentActivityIds: Array<string>): boolean {
-    console.log("inside infer gateway inclusive");
-    console.log("next node");
-    console.log(nextNode);
-    
     // if the next node is already submitted, the gateway has to be a SubmittedNode
     if (nextNode != null && nextNode.isSubmitted() ) {
-      console.log("next node was submitted");
       return false;
     }
 
@@ -157,23 +138,15 @@ export class InclusiveNode extends GatewayNode {
 
       // verify if the path is fully submitted
       if (currentNode.isSubmitted() ) {
-        console.log("this node is submitted");
-        console.log(node);
-
         while (currentNode.nextNode != null) {
           currentNode = currentNode.nextNode;
 
           if (!currentNode.isSubmitted() ) { 
-            console.log("this node wasnt submitted");
-            console.log(currentNode);
-
-            hasUnfinishedBranch = true;//return true;
+            hasUnfinishedBranch = true;
           }
 
         }
-        
 
-        //return false;
       } else {
         numberOfOpenPaths++;
 
@@ -182,10 +155,8 @@ export class InclusiveNode extends GatewayNode {
           hasUnfinishedBranch = true;//return true;
 
         } else if (node instanceof GatewayNode) {
-          //if (ExclusiveNode.inferGatewayInstance(node.nextNode, node.branches) ) 
-          //return true;
           currentActivityIds.forEach(id => {
-            if(node.hasActivityId(id)) hasUnfinishedBranch = true;//return true;
+            if(node.hasActivityId(id)) hasUnfinishedBranch = true;
           });
 
         }
@@ -196,8 +167,7 @@ export class InclusiveNode extends GatewayNode {
     if (numberOfOpenPaths == branches.length)
       return true;
     
-    //return true;
-    return hasUnfinishedBranch;//return false;
+    return hasUnfinishedBranch;
   }
 
 }

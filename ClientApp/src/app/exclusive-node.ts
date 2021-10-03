@@ -36,7 +36,6 @@ export class ExclusiveNode extends GatewayNode {
     // check if the nodes selected can be submited by verifying that, if a node is selected before a 
     // gateway, at least on node is selected inside the gateway
     this.branches.forEach(br => { 
-      //if (br.getGreenLight() && br.canBeValidated()) selectedBranchCount++;
       if (br.getGreenLight() ) {
         selectedBranchCount++;
         isValid = isValid && br.canBeValidated(); 
@@ -82,6 +81,10 @@ export class ExclusiveNode extends GatewayNode {
           variables.set(br.gatewayId, this.pathVariables[variableIndex]);
           if (br.nextNode != null)
             br.nextNode.getVariables().forEach((v, k) => variables.set(k, v));
+        
+        } else { // case where the gateway has a path leading only to the end gateway
+          //variables.set(br.gatewayId, this.pathVariables[variableIndex]);
+        
         }
 
       } else {
@@ -95,18 +98,6 @@ export class ExclusiveNode extends GatewayNode {
       variableIndex++;
     });
 
-    /*
-    this.branches.forEach(br => { 
-      if (br.getGreenLight() && !br.isSubmitted()) {
-        variables.set(this.gatewayId + variableIndex, this.pathVariables[variableIndex]);
-      }
-      variableIndex++;
-    });
-    */
-
-    console.log("inside get variables exclusive");
-    console.log(variables);
-
     if (this.nextNode != null && this.getGreenLight())
       this.nextNode.getVariables().forEach((v, k) => variables.set(k, v));
     
@@ -114,14 +105,8 @@ export class ExclusiveNode extends GatewayNode {
   }
 
   public static inferGatewayInstance(nextNode: DiagramNode, branches: Array<DiagramNode>): boolean {
-    console.log("inside infer gateway exclusive");
-    console.log("next node");
-    console.log(nextNode);
-
     // if the next node is already submitted, the gateway has to be a SubmittedNode
     if (nextNode != null && nextNode.isSubmitted() ) {
-      console.log("next node was submitted");
-      console.log(nextNode);
       return false;
     }
 
@@ -136,73 +121,11 @@ export class ExclusiveNode extends GatewayNode {
       }
 
       if (currentNode.isSubmitted() ) {
-        console.log("found a submitted path");
         noSubmittedPath = false;
       }
-
-      /*
-      // verify if the path is fully submitted
-      if (node.isSubmitted() ) {
-        console.log("this node is submitted");
-        console.log(node);
-        var currentNode: DiagramNode = node.nextNode;
-
-        while (currentNode != null) {
-          if (currentNode.isSubmitted() ) { 
-            console.log("this node was submitted");
-            console.log(currentNode);
-
-            noSubmittedPath = false;//return true;
-          }
-          currentNode = currentNode.nextNode;
-        }
-
-        //return false;
-      }
-      */
-
     });
 
-    return noSubmittedPath;//return true;
-
-    /*
-    var startedPaths: number = 0;
-    var submittedPaths: number = 0;
-
-    branches.forEach(node => {
-      
-      // check if the node has any of the current activity id's 
-      if (node instanceof BasicNode) {
-        if (currentActivityIds.indexOf(node.activityId) != -1)
-          return true;
-
-      } else if (node instanceof ExclusiveNode) {
-        if (ExclusiveNode.inferGatewayInstance(node.branches, currentActivityIds) ) 
-          return true;
-
-      } else if (node instanceof InclusiveNode) {
-        if (InclusiveNode.inferGatewayInstance(node.branches, currentActivityIds) ) 
-          return true;
-        
-      } else if (node instanceof ParallelNode) {
-        if (ParallelNode.inferGatewayInstance(node.branches, currentActivityIds) ) 
-          return true;
-        
-      }
-
-      if (node.getGreenLight()) startedPaths++;
-
-      if (node.isSubmitted()) submittedPaths++;
-
-    });
-
-    if (submittedPaths > 0 && startedPaths == submittedPaths) {
-      return false;
-    }
-
-    
-    return true;
-    */
+    return noSubmittedPath;
   }
 
 }

@@ -96,66 +96,15 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
 
     var eventBus = this.bpmnJS.get('eventBus');
 
-    //var canvas = this.bpmnJS.get('canvas');
     this.canvas = this.bpmnJS.get('canvas');
-
-    //var elementRegistry = this.bpmnJS.get('elementRegistry');
     this.elementRegistry = this.bpmnJS.get('elementRegistry');
 
     this.bpmnJS.on('import.done', ({ error }) => {
       if (!error) {
         this.bpmnJS.get('canvas').zoom('fit-viewport');
       }
-      
-      //var elementRegistry = this.bpmnJS.get('elementRegistry');
 
       this.importDiagramHistory(this.canvas, this.elementRegistry);
-      /*
-      // get the tasks completed in the current diagram
-      http.get<HistoryTasks>(baseUrl + 'api/Tasks/' + this.caseInstanceId + '/Diagram/History').subscribe(result => {
-
-        this.taskHistoryIds = result.historyActivityIds;
-
-        // remove the current task to be approved from the list and save it
-        this.currentTaskIds = result.currentActivityIds;                               // TODO: needs to be changed to retrieve current tasks hereeeee
-
-        console.log(this.currentTaskIds);
-        console.log(this.currentTaskIds[0]);
-
-        // filter the elements in the diagram to limit those who are clickable
-        var tasksFound = elementRegistry.filter(function (el) {
-          return (el.type == "bpmn:Task" || el.type == "bpmn:UserTask" || el.type == "bpmn:ManualTask")
-        });
-        // add color to all the elements in the history
-        for (let i = 0; i < tasksFound.length; i++) {
-          if (this.taskHistoryIds.indexOf(tasksFound[i].id) > -1) { //&& !canvas.hasMarker(tasksFound[i].id, 'highlight-history')) {
-            canvas.addMarker(tasksFound[i].id, 'highlight-history');
-          }
-
-        }
-
-      }, error => console.error(error)
-        , () => { // on complete this path is activated
-
-          // get the start event of the diagram
-          //var foundEl = elementRegistry.filter(el => el.id == this.currentTaskIds[0])[0];
-          var foundEl = elementRegistry.filter(el => el.type == "bpmn:StartEvent")[0];
-
-          // parse the diagram be calling the parseNode on the pseudo-root (first task to approve)
-          this.currentNode = this.parseNode(foundEl.outgoing[0]);                                                 // change var name
-
-          console.log(this.currentNode);
-
-          var nodesAbleToSelect: Array<BasicNode> = this.currentNode.canEnable();
-
-          nodesAbleToSelect.forEach(n => this.currentTaskIds.push(n.activityId));
-
-          this.nodesEnableable = this.currentNode.canEnable();
-          console.log(this.nodesEnableable);
-
-        });
-
-      */
     });
 
     this.events.forEach(event => {
@@ -530,7 +479,7 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
    * @param beginningGatewayNode
    * @param gatewayType
    */
-  private getLastGateway(beginningGatewayNode: any, gatewayType: string): any {
+  private getLastGateway(beginningGatewayNode: any, gatewayType: string): any { //TODO: if no gateway is found and an endEvent is found return null
     // check if the beginningGatewayNode is the ending node of a gateway
     if (beginningGatewayNode.incoming.length > 1 && beginningGatewayNode.outgoing.length == 1) {
       return beginningGatewayNode;
@@ -580,10 +529,6 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
       if (nodeType == "bpmn:SequenceFlow") {
         var flowId: string = obj.id;
 
-        //var name: string = obj.name.replace(/\s/g, "_").substring(0, 15);
-
-        //var conditionExpression: string = obj.conditionExpression.body; // expression ------------------------------------------------
-
         pathVariables.push(flowId);
       }
 
@@ -592,70 +537,33 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
 
     var nextNode: DiagramNode = this.parseNode(endGateway.outgoing[0], stoppingNode);
 
-    // bool = false
-    // foreach branch
-    //    bool = bool V branch.isSubmited
-    //
-    // if bool then return new SubmitedNode(nextNode)
-    // else gatewayNode...
-
-    var submitted: boolean = false;
-    var startedPaths: number = 0;
-    var submittedPaths: number = 0;
-    /*
-    console.log("parsing gateway: " + node.id + "before submitted judgement");
-    branches.forEach(node => {
-      if (node.getGreenLight() || this.taskHistoryIds.indexOf(node.id) != -1) startedPaths++;
-
-      if (node.isSubmitted()) submittedPaths++;
-
-      //console.log(node);
-      //console.log("submited: " + node.isSubmitted());
-      //submitted = submitted || node.isSubmitted();
-    });
-
-    if (submittedPaths > 0 && startedPaths == submittedPaths) { //if (submitted) {
-      console.log("gateway " + node.id + " was parsed as a submitted node");
-      return new SubmittedNode(nextNode);
-    }
-    */
-
     switch (gatewayType) {
       case "exclusive":
         if (ExclusiveNode.inferGatewayInstance(nextNode, branches)) {
-          console.log("made an exclusive node from " + node.id);
           return new ExclusiveNode(nextNode, false, branches, node.id, pathVariables);
-        }else {
-          console.log("made a submitted node from " + node.id);
+        } else {
           return new SubmittedNode(nextNode);
         }
 
-        // return new ExclusiveNode(nextNode, false, branches, node.id, pathVariables);
         break;
       case "inclusive":
         if (InclusiveNode.inferGatewayInstance(nextNode, branches, this.currentTaskIds)) {
-          console.log("made an inclusive node from " + node.id);
           return new InclusiveNode(nextNode, false, branches, node.id, pathVariables);
-        }else {
-          console.log("made a submitted node from " + node.id);
+        } else {
           return new SubmittedNode(nextNode);
         }
 
-        //return new InclusiveNode(nextNode, false, branches, node.id, pathVariables);
         break;
       case "parallel":
         if (ParallelNode.inferGatewayInstance(nextNode, branches)) {
-          console.log("made an parallel node from " + node.id);
           return new ParallelNode(nextNode, false, branches, node.id, pathVariables);
-        }else {
-          console.log("made a submitted node from " + node.id);
+        } else {
           return new SubmittedNode(nextNode);
         }
 
-        //return new ParallelNode(nextNode, false, branches, node.id, pathVariables);
         break;
       default:
-        console.log("Andre says Oi");
+        console.log("Gateway type not found.");
         break;
     }
 

@@ -51,36 +51,12 @@ export class ParallelNode extends GatewayNode {
   }
 
   public getVariables(): Map<string, string> {
-    var variables: Map<string, string> = new Map<string, string>();
-
-    /*
-    var variableIndex: number = 0;
-    
-    this.branches.forEach(br => { 
-      if (br.getGreenLight() && !br.isSubmitted()) 
-        variables.set(this.gatewayId + variableIndex, this.pathVariables[variableIndex]);
-      
-      variableIndex++;
-    });
-
-    console.log("inside get variables parallel");
-    console.log(variables);
-
-    if (this.nextNode != null && this.getGreenLight()) 
-      this.nextNode.getVariables().forEach((v, k) => variables.set(k, v));
-    */
-    return variables;
+    return new Map<string, string>();
   }
 
   public static inferGatewayInstance(nextNode: DiagramNode, branches: Array<DiagramNode>): boolean {
-    console.log("inside infer gateway parallel");
-    console.log("next node");
-    console.log(nextNode);
-
     // if the next node is already submitted, the gateway has to be a SubmittedNode
     if (nextNode != null && nextNode.isSubmitted() ) {
-      console.log("next node was submitted");
-      console.log(nextNode);
       return false;
     }
 
@@ -95,37 +71,12 @@ export class ParallelNode extends GatewayNode {
       }
 
       if (!currentNode.isSubmitted() ) {
-        console.log("found a unsubmitted path");
         hasUnfinishedBranch = true;
       }
 
-      /*
-      // verify if the path is fully submitted
-      if (node.isSubmitted() ) {
-        console.log("this node is submitted");
-        console.log(node);
-        var currentNode: DiagramNode = node.nextNode;
-
-        while (currentNode != null) {
-          if (!currentNode.isSubmitted() ) { 
-            console.log("this node wasnt submitted");
-            console.log(currentNode);
-
-            hasUnfinishedBranch = true;//return true;
-          }
-          currentNode = currentNode.nextNode;
-        }
-
-      } 
-      /*
-      else {
-        return false;
-      }
-      */
-
     });
 
-    return hasUnfinishedBranch;//return false;
+    return hasUnfinishedBranch;
   }
 
 }

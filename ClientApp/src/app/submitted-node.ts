@@ -8,19 +8,19 @@ export class SubmittedNode extends DiagramNode{
     }
 
     public canEnable(): BasicNode[] {
-        if (this.nextNode == null) return []; //throw new Error("Method not implemented.");
+        if (this.nextNode == null) return []; 
 
         return this.nextNode.canEnable();
     }
     
     public canDisable(): BasicNode[] {
-        if (this.nextNode == null) return []; //throw new Error("Method not implemented.");
+        if (this.nextNode == null) return []; 
 
         return this.nextNode.canDisable();
     }
 
     public canBeValidated(): boolean {
-        if (this.nextNode == null) return true; //throw new Error("Method not implemented.");
+        if (this.nextNode == null) return true; 
 
         return this.nextNode.canBeValidated();
     }
@@ -42,11 +42,6 @@ export class SubmittedNode extends DiagramNode{
     }
 
     public isSubmitted(): boolean {
-        /*
-        if (this.nextNode == null) return true;
-
-        return this.nextNode.isSubmitted();
-        */
         return true;
     }
 
