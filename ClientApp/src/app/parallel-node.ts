@@ -4,8 +4,8 @@ import { GatewayNode } from "./gateway-node";
 
 export class ParallelNode extends GatewayNode {
 
-  public canEnable(): BasicNode[] {
-    var canEnable: Array<BasicNode> = new Array<BasicNode>();
+  public canEnable(): DiagramNode[] {
+    var canEnable: Array<DiagramNode> = new Array<DiagramNode>();
     this.branches.forEach(br => canEnable = canEnable.concat(br.canEnable()));
 
     if (this.getGreenLight() && this.nextNode != null)
@@ -40,10 +40,10 @@ export class ParallelNode extends GatewayNode {
     this.branches.forEach(br => clonedBranches.push(br.clone()));
 
     if (this.nextNode == null)
-      return new ParallelNode(null, this.greenLight, clonedBranches, this.gatewayId, this.pathVariables);
+      return new ParallelNode(null, this.greenLight, clonedBranches, this.id, this.pathVariables);
 
     var nextNodeClone: DiagramNode = this.nextNode.clone();
-    return new ParallelNode(nextNodeClone, this.greenLight, clonedBranches, this.gatewayId, this.pathVariables);
+    return new ParallelNode(nextNodeClone, this.greenLight, clonedBranches, this.id, this.pathVariables);
   }
 
   public getGreenLight(): boolean {

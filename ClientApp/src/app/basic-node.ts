@@ -2,15 +2,12 @@ import { DiagramNode } from "./diagram-node";
 import { GatewayNode } from "./gateway-node";
 
 export class BasicNode extends DiagramNode {
-  // the activityId that identifies the task/node
-  public activityId: string;
-
-  constructor(nextNode: DiagramNode, greenLight: boolean, activityId: string)  {
-    super(nextNode, greenLight);
-    this.activityId = activityId;
+  
+  constructor(nextNode: DiagramNode, greenLight: boolean, activityId: string) {
+    super(nextNode, activityId, greenLight);
   }
 
-  public canEnable(): BasicNode[] {
+  public canEnable(): DiagramNode[] {
     if (this.greenLight == false)
       return [this];
     if (this.nextNode != null)
@@ -19,9 +16,9 @@ export class BasicNode extends DiagramNode {
     return new Array<BasicNode>();
   }
 
-  public canDisable(): BasicNode[] {
-    var canDisable: Array<BasicNode> = new Array<BasicNode>();
-    if (this.greenLight == true) 
+  public canDisable(): DiagramNode[] {
+    var canDisable: Array<DiagramNode> = new Array<DiagramNode>();
+    if (this.greenLight == true)
       canDisable.push(this);
       if (this.nextNode != null)
         canDisable = canDisable.concat(this.nextNode.canDisable());
@@ -30,7 +27,7 @@ export class BasicNode extends DiagramNode {
   }
 
   public canBeValidated(): boolean {
-    if (this.greenLight == true && this.nextNode != null) 
+    if (this.greenLight == true && this.nextNode != null)
       return this.nextNode.canBeValidated();
 
     return true;
@@ -40,9 +37,9 @@ export class BasicNode extends DiagramNode {
     this.greenLight = true;
   }
 
-  public disable(): Array<BasicNode> {
-    var nodesDisabled: Array<BasicNode> = new Array<BasicNode>();
-    
+  public disable(): Array<DiagramNode> {
+    var nodesDisabled: Array<DiagramNode> = new Array<DiagramNode>();
+
     if (this.greenLight == true) {
       nodesDisabled = [this];
       this.greenLight = false;
@@ -57,7 +54,7 @@ export class BasicNode extends DiagramNode {
       // of the parent gateway node
       while (currentParentGatewayNode != null && !currentParentGatewayNode.getGreenLight()) {
         if (currentParentGatewayNode.nextNode != null)
-          nodesDisabled = nodesDisabled.concat(currentParentGatewayNode.nextNode.disable()); 
+          nodesDisabled = nodesDisabled.concat(currentParentGatewayNode.nextNode.disable());
 
         currentParentGatewayNode = currentParentGatewayNode.parentGatewayNode;
       }
@@ -69,10 +66,10 @@ export class BasicNode extends DiagramNode {
 
   public clone(): BasicNode {
     if (this.nextNode == null)
-      return new BasicNode(null, this.greenLight, this.activityId);
+      return new BasicNode(null, this.greenLight, this.id);
 
     var nextNodeClone: DiagramNode = this.nextNode.clone();
-    return new BasicNode(nextNodeClone, this.greenLight, this.activityId);
+    return new BasicNode(nextNodeClone, this.greenLight, this.id);
   }
 
   public getGreenLight(): boolean {
@@ -86,12 +83,12 @@ export class BasicNode extends DiagramNode {
   public getVariables(): Map<string, string> {
     if (this.nextNode != null)
       return this.nextNode.getVariables();
-    
+
     return new Map<string, string>();
   }
 
   public hasActivityId(activityId: string): boolean {
-    return activityId == this.activityId;
+    return activityId == this.id;
   }
 
 }

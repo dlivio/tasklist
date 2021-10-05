@@ -6,8 +6,8 @@ import { ParallelNode } from "./parallel-node";
 
 export class InclusiveNode extends GatewayNode {
 
-  public canEnable(): BasicNode[] {
-    var canEnable: Array<BasicNode> = new Array<BasicNode>();
+  public canEnable(): DiagramNode[] {
+    var canEnable: Array<DiagramNode> = new Array<DiagramNode>();
     var hasSubmittedPath: boolean = false;
 
     // check for submitted branch
@@ -19,7 +19,7 @@ export class InclusiveNode extends GatewayNode {
     this.branches.forEach(br => {
       if (hasSubmittedPath) {
         if (br.isSubmitted()) {
-          console.log("found a submitted branch inside: " + this.gatewayId);
+          console.log("found a submitted branch inside: " + this.id);
           canEnable = canEnable.concat(br.canEnable());
         }
       } else {
@@ -35,7 +35,7 @@ export class InclusiveNode extends GatewayNode {
   }
 
   public canBeValidated(): boolean {
-    console.log("inside can be validated of: " + this.gatewayId);
+    console.log("inside can be validated of: " + this.id);
 
     var isValid: boolean = true;
 
@@ -63,10 +63,10 @@ export class InclusiveNode extends GatewayNode {
     this.branches.forEach(br => clonedBranches.push(br.clone()) );
 
     if (this.nextNode == null)
-      return new InclusiveNode(null, this.greenLight, clonedBranches, this.gatewayId, this.pathVariables);
+      return new InclusiveNode(null, this.greenLight, clonedBranches, this.id, this.pathVariables);
 
     var nextNodeClone: DiagramNode = this.nextNode.clone();
-    return new InclusiveNode(nextNodeClone, this.greenLight, clonedBranches, this.gatewayId, this.pathVariables);
+    return new InclusiveNode(nextNodeClone, this.greenLight, clonedBranches, this.id, this.pathVariables);
   }
 
   public getGreenLight(): boolean {
@@ -85,16 +85,16 @@ export class InclusiveNode extends GatewayNode {
 
     var variableIndex: number = 0;
 
-    console.log("inside get variables of inclusive gateway: " + this.gatewayId);
+    console.log("inside get variables of inclusive gateway: " + this.id);
     console.log(this.pathVariables);
     
     this.branches.forEach(br => { 
       if (br.getGreenLight() && !br.isSubmitted()) {
         if (br instanceof BasicNode) {
-          variables.set(br.activityId, this.pathVariables[variableIndex]);
+          variables.set(br.id, this.pathVariables[variableIndex]);
 
         } else if (br instanceof GatewayNode) {
-          variables.set(br.gatewayId, this.pathVariables[variableIndex]);
+          variables.set(br.id, this.pathVariables[variableIndex]);
           if (br.nextNode != null)
             br.nextNode.getVariables().forEach((v, k) => variables.set(k, v));
         }
@@ -102,10 +102,10 @@ export class InclusiveNode extends GatewayNode {
       
       } else {
         if (br instanceof BasicNode) {
-          variables.set(br.activityId, "");
+          variables.set(br.id, "");
 
         } else if (br instanceof GatewayNode) {
-          variables.set(br.gatewayId, "");
+          variables.set(br.id, "");
         }
       }
       variableIndex++;
@@ -151,7 +151,7 @@ export class InclusiveNode extends GatewayNode {
         numberOfOpenPaths++;
 
         // verify if the node is in the currentActivityIds
-        if (node instanceof BasicNode && currentActivityIds.indexOf(node.activityId) != -1) {
+        if (node instanceof BasicNode && currentActivityIds.indexOf(node.id) != -1) {
           hasUnfinishedBranch = true;//return true;
 
         } else if (node instanceof GatewayNode) {

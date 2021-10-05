@@ -4,17 +4,15 @@ import { DiagramNode } from "./diagram-node";
 export abstract class GatewayNode extends DiagramNode {
   // array with the first node of each branch of the gateway
   public branches: Array<DiagramNode>;
-  
-  public gatewayId: string;
+  //
   public pathVariables: Array<string>;
 
   constructor(nextNode: DiagramNode, greenLight: boolean, branches: Array<DiagramNode>, gatewayId: string, pathVariables: Array<string>) {
-    super(nextNode, greenLight);
+    super(nextNode, gatewayId, greenLight);
 
     this.branches = new Array<DiagramNode>();
     branches.forEach(br => this.addBranch(br));
     
-    this.gatewayId = gatewayId;
     this.pathVariables = pathVariables;
   }
 
@@ -28,8 +26,8 @@ export abstract class GatewayNode extends DiagramNode {
     }
   }
 
-  public canDisable(): BasicNode[] {
-    var canDisable: Array<BasicNode> = new Array<BasicNode>();
+  public canDisable(): DiagramNode[] {
+    var canDisable: Array<DiagramNode> = new Array<DiagramNode>();
     this.branches.forEach(br => canDisable = canDisable.concat(br.canDisable()) );
 
     if (this.nextNode != null)
@@ -42,8 +40,8 @@ export abstract class GatewayNode extends DiagramNode {
     throw new Error("Method not implemented.");
   }
 
-  public disable(): Array<BasicNode> {
-    var nodesDisabled: Array<BasicNode> = new Array<BasicNode>();
+  public disable(): Array<DiagramNode> {
+    var nodesDisabled: Array<DiagramNode> = new Array<DiagramNode>();
     this.branches.forEach(br => nodesDisabled = nodesDisabled.concat(br.disable()) );
 
     if (this.nextNode != null)

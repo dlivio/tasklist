@@ -3,17 +3,17 @@ import { DiagramNode } from "./diagram-node";
 
 export class SubmittedNode extends DiagramNode{
 
-    constructor(nextNode: DiagramNode) {
-        super(nextNode, true);
+    constructor(nextNode: DiagramNode, id: string) {
+        super(nextNode, id, true);
     }
 
-    public canEnable(): BasicNode[] {
+    public canEnable(): DiagramNode[] {
         if (this.nextNode == null) return []; 
 
         return this.nextNode.canEnable();
     }
     
-    public canDisable(): BasicNode[] {
+    public canDisable(): DiagramNode[] {
         if (this.nextNode == null) return []; 
 
         return this.nextNode.canDisable();

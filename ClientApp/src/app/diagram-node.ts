@@ -6,11 +6,20 @@ export abstract class DiagramNode {
   protected greenLight: boolean;
   // next node connected
   public nextNode: DiagramNode;
+  // previous node connected
+  public previousNode: DiagramNode;
+  // the id that identifies the node (activityId, gatewayId, or sequenceFlowId)
+  public id: string;
   // identifies the parent of the current node (if it exists)
   public parentGatewayNode: GatewayNode;
 
-  constructor(nextNode: DiagramNode, greenLight: boolean) {
+  constructor(nextNode: DiagramNode, id: string, greenLight: boolean) {
     this.nextNode = nextNode;
+
+    if (nextNode != null)
+      this.nextNode.previousNode = this;
+    
+    this.id = id;
     this.greenLight = greenLight;
   }
 
@@ -23,7 +32,7 @@ export abstract class DiagramNode {
    * 
    * @returns an array of enableable BasicNode's
    */
-  public abstract canEnable(): Array<BasicNode>;
+  public abstract canEnable(): Array<DiagramNode>;
 
   /**
    * Method that returns an array containing all the basic nodes that were previously enabled in the session (except 
@@ -31,7 +40,7 @@ export abstract class DiagramNode {
    * 
    * @returns an array of disableable BasicNode's
    */
-  public abstract canDisable(): Array<BasicNode>;
+  public abstract canDisable(): Array<DiagramNode>;
 
   /**
    * Method that evaluates the selection based on it's validity to submission in the Camunda Workflow Engine.
@@ -52,7 +61,7 @@ export abstract class DiagramNode {
    * 
    * @returns
    */
-  public abstract disable(): Array<BasicNode>;
+  public abstract disable(): Array<DiagramNode>;
 
   public abstract clone(): DiagramNode;
 
