@@ -87,8 +87,30 @@ namespace tasklist.Services
         /// <param name="processId">The id of the process to begin.</param>
         /// <param name="caseInstanceIdToCreate">The caseInstantId to identify the process.</param>
         /// <returns>The caseInstanceId used to begin the process.</returns>
-        public async Task<string> StartProcessInstanceAsync(string processId, string caseInstanceIdToCreate)
+        public async Task<string> StartProcessInstanceAsync(string processId, string caseInstanceIdToCreate, ProjectFormDTO projectForm)
         {
+            Dictionary<string, PairKeyValueType> variables = new Dictionary<string, PairKeyValueType>();
+
+            // Add necessary variables to the object
+            variables.Add("clientExpectation", new PairKeyValueType() { Value = projectForm.ClientExpectation, Type = "String"  });
+            variables.Add("originalMaterials", new PairKeyValueType() { Value = projectForm.OriginalMaterials, Type = "Boolean" });
+            variables.Add("carDocuments", new PairKeyValueType() { Value = projectForm.CarDocuments, Type = "Boolean" });
+
+            var processArgs = new CamundaStartProcess()
+            {
+                Variables = variables,
+                CaseInstanceId = caseInstanceIdToCreate
+            };
+            var serializeOptions = new JsonSerializerOptions
+            {
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                WriteIndented = true
+            };
+            var processArgsSerialized = JsonSerializer.Serialize(processArgs, serializeOptions);
+            var requestContent = new StringContent(processArgsSerialized, Encoding.UTF8, "application/json");
+
+
+            /*
             var processArgs = new CamundaStartProcess(caseInstanceIdToCreate);
             var serializeOptions = new JsonSerializerOptions
             {
@@ -97,6 +119,7 @@ namespace tasklist.Services
             };
             var processArgsSerialized = JsonSerializer.Serialize(processArgs, serializeOptions);
             var requestContent = new StringContent(processArgsSerialized, Encoding.UTF8, "application/json");
+            */
 
             string caseInstanceId = null;
 

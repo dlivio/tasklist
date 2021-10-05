@@ -133,7 +133,7 @@ namespace tasklist.Controllers
 
             _projectService.Create(project);
             // start the process in Camunda with the generated ID
-            await _camundaService.StartProcessInstanceAsync("HelpLafayetteEscape", generatedId); // TO BE CHANGED
+            await _camundaService.StartProcessInstanceAsync("restoration_base", generatedId, projectForm);
 
             return CreatedAtRoute("GetProject", new { id = project.Id.ToString() }, project);
         }

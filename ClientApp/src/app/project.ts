@@ -11,11 +11,11 @@ export class Project {
 
 
 export class ProjectForm {
-  projectName: string;
-  public startDate: string;
-
-  constructor(projectName: string, startDate: string) {
-    this.projectName = projectName;
-    this.startDate = startDate;
-  }
+  constructor(
+    public projectName: string,
+    public clientExpectation: string,
+    public originalMaterials: boolean,
+    public carDocuments: boolean,
+    public startDate: string
+  ) { }
 }

@@ -1,9 +1,33 @@
 <div class="container" style="width: 80%;">
   <h1>Start a new Project</h1>
   <form style="padding-top: 25px;">
+
     <div class="form-group">
       <label for="projectName">Project name</label>
       <input type="text" class="form-control" id="projectName" required>
+      <small id="projectNameEmpty" class="form-text" style="color:red"></small>
+    </div>
+
+    <div class="form-group">
+      <label for="clientExpectation">Select Type of Intervention</label>
+      <select class="form-control" id="clientExpectation" required>
+        <option>Preservation</option>
+        <option>Cosmetic Restoration</option>
+        <option>Traditional Restoration</option>
+        <option>Concour d'Elegance Restoration</option>
+        <option>Traditional Mixed</option>
+        <option>Concour d'Elegance Mixed</option>
+      </select>
+    </div>
+
+    <div class="form-group form-check">
+      <input type="checkbox" class="form-check-input" id="originalMaterials">
+      <label class="form-check-label" for="originalMaterials">Original materials/substracts available</label>
+    </div>
+
+    <div class="form-group form-check">
+      <input type="checkbox" class="form-check-input" id="carDocuments">
+      <label class="form-check-label" for="carDocuments">Car document available</label>
     </div>
 
     <button type="submit" class="btn btn-secondary btn-lg" (click)="onSubmit()">Start</button>
