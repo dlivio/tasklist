@@ -89,12 +89,12 @@ export class SequenceFlowNode extends DiagramNode {
         return nodesDisabled;
     }
 
-    public clone(): DiagramNode {
+    public clone(): SequenceFlowNode {
         if (this.nextNode == null)
-            return new BasicNode(null, this.greenLight, this.id);
+            return new SequenceFlowNode(null, this.greenLight, this.id, this.nextNodeId);
 
         var nextNodeClone: DiagramNode = this.nextNode.clone();
-        return new BasicNode(nextNodeClone, this.greenLight, this.id);
+        return new SequenceFlowNode(nextNodeClone, this.greenLight, this.id, this.nextNodeId);
     }
 
     public getGreenLight(): boolean {
@@ -106,14 +106,14 @@ export class SequenceFlowNode extends DiagramNode {
     }
 
     public getVariables(): Map<string, string> {
-        if (this.nextNode != null)
+        if (this.greenLight == true && this.nextNode != null)
             return this.nextNode.getVariables();
 
         return new Map<string, string>();
     }
 
     public hasActivityId(activityId: string): boolean {
-        return false;
+        return activityId == this.id;
     }
 
 }

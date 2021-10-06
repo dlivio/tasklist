@@ -1,22 +1,23 @@
 import { BasicNode } from "./basic-node";
 import { DiagramNode } from "./diagram-node";
+import { SequenceFlowNode } from "./sequence-flow-node";
 
 export abstract class GatewayNode extends DiagramNode {
   // array with the first node of each branch of the gateway
-  public branches: Array<DiagramNode>;
+  public branches: Array<SequenceFlowNode>;
   //
   public pathVariables: Array<string>;
 
-  constructor(nextNode: DiagramNode, greenLight: boolean, branches: Array<DiagramNode>, gatewayId: string, pathVariables: Array<string>) {
+  constructor(nextNode: DiagramNode, greenLight: boolean, branches: Array<SequenceFlowNode>, gatewayId: string, pathVariables: Array<string>) {
     super(nextNode, gatewayId, greenLight);
 
-    this.branches = new Array<DiagramNode>();
+    this.branches = new Array<SequenceFlowNode>();
     branches.forEach(br => this.addBranch(br));
     
     this.pathVariables = pathVariables;
   }
 
-  public addBranch(branch: DiagramNode): void {
+  public addBranch(branch: SequenceFlowNode): void {
     this.branches.push(branch);
 
     var currentNode: DiagramNode = branch;

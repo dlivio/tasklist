@@ -540,7 +540,7 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
       return this.parseNode(node.outgoing[0], stoppingNode);
     }
 
-    var branches: Array<DiagramNode> = new Array<DiagramNode>();
+    var branches: Array<SequenceFlowNode> = new Array<SequenceFlowNode>();
     var pathVariables: Array<string> = new Array<string>();
     node.outgoing.forEach(obj => {
 
@@ -551,7 +551,7 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
 
         pathVariables.push(flowId);
 
-        branches.push(this.parseNode(obj, endGateway));
+        branches.push(this.parseSequenceFlow(obj, endGateway));
       }
 
       //branches.push(this.parseNode(obj, endGateway));
@@ -604,7 +604,7 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
    * TODO
    * 
    */
-   private parseSequenceFlow(node: any, stoppingNode: any = null): DiagramNode {
+   private parseSequenceFlow(node: any, stoppingNode: any = null): SequenceFlowNode {
     var nextObj: any = this.getSequenceFlowOutgoing(node);
     var nextNode: DiagramNode = this.parseNode(nextObj, stoppingNode);
 

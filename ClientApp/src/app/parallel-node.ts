@@ -1,6 +1,7 @@
 import { BasicNode } from "./basic-node";
 import { DiagramNode } from "./diagram-node";
 import { GatewayNode } from "./gateway-node";
+import { SequenceFlowNode } from "./sequence-flow-node";
 
 export class ParallelNode extends GatewayNode {
 
@@ -36,7 +37,7 @@ export class ParallelNode extends GatewayNode {
   }
 
   public clone(): DiagramNode {
-    var clonedBranches: Array<DiagramNode> = new Array<DiagramNode>(this.branches.length);
+    var clonedBranches: Array<SequenceFlowNode> = new Array<SequenceFlowNode>(this.branches.length);
     this.branches.forEach(br => clonedBranches.push(br.clone()));
 
     if (this.nextNode == null)
@@ -51,6 +52,9 @@ export class ParallelNode extends GatewayNode {
   }
 
   public getVariables(): Map<string, string> {
+    if (this.greenLight == true && this.nextNode != null)
+      return this.nextNode.getVariables();
+
     return new Map<string, string>();
   }
 

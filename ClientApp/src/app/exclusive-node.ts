@@ -51,7 +51,7 @@ export class ExclusiveNode extends GatewayNode {
   }
 
   public clone(): DiagramNode {
-    var clonedBranches: Array<DiagramNode> = new Array<DiagramNode>(this.branches.length);
+    var clonedBranches: Array<SequenceFlowNode> = new Array<SequenceFlowNode>(this.branches.length);
     this.branches.forEach(br => clonedBranches.push(br.clone()));
 
     if (this.nextNode == null)
@@ -91,10 +91,12 @@ export class ExclusiveNode extends GatewayNode {
         }
         */
        
-        if (br instanceof SequenceFlowNode)
-          variables.set(br.nextNodeId, br.id);
-      
+        variables.set(br.nextNodeId, br.id);
 
+        if (br.nextNode != null) 
+          br.nextNode.getVariables().forEach((v, k) => variables.set(k, v));
+          
+        
       } else {
         /*
         if (br instanceof BasicNode) {
@@ -105,8 +107,7 @@ export class ExclusiveNode extends GatewayNode {
         }
         */
        
-        if (br instanceof SequenceFlowNode)
-          variables.set(br.nextNodeId, "");
+        variables.set(br.nextNodeId, "");
           
       }
       variableIndex++;

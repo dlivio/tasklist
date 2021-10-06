@@ -1,8 +1,10 @@
+import { IncomingMessage } from "http";
 import { BasicNode } from "./basic-node";
 import { DiagramNode } from "./diagram-node";
 import { ExclusiveNode } from "./exclusive-node";
 import { GatewayNode } from "./gateway-node";
 import { ParallelNode } from "./parallel-node";
+import { SequenceFlowNode } from "./sequence-flow-node";
 
 export class InclusiveNode extends GatewayNode {
 
@@ -59,8 +61,8 @@ export class InclusiveNode extends GatewayNode {
   }
 
   public clone(): DiagramNode {
-    var clonedBranches: Array<DiagramNode> = new Array<DiagramNode>(this.branches.length);
-    this.branches.forEach(br => clonedBranches.push(br.clone()) );
+    var clonedBranches: Array<SequenceFlowNode> = new Array<SequenceFlowNode>(this.branches.length);
+    this.branches.forEach(br => clonedBranches.push(br.clone()));
 
     if (this.nextNode == null)
       return new InclusiveNode(null, this.greenLight, clonedBranches, this.id, this.pathVariables);
@@ -90,6 +92,7 @@ export class InclusiveNode extends GatewayNode {
     
     this.branches.forEach(br => { 
       if (br.getGreenLight() && !br.isSubmitted()) {
+        /*
         if (br instanceof BasicNode) {
           variables.set(br.id, this.pathVariables[variableIndex]);
 
@@ -99,14 +102,24 @@ export class InclusiveNode extends GatewayNode {
             br.nextNode.getVariables().forEach((v, k) => variables.set(k, v));
         }
         br.getVariables().forEach((v, k) => variables.set(k, v));
-      
+        */
+
+        variables.set(br.nextNodeId, br.id);
+
+        if (br.nextNode != null) 
+          br.nextNode.getVariables().forEach((v, k) => variables.set(k, v));
+
       } else {
+        /*
         if (br instanceof BasicNode) {
           variables.set(br.id, "");
 
         } else if (br instanceof GatewayNode) {
           variables.set(br.id, "");
         }
+        */
+
+        variables.set(br.nextNodeId, "");
       }
       variableIndex++;
     });
