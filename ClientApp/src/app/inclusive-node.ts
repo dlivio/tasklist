@@ -1,4 +1,3 @@
-import { IncomingMessage } from "http";
 import { BasicNode } from "./basic-node";
 import { DiagramNode } from "./diagram-node";
 import { ExclusiveNode } from "./exclusive-node";
@@ -85,43 +84,20 @@ export class InclusiveNode extends GatewayNode {
   public getVariables(): Map<string, string> {
     var variables: Map<string, string> = new Map<string, string>();
 
-    var variableIndex: number = 0;
-
     console.log("inside get variables of inclusive gateway: " + this.id);
     console.log(this.pathVariables);
     
     this.branches.forEach(br => { 
       if (br.getGreenLight() && !br.isSubmitted()) {
-        /*
-        if (br instanceof BasicNode) {
-          variables.set(br.id, this.pathVariables[variableIndex]);
-
-        } else if (br instanceof GatewayNode) {
-          variables.set(br.id, this.pathVariables[variableIndex]);
-          if (br.nextNode != null)
-            br.nextNode.getVariables().forEach((v, k) => variables.set(k, v));
-        }
-        br.getVariables().forEach((v, k) => variables.set(k, v));
-        */
-
         variables.set(br.nextNodeId, br.id);
 
         if (br.nextNode != null) 
           br.nextNode.getVariables().forEach((v, k) => variables.set(k, v));
 
       } else {
-        /*
-        if (br instanceof BasicNode) {
-          variables.set(br.id, "");
-
-        } else if (br instanceof GatewayNode) {
-          variables.set(br.id, "");
-        }
-        */
-
         variables.set(br.nextNodeId, "");
+
       }
-      variableIndex++;
     });
 
     if (this.nextNode != null && this.getGreenLight()) {

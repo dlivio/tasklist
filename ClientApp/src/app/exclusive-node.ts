@@ -68,49 +68,17 @@ export class ExclusiveNode extends GatewayNode {
   public getVariables(): Map<string, string> {
     var variables: Map<string, string> = new Map<string, string>();
 
-    var variableIndex: number = 0;
-    
-    console.log("inside get variables of exclusive gateway: " + this.id);
-    console.log(this.pathVariables);
-
     this.branches.forEach(br => { 
       if (br.getGreenLight() && !br.isSubmitted()) {
-        
-        /*
-        if (br instanceof BasicNode) {
-          variables.set(br.id, this.pathVariables[variableIndex]);
-
-        } else if (br instanceof GatewayNode) {
-          variables.set(br.id, this.pathVariables[variableIndex]);
-          if (br.nextNode != null)
-            br.nextNode.getVariables().forEach((v, k) => variables.set(k, v));
-        
-        } else { // case where the gateway has a path leading only to the end gateway
-          //variables.set(br.gatewayId, this.pathVariables[variableIndex]);
-        
-        }
-        */
-       
         variables.set(br.nextNodeId, br.id);
 
         if (br.nextNode != null) 
           br.nextNode.getVariables().forEach((v, k) => variables.set(k, v));
           
-        
       } else {
-        /*
-        if (br instanceof BasicNode) {
-          variables.set(br.id, "");
-
-        } else if (br instanceof GatewayNode) {
-          variables.set(br.id, "");
-        }
-        */
-       
         variables.set(br.nextNodeId, "");
           
       }
-      variableIndex++;
     });
 
     if (this.nextNode != null && this.getGreenLight())

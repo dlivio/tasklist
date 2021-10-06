@@ -98,6 +98,9 @@ export class SequenceFlowNode extends DiagramNode {
     }
 
     public getGreenLight(): boolean {
+        if (this.submitted)
+            return true;
+
         return this.greenLight;
     }
 
@@ -106,7 +109,7 @@ export class SequenceFlowNode extends DiagramNode {
     }
 
     public getVariables(): Map<string, string> {
-        if (this.greenLight == true && this.nextNode != null)
+        if ((this.greenLight == true || this.submitted) && this.nextNode != null)
             return this.nextNode.getVariables();
 
         return new Map<string, string>();

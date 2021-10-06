@@ -256,7 +256,7 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
     console.log("inside submit tasks variables");
     console.log(variablesToSend);
 
-    //return; // temp
+    return; // temp
 
     console.log("variables map hereeeeee");
     console.log(variablesToSend);
@@ -617,11 +617,13 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
       if (nextNode.isSubmitted() || this.currentTaskIds.indexOf(nextNode.id) != -1) {
         console.log("gateway path " + node.id + " updated as submitted node");
         builtNode.submitted = true;
-        //return new SubmittedNode(nextNode, node.id);
       }
 
     } else {
-      builtNode = new SequenceFlowNode(nextNode, false, node.id, "");
+      if (stoppingNode != null && nextObj.id == stoppingNode.id)
+        builtNode = new SequenceFlowNode(nextNode, false, node.id, nextObj.id);
+      else
+        builtNode = new SequenceFlowNode(nextNode, false, node.id, "");
 
     }
 
