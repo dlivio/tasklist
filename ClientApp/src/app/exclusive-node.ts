@@ -2,12 +2,13 @@ import { notDeepStrictEqual } from "assert";
 import { BasicNode } from "./basic-node";
 import { DiagramNode } from "./diagram-node";
 import { GatewayNode } from "./gateway-node";
+import { SequenceFlowNode } from "./sequence-flow-node";
 import { InclusiveNode } from "./inclusive-node";
 import { ParallelNode } from "./parallel-node";
 
 export class ExclusiveNode extends GatewayNode {
 
-  public canEnable(): BasicNode[] {
+  public canEnable(): DiagramNode[] {
     var selectedNode: DiagramNode = null;
     // do a first iteration to see if there is already as selected path and prevent the others from 
     // entering the canEnable array
@@ -15,7 +16,7 @@ export class ExclusiveNode extends GatewayNode {
       if (selectedNode == null && br.getGreenLight() == true) selectedNode = br;
     });
 
-    var canEnable: Array<BasicNode> = new Array<BasicNode>();
+    var canEnable: Array<DiagramNode> = new Array<DiagramNode>();
 
     if (selectedNode != null) 
       canEnable = canEnable.concat(selectedNode.canEnable());
@@ -54,10 +55,10 @@ export class ExclusiveNode extends GatewayNode {
     this.branches.forEach(br => clonedBranches.push(br.clone()));
 
     if (this.nextNode == null)
-      return new ExclusiveNode(null, this.greenLight, clonedBranches, this.gatewayId, this.pathVariables);
+      return new ExclusiveNode(null, this.greenLight, clonedBranches, this.id, this.pathVariables);
 
     var nextNodeClone: DiagramNode = this.nextNode.clone();
-    return new ExclusiveNode(nextNodeClone, this.greenLight, clonedBranches, this.gatewayId, this.pathVariables);
+    return new ExclusiveNode(nextNodeClone, this.greenLight, clonedBranches, this.id, this.pathVariables);
   }
 
   public getGreenLight(): boolean {
@@ -69,16 +70,18 @@ export class ExclusiveNode extends GatewayNode {
 
     var variableIndex: number = 0;
     
-    console.log("inside get variables of exclusive gateway: " + this.gatewayId);
+    console.log("inside get variables of exclusive gateway: " + this.id);
     console.log(this.pathVariables);
 
     this.branches.forEach(br => { 
       if (br.getGreenLight() && !br.isSubmitted()) {
+        
+        /*
         if (br instanceof BasicNode) {
-          variables.set(br.activityId, this.pathVariables[variableIndex]);
+          variables.set(br.id, this.pathVariables[variableIndex]);
 
         } else if (br instanceof GatewayNode) {
-          variables.set(br.gatewayId, this.pathVariables[variableIndex]);
+          variables.set(br.id, this.pathVariables[variableIndex]);
           if (br.nextNode != null)
             br.nextNode.getVariables().forEach((v, k) => variables.set(k, v));
         
@@ -86,14 +89,25 @@ export class ExclusiveNode extends GatewayNode {
           //variables.set(br.gatewayId, this.pathVariables[variableIndex]);
         
         }
+        */
+       
+        if (br instanceof SequenceFlowNode)
+          variables.set(br.nextNodeId, br.id);
+      
 
       } else {
+        /*
         if (br instanceof BasicNode) {
-          variables.set(br.activityId, "");
+          variables.set(br.id, "");
 
         } else if (br instanceof GatewayNode) {
-          variables.set(br.gatewayId, "");
+          variables.set(br.id, "");
         }
+        */
+       
+        if (br instanceof SequenceFlowNode)
+          variables.set(br.nextNodeId, "");
+          
       }
       variableIndex++;
     });
