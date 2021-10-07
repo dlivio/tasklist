@@ -27,14 +27,28 @@ export class BasicNode extends DiagramNode {
   }
 
   public canBeValidated(): boolean {
+    console.log("inside can be validated of basic node: " + this.id);
+
     if (this.greenLight == true && this.nextNode != null)
       return this.nextNode.canBeValidated();
 
     return true;
   }
 
+  public getNodesForSubmission(): BasicNode[] {
+    var nodesToSubmit: Array<DiagramNode> = new Array<DiagramNode>();
+    if (this.greenLight == true)
+      nodesToSubmit.push(this);
+      if (this.nextNode != null)
+        nodesToSubmit = nodesToSubmit.concat(this.nextNode.getNodesForSubmission());
+
+    return nodesToSubmit;
+  }
+
   public enable(): void {
     this.greenLight = true;
+    // automatically enable the next sequence flow
+    this.nextNode.enable();
   }
 
   public disable(): Array<DiagramNode> {

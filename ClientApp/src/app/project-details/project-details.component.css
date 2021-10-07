@@ -2,7 +2,6 @@
   fill: aqua !important; /* color elements as green */
 }
 
-
 .highlight-flow-hover:where(.djs-connection):hover .djs-outline { /*.highlight-flow > .djs-outline */
   stroke: aqua !important;
   stroke-width: 2px;
@@ -14,6 +13,10 @@
 
 .highlight-history:not(.djs-connection) .djs-visual > :nth-child(1) {
   fill: #1CAC78 !important; /* color elements as green */
+}
+
+.highlight-flow-history:where(.djs-connection) .djs-visual > :nth-child(1) {
+  stroke: #1CAC78 !important;
 }
 
 .highlight-current:not(.djs-connection) .djs-visual > :nth-child(1) {

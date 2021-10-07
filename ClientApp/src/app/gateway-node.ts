@@ -5,16 +5,12 @@ import { SequenceFlowNode } from "./sequence-flow-node";
 export abstract class GatewayNode extends DiagramNode {
   // array with the first node of each branch of the gateway
   public branches: Array<SequenceFlowNode>;
-  //
-  public pathVariables: Array<string>;
 
-  constructor(nextNode: DiagramNode, greenLight: boolean, branches: Array<SequenceFlowNode>, gatewayId: string, pathVariables: Array<string>) {
+  constructor(nextNode: DiagramNode, greenLight: boolean, branches: Array<SequenceFlowNode>, gatewayId: string) {
     super(nextNode, gatewayId, greenLight);
 
     this.branches = new Array<SequenceFlowNode>();
     branches.forEach(br => this.addBranch(br));
-    
-    this.pathVariables = pathVariables;
   }
 
   public addBranch(branch: SequenceFlowNode): void {
@@ -37,6 +33,16 @@ export abstract class GatewayNode extends DiagramNode {
     return canDisable;
   }
 
+  public getNodesForSubmission(): BasicNode[] {
+    var nodesToSubmit: Array<BasicNode> = new Array<BasicNode>();
+    this.branches.forEach(br => nodesToSubmit = nodesToSubmit.concat(br.getNodesForSubmission()) );
+
+    if (this.nextNode != null)
+      nodesToSubmit = nodesToSubmit.concat(this.nextNode.getNodesForSubmission());
+
+    return nodesToSubmit;
+  }
+
   public enable(): void {
     throw new Error("Method not implemented.");
   }
@@ -53,15 +59,29 @@ export abstract class GatewayNode extends DiagramNode {
 
   public completedBranches(): number {
     var completedBranches: number = 0;
-    this.branches.forEach(function (br) {
+
+    this.branches.forEach(br => {
       var currentNode: DiagramNode = br;
 
       while (currentNode.getGreenLight() && currentNode.nextNode != null) {
         currentNode = currentNode.nextNode;
       }
 
+      if (currentNode instanceof SequenceFlowNode) { // always should be
+        // last node before ending gateway with a basic node before
+        if (currentNode.previousNode != null && currentNode.previousNode.getGreenLight() && currentNode.nextNode == null) {
+          completedBranches++;
+
+        // single sequence flow in a branch
+        } else if (currentNode.previousNode == null && currentNode.getGreenLight() && currentNode.nextNode == null) {
+          completedBranches++;
+        }
+      }
+
+      /*
       if (currentNode.getGreenLight() && currentNode.nextNode == null)
         completedBranches++;
+        */
     });
 
     return completedBranches;
@@ -73,7 +93,19 @@ export abstract class GatewayNode extends DiagramNode {
 
   public hasActivityId(activityId: string): boolean {
     var activityIdFound: boolean = false;
-    this.branches.forEach(br => activityIdFound = activityIdFound || br.hasActivityId(activityId) );
+    // search all the branch for the activity id
+    this.branches.forEach(br => {
+      var node: DiagramNode = br;
+      while (node != null ) {
+        activityIdFound = activityIdFound || node.hasActivityId(activityId);
+
+        // if the node is found stop the iteration
+        if (node.getGreenLight() || node.isSubmitted())
+          node = node.nextNode;
+        else
+          node = null;
+      }
+    });
 
     return activityIdFound;
   }

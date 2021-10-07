@@ -64,10 +64,10 @@ export class InclusiveNode extends GatewayNode {
     this.branches.forEach(br => clonedBranches.push(br.clone()));
 
     if (this.nextNode == null)
-      return new InclusiveNode(null, this.greenLight, clonedBranches, this.id, this.pathVariables);
+      return new InclusiveNode(null, this.greenLight, clonedBranches, this.id);
 
     var nextNodeClone: DiagramNode = this.nextNode.clone();
-    return new InclusiveNode(nextNodeClone, this.greenLight, clonedBranches, this.id, this.pathVariables);
+    return new InclusiveNode(nextNodeClone, this.greenLight, clonedBranches, this.id);
   }
 
   public getGreenLight(): boolean {
@@ -83,9 +83,6 @@ export class InclusiveNode extends GatewayNode {
 
   public getVariables(): Map<string, string> {
     var variables: Map<string, string> = new Map<string, string>();
-
-    console.log("inside get variables of inclusive gateway: " + this.id);
-    console.log(this.pathVariables);
     
     this.branches.forEach(br => { 
       if (br.getGreenLight() && !br.isSubmitted()) {
@@ -130,7 +127,7 @@ export class InclusiveNode extends GatewayNode {
         while (currentNode.nextNode != null) {
           currentNode = currentNode.nextNode;
 
-          if (!currentNode.isSubmitted() ) { 
+          if (!(currentNode instanceof SequenceFlowNode) && !currentNode.isSubmitted() ) { 
             hasUnfinishedBranch = true;
           }
 

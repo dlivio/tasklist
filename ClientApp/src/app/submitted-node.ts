@@ -20,9 +20,17 @@ export class SubmittedNode extends DiagramNode{
     }
 
     public canBeValidated(): boolean {
+        console.log("inside can be submitted: " + this.id);
+
         if (this.nextNode == null) return true; 
 
         return this.nextNode.canBeValidated();
+    }
+
+    public getNodesForSubmission(): BasicNode[] {
+        if (this.nextNode == null) return []; 
+
+        return this.nextNode.getNodesForSubmission();
     }
 
     public enable(): void {

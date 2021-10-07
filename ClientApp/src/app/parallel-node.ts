@@ -41,10 +41,10 @@ export class ParallelNode extends GatewayNode {
     this.branches.forEach(br => clonedBranches.push(br.clone()));
 
     if (this.nextNode == null)
-      return new ParallelNode(null, this.greenLight, clonedBranches, this.id, this.pathVariables);
+      return new ParallelNode(null, this.greenLight, clonedBranches, this.id);
 
     var nextNodeClone: DiagramNode = this.nextNode.clone();
-    return new ParallelNode(nextNodeClone, this.greenLight, clonedBranches, this.id, this.pathVariables);
+    return new ParallelNode(nextNodeClone, this.greenLight, clonedBranches, this.id);
   }
 
   public getGreenLight(): boolean {
@@ -74,9 +74,22 @@ export class ParallelNode extends GatewayNode {
         currentNode = currentNode.nextNode;
       }
 
+      if (currentNode instanceof SequenceFlowNode) { // always should be
+        // last node before ending gateway with a basic/gateway node before
+        if (currentNode.previousNode != null && !currentNode.previousNode.isSubmitted() && currentNode.nextNode == null) {
+          hasUnfinishedBranch = true;
+
+        // single sequence flow in a branch
+        } else if (currentNode.previousNode == null && !currentNode.getGreenLight() && currentNode.nextNode == null) {
+          hasUnfinishedBranch = true;
+        }
+      }
+
+      /*
       if (!currentNode.isSubmitted() ) {
         hasUnfinishedBranch = true;
       }
+      */
 
     });
 

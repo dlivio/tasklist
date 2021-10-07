@@ -46,16 +46,19 @@ export class SequenceFlowNode extends DiagramNode {
     }
 
     public canBeValidated(): boolean {
-        if (this.submitted) {
-            if (this.nextNode == null) return true; 
+        console.log("inside can be validated of flow: " + this.id);
 
-            return this.nextNode.canBeValidated();
-        }
+        if (this.nextNode == null) return true; 
 
-        if (this.greenLight == true && this.nextNode != null)
-            return this.nextNode.canBeValidated();
+        return this.nextNode.canBeValidated();
+    }
 
-        return true;
+    public getNodesForSubmission(): BasicNode[] {
+        var nodesToSubmit: Array<DiagramNode> = new Array<DiagramNode>();
+        if ( (this.submitted || this.greenLight == true) && this.nextNode != null)
+            nodesToSubmit = nodesToSubmit.concat(this.nextNode.getNodesForSubmission());
+
+        return nodesToSubmit;
     }
 
     public enable(): void {
@@ -116,7 +119,7 @@ export class SequenceFlowNode extends DiagramNode {
     }
 
     public hasActivityId(activityId: string): boolean {
-        return activityId == this.id;
+        return false;
     }
 
 }

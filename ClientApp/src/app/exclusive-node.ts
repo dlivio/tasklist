@@ -31,6 +31,8 @@ export class ExclusiveNode extends GatewayNode {
 
   public canBeValidated(): boolean {
 
+    console.log("inside can be validated of gateway exclusive: " + this.id + " green light: " + this.getGreenLight());
+
     var isValid: boolean = true;
 
     var selectedBranchCount: number = 0;
@@ -55,10 +57,10 @@ export class ExclusiveNode extends GatewayNode {
     this.branches.forEach(br => clonedBranches.push(br.clone()));
 
     if (this.nextNode == null)
-      return new ExclusiveNode(null, this.greenLight, clonedBranches, this.id, this.pathVariables);
+      return new ExclusiveNode(null, this.greenLight, clonedBranches, this.id);
 
     var nextNodeClone: DiagramNode = this.nextNode.clone();
-    return new ExclusiveNode(nextNodeClone, this.greenLight, clonedBranches, this.id, this.pathVariables);
+    return new ExclusiveNode(nextNodeClone, this.greenLight, clonedBranches, this.id);
   }
 
   public getGreenLight(): boolean {
@@ -68,18 +70,31 @@ export class ExclusiveNode extends GatewayNode {
   public getVariables(): Map<string, string> {
     var variables: Map<string, string> = new Map<string, string>();
 
-    this.branches.forEach(br => { 
-      if (br.getGreenLight() && !br.isSubmitted()) {
-        variables.set(br.nextNodeId, br.id);
-
-        if (br.nextNode != null) 
-          br.nextNode.getVariables().forEach((v, k) => variables.set(k, v));
-          
-      } else {
-        variables.set(br.nextNodeId, "");
-          
-      }
+    var submittedPath: DiagramNode = null;
+    // do a first iteration to see if there is already as selected path and prevent the others from 
+    // entering the canEnable array
+    this.branches.forEach(br => {
+      if (submittedPath == null && br.isSubmitted() ) submittedPath = br;
     });
+
+    if (submittedPath != null) {
+      if (submittedPath.nextNode != null) 
+        submittedPath.nextNode.getVariables().forEach((v, k) => variables.set(k, v));
+    
+      } else {
+      this.branches.forEach(br => { 
+        if (br.getGreenLight()) {
+          variables.set(br.nextNodeId, br.id);
+  
+          if (br.nextNode != null) 
+            br.nextNode.getVariables().forEach((v, k) => variables.set(k, v));
+            
+        } else {
+          variables.set(br.nextNodeId, "");
+            
+        }
+      });
+    }
 
     if (this.nextNode != null && this.getGreenLight())
       this.nextNode.getVariables().forEach((v, k) => variables.set(k, v));
@@ -103,9 +118,22 @@ export class ExclusiveNode extends GatewayNode {
         currentNode = currentNode.nextNode;
       }
 
+      if (currentNode instanceof SequenceFlowNode) { // always should be
+        // last node before ending gateway with a basic/gateway node before
+        if (currentNode.previousNode != null && currentNode.previousNode.isSubmitted() && currentNode.nextNode == null) {
+          noSubmittedPath = false;
+
+        // single sequence flow in a branch
+        } else if (currentNode.previousNode == null && currentNode.getGreenLight() && currentNode.nextNode == null) {
+          noSubmittedPath = false;
+        }
+      }
+
+      /*
       if (currentNode.isSubmitted() ) {
         noSubmittedPath = false;
       }
+      */
     });
 
     return noSubmittedPath;

@@ -28,14 +28,14 @@ export abstract class DiagramNode {
   }
 
   /**
-   * Method that returns an array containing all the basic nodes that can be enabled (or clicked) in the graph.
+   * Method that returns an array containing all the nodes that can be enabled (or clicked) in the graph.
    * 
    * @returns an array of enableable BasicNode's
    */
   public abstract canEnable(): Array<DiagramNode>;
 
   /**
-   * Method that returns an array containing all the basic nodes that were previously enabled in the session (except 
+   * Method that returns an array containing all the nodes that were previously enabled in the session (except 
    * the nodes already marked and submitted), making it possible to disable them before submission. 
    * 
    * @returns an array of disableable BasicNode's
@@ -48,6 +48,14 @@ export abstract class DiagramNode {
    * @returns a boolean that evaluates if the selection is valid for submission
    */
   public abstract canBeValidated(): boolean;
+
+  /**
+   * Method that returns an array containing all the basic nodes that were previously enabled in the session (except 
+   * the nodes already marked and submitted), to send to be approved by Camunda. 
+   * 
+   * @returns an array of submittable BasicNode's
+   */
+  public abstract getNodesForSubmission(): Array<BasicNode>;
 
   /**
    * TODO: add description

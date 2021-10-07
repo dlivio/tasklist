@@ -35,6 +35,7 @@ import { HistoryTasks } from '../diagram';
 import { SubmittedNode } from '../submitted-node';
 import { TasksToApprove } from '../task';
 import { SequenceFlowNode } from '../sequence-flow-node';
+import { GatewayNode } from '../gateway-node';
 
 @Component({
   selector: 'app-diagram',
@@ -128,18 +129,18 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
         if (nodeForEnableFound != undefined) {
           console.log("found it enable");
 
-          if (nodeForEnableFound instanceof SequenceFlowNode) 
-            this.canvas.addMarker(e.element.id, 'highlight-flow');
-
           if (!this.canvas.hasMarker(e.element.id, 'highlight') || !this.canvas.hasMarker(e.element.id, 'highlight-flow')) {
             
+             // select the node and get the new array with nodes available to select
+             nodeForEnableFound.enable();
+
             if (nodeForEnableFound instanceof SequenceFlowNode) 
               this.canvas.addMarker(e.element.id, 'highlight-flow');
-            else
+            else {
               this.canvas.addMarker(e.element.id, 'highlight');
-            
-            // select the node and get the new array with nodes available to select
-            nodeForEnableFound.enable();
+              // highlight the next SequenceFlow (that had been automatically enabled)
+              this.canvas.addMarker(nodeForEnableFound.nextNode.id, 'highlight-flow');
+            }
 
             this.nodesEnableable = this.currentNode.canEnable();
 
@@ -249,14 +250,18 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
 
     console.log(this.currentNode.canDisable());
 
-    var nodesSelected: BasicNode[] = this.currentNode.canDisable();
+    //var nodesSelected: BasicNode[] = this.currentNode.canDisable();
+    var nodesSelected: BasicNode[] = this.currentNode.getNodesForSubmission();
 
     var variablesToSend: Map<string, string> = this.currentNode.getVariables();
 
     console.log("inside submit tasks variables");
     console.log(variablesToSend);
 
-    return; // temp
+    console.log("nodes to submit: ");
+    console.log(nodesSelected);
+
+    //return; // temp
 
     console.log("variables map hereeeeee");
     console.log(variablesToSend);
@@ -487,6 +492,10 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
     // if node is in historyNodes then return new SubmittedNode
     if (this.taskHistoryIds.indexOf(node.id) != -1) {
       console.log("user task " + node.id + " parsed as submitted node");
+      // if the node is submitted the following sequence flow node should also be
+      if (nextNode instanceof SequenceFlowNode)
+        nextNode.submitted = true; 
+
       return new SubmittedNode(nextNode, node.id);
     }
 
@@ -541,16 +550,11 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
     }
 
     var branches: Array<SequenceFlowNode> = new Array<SequenceFlowNode>();
-    var pathVariables: Array<string> = new Array<string>();
     node.outgoing.forEach(obj => {
 
       var nodeType: string = this.getNodeType(obj);
 
       if (nodeType == "bpmn:SequenceFlow") {
-        var flowId: string = obj.id;
-
-        pathVariables.push(flowId);
-
         branches.push(this.parseSequenceFlow(obj, endGateway));
       }
 
@@ -559,36 +563,36 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
 
     var nextNode: DiagramNode = this.parseNode(endGateway.outgoing[0], stoppingNode);
 
-    console.log("parsing gateway: ");
-    console.log(node);
-    console.log("next node: ");
-    console.log(nextNode);
-    console.log("branches: ");
-    console.log(branches);
-    console.log("end gateway: ");
-    console.log(endGateway);
-
     switch (gatewayType) {
       case "exclusive":
         if (ExclusiveNode.inferGatewayInstance(nextNode, branches)) {
-          return new ExclusiveNode(nextNode, false, branches, node.id, pathVariables);
+          return new ExclusiveNode(nextNode, false, branches, node.id);
         } else {
+          // if the node is submitted the following sequence flow node should also be
+          if (nextNode instanceof SequenceFlowNode)
+            nextNode.submitted = true;
           return new SubmittedNode(nextNode, node.id);
         }
 
         break;
       case "inclusive":
         if (InclusiveNode.inferGatewayInstance(nextNode, branches, this.currentTaskIds)) {
-          return new InclusiveNode(nextNode, false, branches, node.id, pathVariables);
+          return new InclusiveNode(nextNode, false, branches, node.id);
         } else {
+          // if the node is submitted the following sequence flow node should also be
+          if (nextNode instanceof SequenceFlowNode)
+            nextNode.submitted = true;
           return new SubmittedNode(nextNode, node.id);
         }
 
         break;
       case "parallel":
         if (ParallelNode.inferGatewayInstance(nextNode, branches)) {
-          return new ParallelNode(nextNode, false, branches, node.id, pathVariables);
+          return new ParallelNode(nextNode, false, branches, node.id);
         } else {
+          // if the node is submitted the following sequence flow node should also be
+          if (nextNode instanceof SequenceFlowNode)
+            nextNode.submitted = true;
           return new SubmittedNode(nextNode, node.id);
         }
 
@@ -610,20 +614,34 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
 
     var builtNode: SequenceFlowNode;// = new SequenceFlowNode(nextNode, false, node.id, nextObj.id);
 
-    // if node is in historyNodes then return new SubmittedNode
+    // if the sequence flow is either before a submitted node or before a current node,
+    // consider it submitted
     if (nextNode != null) {
+
       builtNode = new SequenceFlowNode(nextNode, false, node.id, nextObj.id);
 
       if (nextNode.isSubmitted() || this.currentTaskIds.indexOf(nextNode.id) != -1) {
-        console.log("gateway path " + node.id + " updated as submitted node");
         builtNode.submitted = true;
+        this.canvas.addMarker(builtNode.id, 'highlight-flow-history');
+      
+      } else if (nextNode instanceof GatewayNode) {
+        this.currentTaskIds.forEach(id => {
+      
+          if (nextNode.hasActivityId(id)) { 
+            builtNode.submitted = true;
+            this.canvas.addMarker(builtNode.id, 'highlight-flow-history');
+          }
+        });
       }
 
     } else {
-      if (stoppingNode != null && nextObj.id == stoppingNode.id)
+
+      if (stoppingNode != null && nextObj.id == stoppingNode.id) {
         builtNode = new SequenceFlowNode(nextNode, false, node.id, nextObj.id);
-      else
+
+      } else {
         builtNode = new SequenceFlowNode(nextNode, false, node.id, "");
+      }
 
     }
 
