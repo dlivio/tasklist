@@ -8,6 +8,7 @@ export class DiagramXML {
 export class HistoryTasks {
   constructor(
     public currentActivityIds: string[],
-    public historyActivityIds: string[]
+    public historyActivityIds: string[],
+    public historySequenceFlowIds: string[]
   ) { }
 }

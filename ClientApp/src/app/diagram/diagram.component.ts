@@ -66,6 +66,8 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
 
   // the history of activity id's of the current diagram
   private taskHistoryIds: string[];
+  //
+  private sequenceFlowHistoryIds: string[];
   // the current task activity id available to click
   private currentTaskIds: string[];
 
@@ -354,22 +356,14 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
       // remove the current task to be approved from the list and save it
       this.currentTaskIds = result.currentActivityIds;                               // TODO: needs to be changed to retrieve current tasks hereeeee
 
+      console.log("history variable result");
+      console.log(result);
+
+      this.sequenceFlowHistoryIds = result.historySequenceFlowIds;
+
       console.log("current tasks");
       console.log(this.currentTaskIds);
       console.log(this.currentTaskIds[0]);
-
-      // filter the elements in the diagram to limit those who are clickable
-      var tasksFound = elementRegistry.filter(function (el) {
-        return (el.type == "bpmn:Task" || el.type == "bpmn:UserTask" || el.type == "bpmn:ManualTask" || 
-          el.type == "bpmn:CallActivity" || el.type == "bpmn:CallActivity" || el.type == "bpmn:BusinessRuleTask");
-      });
-      // add color to all the elements in the history
-      for (let i = 0; i < tasksFound.length; i++) {
-        if (this.taskHistoryIds.indexOf(tasksFound[i].id) > -1) { //&& !canvas.hasMarker(tasksFound[i].id, 'highlight-history')) {
-          canvas.addMarker(tasksFound[i].id, 'highlight-history');
-        }
-
-      }
 
     }, error => console.error(error)
       , () => { // on complete this path is activated
@@ -407,7 +401,7 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
    * Method to build the graph recursively through the call of the parsing of the root (or first) node 
    * in the graph.
    * 
-   * @param node 
+   * @param node the unparsed node
    * @param stoppingNode, the node that serves as criteria to stop the parsing
    * @returns the built 'node' called with the entire graph built
    */
@@ -433,13 +427,9 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
         return this.parseSequenceFlow(node, stoppingNode);
         break;
       case "bpmn:ManualTask":
-        return this.parseManualTask(node, stoppingNode);
-        break;
       case "bpmn:BusinessRuleTask":
-        return this.parseBusinessTask(node, stoppingNode);
-        break;
       case "bpmn:CallActivity":
-        return this.parseBusinessTask(node, stoppingNode);
+        return this.parseServerRequiredTask(node, stoppingNode);
         break;
       case "bpmn:EndEvent":
         return null;
@@ -456,7 +446,7 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
    * existance of a 'businessObject' property in the outer nodes that is seemingly inexistant in the inner 
    * nodes, in which case to retrieve the next node the property 'targetRef' is needed to be called.
    * 
-   * @param sequenceFlowNode
+   * @param sequenceFlowNode the unparsed SequenceFlow
    */
   private getSequenceFlowOutgoing(sequenceFlowNode: any): any {
     if (sequenceFlowNode.businessObject != undefined) {
@@ -468,7 +458,7 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
   /**
    * Auxiliary method to retrieve the node type of a requested node.
    * 
-   * @param node
+   * @param node the unparsed node
    */
   private getNodeType(node: any): string {
     var nodeType: string = node.type;
@@ -482,9 +472,9 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
   /**
    * Method to build a node of type BasicNode (which correlates to a 'UserTask' in BPMN).
    * 
-   * @param node 
-   * @param stoppingNode, the node that serves as criteria to stop the parsing
-   * @returns 
+   * @param node the unparsed node
+   * @param stoppingNode the node that serves as criteria to stop the parsing
+   * @returns the parsed node as a BasicNode (subtype of DiagramNode)
    */
   private parseUserTask(node: any, stoppingNode: any = null): DiagramNode {
     var nextNode: DiagramNode = this.parseNode(node.outgoing[0], stoppingNode);
@@ -496,6 +486,8 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
       if (nextNode instanceof SequenceFlowNode)
         nextNode.submitted = true; 
 
+      // color the affected nodes by making a submitted node
+      this.colourHistoryNode("basic", node.id, nextNode.id);
       return new SubmittedNode(nextNode, node.id);
     }
 
@@ -539,7 +531,16 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
     return node;
   }
 
-  private parseGateway(node: any, stoppingNode: any = null, gatewayType: string) {
+  /**
+   * Method to build a node of type GatewayNode, which encapsules the entire collection of nodes between 
+   * the opening and the respective closing gateway (including possible GatewayNode's).
+   * 
+   * @param node the unparsed node
+   * @param stoppingNode the node that serves as criteria to stop the parsing
+   * @param gatewayType the type of gateway to create ("exclusive", "inclusive", and "parallel")
+   * @returns the parsed node as a GatewayNode (subtype of DiagramNode)
+   */
+  private parseGateway(node: any, stoppingNode: any = null, gatewayType: string): DiagramNode {
     var endGateway = this.getLastGateway(node, this.getNodeType(node));
 
     // if the gateway found equals the endGateway, the first node of the graph is inside a gateway;
@@ -550,16 +551,7 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
     }
 
     var branches: Array<SequenceFlowNode> = new Array<SequenceFlowNode>();
-    node.outgoing.forEach(obj => {
-
-      var nodeType: string = this.getNodeType(obj);
-
-      if (nodeType == "bpmn:SequenceFlow") {
-        branches.push(this.parseSequenceFlow(obj, endGateway));
-      }
-
-      //branches.push(this.parseNode(obj, endGateway));
-    });
+    node.outgoing.forEach(obj => branches.push(this.parseSequenceFlow(obj, endGateway) ) );
 
     var nextNode: DiagramNode = this.parseNode(endGateway.outgoing[0], stoppingNode);
 
@@ -571,6 +563,8 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
           // if the node is submitted the following sequence flow node should also be
           if (nextNode instanceof SequenceFlowNode)
             nextNode.submitted = true;
+          // color the affected nodes by making a submitted node
+          this.colourHistoryNode("gateway", node.id, nextNode.id);
           return new SubmittedNode(nextNode, node.id);
         }
 
@@ -582,6 +576,8 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
           // if the node is submitted the following sequence flow node should also be
           if (nextNode instanceof SequenceFlowNode)
             nextNode.submitted = true;
+          // color the affected nodes by making a submitted node
+          this.colourHistoryNode("gateway", node.id, nextNode.id);
           return new SubmittedNode(nextNode, node.id);
         }
 
@@ -593,43 +589,53 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
           // if the node is submitted the following sequence flow node should also be
           if (nextNode instanceof SequenceFlowNode)
             nextNode.submitted = true;
+          // color the affected nodes by making a submitted node
+          this.colourHistoryNode("gateway", node.id, nextNode.id);
           return new SubmittedNode(nextNode, node.id);
         }
 
         break;
       default:
         console.log("Gateway type not found.");
+        return null;
         break;
     }
 
   }
 
   /**
-   * TODO
+   * Method to build a node of type SequenceFlowNode (which correlates to a 'SequenceFlow' in BPMN)
    * 
+   * @param node the unparsed node
+   * @param stoppingNode the node that serves as criteria to stop the parsing
+   * @returns the parsed node as a SequenceFlowNode (subtype of DiagramNode)
    */
-   private parseSequenceFlow(node: any, stoppingNode: any = null): SequenceFlowNode {
+  private parseSequenceFlow(node: any, stoppingNode: any = null): SequenceFlowNode {
     var nextObj: any = this.getSequenceFlowOutgoing(node);
     var nextNode: DiagramNode = this.parseNode(nextObj, stoppingNode);
 
     var builtNode: SequenceFlowNode;// = new SequenceFlowNode(nextNode, false, node.id, nextObj.id);
 
-    // if the sequence flow is either before a submitted node or before a current node,
-    // consider it submitted
     if (nextNode != null) {
 
       builtNode = new SequenceFlowNode(nextNode, false, node.id, nextObj.id);
 
-      if (nextNode.isSubmitted() || this.currentTaskIds.indexOf(nextNode.id) != -1) {
+      if (this.sequenceFlowHistoryIds.indexOf(node.id) != -1) {
         builtNode.submitted = true;
-        this.canvas.addMarker(builtNode.id, 'highlight-flow-history');
+        this.colourHistoryNode("flow", builtNode.id);
+      
+      // if the sequence flow is either before a submitted node or before a current node,
+      // consider it submitted
+      } else if (nextNode.isSubmitted() || this.currentTaskIds.indexOf(nextNode.id) != -1) {
+        builtNode.submitted = true;
+        this.colourHistoryNode("flow", builtNode.id);
       
       } else if (nextNode instanceof GatewayNode) {
         this.currentTaskIds.forEach(id => {
       
           if (nextNode.hasActivityId(id)) { 
             builtNode.submitted = true;
-            this.canvas.addMarker(builtNode.id, 'highlight-flow-history');
+            this.colourHistoryNode("flow", builtNode.id);
           }
         });
       }
@@ -638,6 +644,12 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
 
       if (stoppingNode != null && nextObj.id == stoppingNode.id) {
         builtNode = new SequenceFlowNode(nextNode, false, node.id, nextObj.id);
+
+        if (this.sequenceFlowHistoryIds.indexOf(node.id) != -1) {
+          builtNode.submitted = true;
+          this.colourHistoryNode("flow", builtNode.id);
+        
+        }
 
       } else {
         builtNode = new SequenceFlowNode(nextNode, false, node.id, "");
@@ -648,18 +660,18 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
     return builtNode;
   }
 
-  private parseManualTask(node: any, stoppingNode: any = null): DiagramNode {       // TODO: shouldn't exist
-    var nextNode: DiagramNode = this.parseNode(node.outgoing[0], stoppingNode);
-
-    // if node is in historyNodes then return new SubmittedNode
-    if (this.taskHistoryIds.indexOf(node.id) != -1) {
-      return new SubmittedNode(nextNode, node.id);
-    }
-
-    return null;
-  }
-
-  private parseBusinessTask(node: any, stoppingNode: any = null): DiagramNode {
+  /**
+   * Method to build a special type of node of type SubmittedNode or 'null'. This type of node has some 
+   * requirements that can only be satisfied by the server. Therefore, this node should be interpreted as 
+   * either a stopping point where the user must submit everything immediatly before it to be able to 
+   * proceed, or simply part of the history of the diagram. This method is called for ManualTask's, 
+   * BusinessRuleTask's, or CallActivity's.
+   * 
+   * @param node the unparsed node
+   * @param stoppingNode the node that serves as criteria to stop the parsing
+   * @returns the parsed node as a SubmittedNode (subtype of DiagramNode), or null if it hasn't occurred yet
+   */
+  private parseServerRequiredTask(node: any, stoppingNode: any = null): DiagramNode {
     var nextNode: DiagramNode = this.parseNode(node.outgoing[0], stoppingNode);
 
     // if node is in historyNodes then return new SubmittedNode
@@ -683,15 +695,37 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
     });
   }
 
-  private disablePointerCleanup(canvas: any, elementRegistry: any) {
-    // filter the elements in the diagram to limit those who are clickable
-    var tasksFound = elementRegistry.filter(function (el) {
-      return (el.type == "bpmn:UserTask")
-    });
+  /**
+   * Method to color the submitted nodes and their surrounding affected nodes (SequenceFlowNode's).
+   * 
+   * @param nodeType the type of node to color ("flow", "basic", or "gateway")
+   * @param nodeId the id of the node to color
+   * @param nextNodeId the id of the next node (can be ommited in case of being null, after SequenceFlowNode)
+   */
+  private colourHistoryNode(nodeType: string, nodeId: string, nextNodeId: string = null) {
+    
+    switch (nodeType) {
+      case "flow": // color only itself
+        if (!this.canvas.hasMarker(nodeId, 'highlight-flow-history') )
+          this.canvas.addMarker(nodeId, 'highlight-flow-history');
 
-    // remove the 'pointer' property from all user tasks
-    for (let i = 0; i < tasksFound.length; i++) {
-      canvas.removeMarker(tasksFound[i].id, 'pointer');
+        break;
+      case "basic": // color itself and the following sequence flow
+        if (!this.canvas.hasMarker(nodeId, 'highlight-history') )
+          this.canvas.addMarker(nodeId, 'highlight-history');
+
+        if (!this.canvas.hasMarker(nextNodeId, 'highlight-flow-history') )
+          this.canvas.addMarker(nextNodeId, 'highlight-flow-history');
+
+        break;
+      case "gateway": // color only the following sequence flow
+        if (!this.canvas.hasMarker(nextNodeId, 'highlight-flow-history') )
+          this.canvas.addMarker(nextNodeId, 'highlight-flow-history');
+        
+        break;
+      default:
+        console.log("Node type not found.");
+        break;
     }
   }
 

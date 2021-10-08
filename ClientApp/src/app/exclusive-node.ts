@@ -129,11 +129,6 @@ export class ExclusiveNode extends GatewayNode {
         }
       }
 
-      /*
-      if (currentNode.isSubmitted() ) {
-        noSubmittedPath = false;
-      }
-      */
     });
 
     return noSubmittedPath;

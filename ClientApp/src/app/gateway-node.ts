@@ -77,11 +77,7 @@ export abstract class GatewayNode extends DiagramNode {
           completedBranches++;
         }
       }
-
-      /*
-      if (currentNode.getGreenLight() && currentNode.nextNode == null)
-        completedBranches++;
-        */
+      
     });
 
     return completedBranches;

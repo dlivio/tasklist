@@ -72,7 +72,6 @@ export class BasicNode extends DiagramNode {
 
         currentParentGatewayNode = currentParentGatewayNode.parentGatewayNode;
       }
-
     }
 
     return nodesDisabled;

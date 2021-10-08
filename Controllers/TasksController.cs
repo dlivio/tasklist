@@ -70,7 +70,9 @@ namespace tasklist.Controllers
 
             }
 
-            return new HistoryTasks(currentTasksActivityIds, historyTasks.Select(t => t.ActivityId).ToList());
+            List<CamundaHistoryVariables> historyVariables = await _camundaService.GetDiagramVariableHistoryAsync(processInstanceId);
+
+            return new HistoryTasks(currentTasksActivityIds, historyTasks.Select(t => t.ActivityId).ToList(), historyVariables.Select(v => v.Value).ToList());
         }
 
         // GET: api/Tasks/ProjectIdActive/5

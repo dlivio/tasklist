@@ -50,8 +50,6 @@ export class InclusiveNode extends GatewayNode {
       }
     });
 
-    console.log("selected branch count: " + selectedBranchCount);
-
     if (selectedBranchCount < 1 || !isValid) return false;
 
     if (this.nextNode != null && this.getGreenLight()) return this.nextNode.canBeValidated();
@@ -147,7 +145,6 @@ export class InclusiveNode extends GatewayNode {
 
         }
       }
-
     });
 
     if (numberOfOpenPaths == branches.length)

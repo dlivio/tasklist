@@ -23,12 +23,6 @@ export class ParallelNode extends GatewayNode {
       if (br.getGreenLight() && br.canBeValidated()) selectedBranchCount++;
     });
 
-    console.log("can be validated");
-    console.log(this);
-    console.log(selectedBranchCount);
-    console.log(this.branches.length);
-    console.log(this.getGreenLight());
-
     if (selectedBranchCount != this.branches.length) return false;
 
     if (this.nextNode != null && this.getGreenLight()) return this.nextNode.canBeValidated();
@@ -84,13 +78,6 @@ export class ParallelNode extends GatewayNode {
           hasUnfinishedBranch = true;
         }
       }
-
-      /*
-      if (!currentNode.isSubmitted() ) {
-        hasUnfinishedBranch = true;
-      }
-      */
-
     });
 
     return hasUnfinishedBranch;

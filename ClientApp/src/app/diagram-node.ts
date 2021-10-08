@@ -58,16 +58,17 @@ export abstract class DiagramNode {
   public abstract getNodesForSubmission(): Array<BasicNode>;
 
   /**
-   * TODO: add description
+   * Method that activates (greenLight = true) a node of type BasicNode or SequenceFlowNode. In other nodes the method 
+   * isn't supposed to be called returning the "Method not implemented." error.
    * 
-   * @returns
+   * @throws "Method not implemented.", in case of a GatewayNode
    */
   public abstract enable(): void;
 
   /**
-   * TODO: add description
+   * Method that deactivates a node and all the posterior nodes that previously required that activation.
    * 
-   * @returns
+   * @returns an array with all the DiagramNode consequently disabled by the deactivation of the current node
    */
   public abstract disable(): Array<DiagramNode>;
 

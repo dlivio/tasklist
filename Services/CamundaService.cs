@@ -186,6 +186,29 @@ namespace tasklist.Services
             return history;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="processInstanceId"></param>
+        /// <returns></returns>
+        public async Task<List<CamundaHistoryVariables>> GetDiagramVariableHistoryAsync(string processInstanceId)
+		{
+            List<CamundaHistoryVariables> history = new();
+
+            HttpResponseMessage response = await _client.GetAsync(BASE_URL + "history/variable-instance?processInstanceId=" + processInstanceId);
+            if (response.IsSuccessStatusCode)
+            {
+                history = await response.Content.ReadFromJsonAsync<List<CamundaHistoryVariables>>();
+            }
+
+            // sort the list to order the elements by creation time
+            history = history.OrderBy(v => v.CreateTime).ToList();
+
+            history = history.Where(t => t.Value != "").ToList();
+
+            return history;
+        }
+
 		public async Task<string> CompleteCamundaTask(string id, string[][] vars)
 		{
             Dictionary<string, PairKeyValue> variables = new Dictionary<string, PairKeyValue>();
