@@ -2,9 +2,12 @@ import { DiagramNode } from "./diagram-node";
 import { GatewayNode } from "./gateway-node";
 
 export class BasicNode extends DiagramNode {
-  
+  // the date and time defined in which the task was completed
+  public completionTime: Date;
+
   constructor(nextNode: DiagramNode, greenLight: boolean, activityId: string) {
     super(nextNode, activityId, greenLight);
+    this.completionTime = null;
   }
 
   public canEnable(): DiagramNode[] {
@@ -13,7 +16,7 @@ export class BasicNode extends DiagramNode {
     if (this.nextNode != null)
       return this.nextNode.canEnable();
 
-    return new Array<BasicNode>();
+    return new Array<DiagramNode>();
   }
 
   public canDisable(): DiagramNode[] {
@@ -27,8 +30,6 @@ export class BasicNode extends DiagramNode {
   }
 
   public canBeValidated(): boolean {
-    console.log("inside can be validated of basic node: " + this.id);
-
     if (this.greenLight == true && this.nextNode != null)
       return this.nextNode.canBeValidated();
 
@@ -36,7 +37,7 @@ export class BasicNode extends DiagramNode {
   }
 
   public getNodesForSubmission(): BasicNode[] {
-    var nodesToSubmit: Array<DiagramNode> = new Array<DiagramNode>();
+    var nodesToSubmit: Array<BasicNode> = new Array<BasicNode>();
     if (this.greenLight == true)
       nodesToSubmit.push(this);
       if (this.nextNode != null)

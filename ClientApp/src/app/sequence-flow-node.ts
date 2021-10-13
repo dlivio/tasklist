@@ -54,7 +54,7 @@ export class SequenceFlowNode extends DiagramNode {
     }
 
     public getNodesForSubmission(): BasicNode[] {
-        var nodesToSubmit: Array<DiagramNode> = new Array<DiagramNode>();
+        var nodesToSubmit: Array<BasicNode> = new Array<BasicNode>();
         if ( (this.submitted || this.greenLight == true) && this.nextNode != null)
             nodesToSubmit = nodesToSubmit.concat(this.nextNode.getNodesForSubmission());
 
