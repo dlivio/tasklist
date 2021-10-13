@@ -13,6 +13,7 @@ import { ProjectsComponent } from './projects/projects.component';
 import { ProjectDetailsComponent } from './project-details/project-details.component';
 import { DiagramComponent } from './diagram/diagram.component';
 import { ProjectFormComponent } from './project-form/project-form.component';
+import { DatePickerComponent } from './date-picker/date-picker.component';
 
 @NgModule({
   declarations: [
@@ -24,7 +25,8 @@ import { ProjectFormComponent } from './project-form/project-form.component';
     ProjectsComponent,
     ProjectDetailsComponent,
     DiagramComponent,
-    ProjectFormComponent
+    ProjectFormComponent,
+    DatePickerComponent
   ],
   imports: [
     BrowserModule.withServerTransition({ appId: 'ng-cli-universal' }),

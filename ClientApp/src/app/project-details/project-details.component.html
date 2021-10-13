@@ -6,7 +6,7 @@
   <div class="col" id="projectDescription">
     <div class="row">
       <div class="col">
-        <p><b>Started at: </b>{{ project.startDate }}</p>
+        <p><b>Started at: </b>{{ projectStartDate }}, {{ projectStartTime }}</p>
       </div>
     </div>
     <div class="row">
@@ -22,12 +22,38 @@
   <hr>
 
 <div class="diagram-parent" style="background-color: lightgray; height: 60vh;">
+  <app-diagram [url]="diagramUrl" [caseInstanceId]="camundaCaseInstanceId" (importDone)="handleImported($event)" 
+        (datePickerTrigger)="handleDatePickerTrigger($event)"></app-diagram>
+  <!--
+  <div class="row" style="height: 100%;">
+    <div id="diagram-viewer-col" class="col">
+      <app-diagram [url]="diagramUrl" [caseInstanceId]="camundaCaseInstanceId" (importDone)="handleImported($event)" 
+        (datePickerTrigger)="handleDatePickerTrigger($event)"></app-diagram>
+
+      <div class="import-error" *ngIf="importError">
+        <strong>Failed to render diagram: </strong>
+        {{ importError.message }}
+      </div>
+    </div>
+    < !--
+    <component [selectedNode]="someVar"> 
+    -- >
+    <div id="task-date-picker-col" class="col-3 hidden" style="background-color: white; border: black; border-width: 1px; border-style: solid;">
+      <div name="date-picker-form" style="margin: 5%;">
+        <label for="task-completion-date-time">Choose the date and time of completion of the event:</label>
+        <input type="datetime-local" id="task-completion-date-time" name="task-completion-date-time">
+      </div>
+    </div>
+  </div>
+  -->
+  <!--
   <app-diagram [url]="diagramUrl" [caseInstanceId]="camundaCaseInstanceId" (importDone)="handleImported($event)"></app-diagram>
 
   <div class="import-error" *ngIf="importError">
     <strong>Failed to render diagram: </strong>
     {{ importError.message }}
   </div>
+  -->
 </div>
 
 

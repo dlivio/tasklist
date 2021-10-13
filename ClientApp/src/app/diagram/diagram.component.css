@@ -1,3 +1,11 @@
-.highlight:not(.djs-connection) .djs-visual > :nth-child(1) {
-  fill: green !important; /* color elements as green */
+.diagram-container {
+  height: 100%;
+  width: 100%;
+}
+
+.date-picker-tab {
+  background-color: white; 
+  border: black; 
+  border-width: 1px; 
+  border-style: solid;
 }

@@ -23,4 +23,10 @@
   fill: #F0E68C !important; /* color elements as green */
 }
 
-.pointer {cursor: pointer;}
+.pointer {
+  cursor: pointer;
+}
+
+.hidden {
+  display: none;
+}

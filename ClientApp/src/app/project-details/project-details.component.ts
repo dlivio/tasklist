@@ -20,6 +20,8 @@ export class ProjectDetailsComponent implements OnInit {
   private diagramComponent!: DiagramComponent;
 
   public project: Project;
+  public projectStartDate: string;
+  public projectStartTime: string;
   public projectId: string;
   public tasksForApproval: Task[];
 
@@ -55,6 +57,10 @@ export class ProjectDetailsComponent implements OnInit {
 
     }
 
+    let startDateTime: string[] = this.project.startDate.split("T");
+    this.projectStartDate = startDateTime[0];
+    this.projectStartTime = startDateTime[1].substring(0, 8);
+
     console.log(this.project);
 
     // get the correct diagram for the instance
@@ -66,7 +72,23 @@ export class ProjectDetailsComponent implements OnInit {
 
   }
 
+  setDate(): void {
+    alert("it works parent");
+  }
+
   ngOnInit() {
+  }
+
+  ngAfterViewInit() {
+    /*
+    var columnOfDiagram = document.getElementsByTagName("app-diagram")[0];
+    if (columnOfDiagram != null || columnOfDiagram != undefined) {
+      columnOfDiagram.addEventListener("contextmenu", (e) => { 
+        e.preventDefault();
+        alert("hello");
+      });
+    }
+    */
   }
 
   submitTasks() {
@@ -99,6 +121,34 @@ export class ProjectDetailsComponent implements OnInit {
     }
 
     this.importError = error;
+  }
+
+  handleDatePickerTrigger(event) {
+    
+    const {
+      type
+    } = event;
+
+    // get the html elements
+    let columnOfDiagram = document.getElementById("diagram-viewer-col");
+    let columnOfDatePicker = document.getElementById("task-date-picker-col");
+
+    let datePicker = document.getElementById("task-completion-date-time") as HTMLInputElement;
+
+    if (type === 'open') {
+      columnOfDiagram.classList.add('col-9');
+      columnOfDatePicker.classList.remove('hidden');
+
+      let dateTimeUnparsed: string = new Date().toISOString();
+      let dateTime: string = dateTimeUnparsed.split(".")[0];
+
+      datePicker.value = dateTime;
+
+    } else if (type === 'close') {
+      columnOfDiagram.classList.remove('col-9');
+      columnOfDatePicker.classList.add('hidden');
+    }
+
   }
 
 }

@@ -1,0 +1,11 @@
+<div class="row" style="height: 100%;">
+  <div id="diagram-viewer-col" class="col">
+    <div #ref class="diagram-container"></div>
+  </div>
+  <div id="task-date-picker-col" class="date-picker-tab col-3" *ngIf="selectedNode != null">
+    <app-date-picker [selectedNode]="selectedNode" (closeDatePickerTrigger)="closeDatePickerButton()"></app-date-picker>
+  </div>
+</div>
+
+
+

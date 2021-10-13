@@ -23,6 +23,7 @@ import { map, switchMap } from 'rxjs/operators';
  *                to navigate them
  * bpmn-modeler - bootstraps a full-fledged BPMN editor
  */
+// @ts-ignore
 import * as BpmnJS from 'src/app/diagram/bpmn-navigated-viewer.development.js';
 
 import { from, Observable, Subscriber, Subscription } from 'rxjs';
@@ -39,9 +40,12 @@ import { GatewayNode } from '../gateway-node';
 
 @Component({
   selector: 'app-diagram',
+  /*
   template: `
     <div #ref class="diagram-container"></div>
-  `,
+  `,*/
+  templateUrl: './diagram.component.html',
+  /*
   styles: [
     `
       .diagram-container {
@@ -50,6 +54,8 @@ import { GatewayNode } from '../gateway-node';
       }
     `
   ]
+  */
+  styleUrls: ['./diagram.component.css']
 })
 export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy {
   private bpmnJS: BpmnJS;
@@ -57,8 +63,9 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
   @Output() private importDone: EventEmitter<any> = new EventEmitter();
 
   @Input() private url: string;
-
   @Input() private caseInstanceId: string;
+  // trigger to show the dateTime form on the parent component
+  @Output() private datePickerTrigger: EventEmitter<any> = new EventEmitter();
 
   private events = [
     'element.click'
@@ -75,17 +82,21 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
   // the starting node that can be approved
   private currentNode: DiagramNode;
   // nodes that can be selected
-  private nodesEnableable: BasicNode[];
+  private nodesEnableable: DiagramNode[];
   // nodes that can be unselected
-  private nodesDisableable: BasicNode[];
-
+  private nodesDisableable: DiagramNode[];
+  // the base url to be used on http requests (since the server side operates in the same ip
   private currentBaseUrl: string;
-
 
   private canvas: any;
   private elementRegistry: any;
 
+  // the currently selected node on the 'date-picker', injected to the component with 
+  // the @Inject parameter
+  private selectedNode: BasicNode;
+
   constructor(private http: HttpClient, @Inject('BASE_URL') baseUrl: string) {
+
     // Global variables init
     this.taskHistoryIds = [];
     this.currentTaskIds = [];
@@ -94,6 +105,8 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
     this.nodesDisableable = [];
 
     this.currentBaseUrl = baseUrl;
+
+    this.selectedNode = null;
 
     // bpmn.io variables
     this.bpmnJS = new BpmnJS();
@@ -111,6 +124,33 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
 
       this.importDiagramHistory(this.canvas, this.elementRegistry);
     });
+
+    // open datetime picker if user right clicks on element
+    this.bpmnJS.on('element.contextmenu', (e) => {
+      // prevent the default right click event
+      e.originalEvent.preventDefault();
+      e.originalEvent.stopPropagation();
+
+      let columnOfDiagram = document.getElementById("diagram-viewer-col");
+
+      // check if the user clicked on the background
+      if (e.element.type == "bpmn:Lane" || e.element.type == "bpmn:Participant" || e.element.type == "bpmn:Collaboration") {
+        this.selectedNode = null; // null so the 'date-picker' tab disappears
+
+        columnOfDiagram.classList.remove('col-9');
+
+        return;
+      }
+
+      // check if the right click was on a disableable node
+      var nodeForDisableFound: DiagramNode = this.nodesDisableable.find(n => n.id == e.element.id);
+
+      if (nodeForDisableFound != undefined && nodeForDisableFound instanceof BasicNode ) {
+        this.selectedNode = nodeForDisableFound;
+        columnOfDiagram.classList.add('col-9');
+      }
+    });
+
 
     // interpret the click events
     this.events.forEach(event => {
@@ -237,6 +277,10 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
     this.bpmnJS.destroy();
   }
 
+  setDate() {
+    alert("it works");
+  }
+
   /**
    * Method called by the clicking of the button 'Submit tasks' in the parent component.
    * This method sends an object containing all the clicked diagram tasks to the server for them
@@ -325,6 +369,16 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
   }
 
   /**
+   * Auxiliar method to be called in a callback in the 'date-picker' child component.
+   * This method is used only to close the 'date-picker' tab by clicking the 'x' button on the UI.
+   */
+  closeDatePickerButton() {
+    this.selectedNode = null;
+    let columnOfDiagram = document.getElementById("diagram-viewer-col");
+    columnOfDiagram.classList.remove('col-9');
+  }
+
+  /**
    * Creates a Promise to import the given XML into the current
    * BpmnJS instance, then returns it as an Observable.
    *
@@ -377,7 +431,7 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
         console.log("Built graph:");
         console.log(this.currentNode);
 
-        var nodesAbleToSelect: Array<BasicNode> = this.currentNode.canEnable();
+        var nodesAbleToSelect: Array<DiagramNode> = this.currentNode.canEnable();
 
         nodesAbleToSelect.forEach(n => this.currentTaskIds.push(n.id));
 
@@ -688,7 +742,7 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
    * @param canvas 
    * @param nodesToUncolor
    */
-  private disableColorCleanup(canvas: any, nodesToUncolor: BasicNode[]): void {
+  private disableColorCleanup(canvas: any, nodesToUncolor: DiagramNode[]): void {
     nodesToUncolor.forEach(n => {
       canvas.removeMarker(n.id, 'highlight');
       canvas.removeMarker(n.id, 'highlight-flow');
