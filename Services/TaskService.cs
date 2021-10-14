@@ -26,6 +26,7 @@ namespace tasklist.Services
         public Task Get(string id) =>
             _tasks.Find<Task>(task => task.Id == id).FirstOrDefault();
 
+        /*
         /// <summary>
         /// Retrieves the Tasks that have the requested projectId.
         /// </summary>
@@ -65,7 +66,7 @@ namespace tasklist.Services
         /// <returns>A List of Tasks</returns>
         public long CountByProjectIdCompleted(string projectId) =>
             _tasks.CountDocuments<Task>(task => (task.ProjectId == projectId && task.Completed == true));
-
+        */
         public Task Create(Task task)
         {
             _tasks.InsertOne(task);

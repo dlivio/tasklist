@@ -64,8 +64,6 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
 
   @Input() private url: string;
   @Input() private caseInstanceId: string;
-  // trigger to show the dateTime form on the parent component
-  @Output() private datePickerTrigger: EventEmitter<any> = new EventEmitter();
 
   private events = [
     'element.click'
@@ -148,6 +146,11 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
       if (nodeForDisableFound != undefined && nodeForDisableFound instanceof BasicNode ) {
         this.selectedNode = nodeForDisableFound;
         columnOfDiagram.classList.add('col-9');
+
+      } else {
+        this.selectedNode = null; // null so the 'date-picker' tab disappears
+
+        columnOfDiagram.classList.remove('col-9');
       }
     });
 
@@ -315,18 +318,20 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
     // if the list to submit is empty do nothing
     if (nodesSelected.length == 0) return; 
 
-    var activityIds: string[] = [];
-    nodesSelected.forEach(node => activityIds.push(node.id) );
+    var tasks: Map<string, string> = new Map<string, string>();
+    //var activityIds: string[] = [];
+    nodesSelected.forEach(node => tasks.set(node.id, node.completionTime.toISOString() ) );
 
-    console.log(activityIds);
+    console.log(tasks);
 
     var variablesArray = Array.from(variablesToSend.entries());
+    var tasksArray = Array.from(tasks.entries());
 
-    var tasksToApprove: TasksToApprove = new TasksToApprove(activityIds, variablesArray);
+    var tasksToApprove: TasksToApprove = new TasksToApprove(tasksArray, variablesArray);
     
     console.log(tasksToApprove);
 
-    // get the tasks completed in the current diagram
+    // send the tasks for approval to the server
     this.http.post<TasksToApprove>(this.currentBaseUrl + 'api/Tasks/' + projectId + '/Approve', tasksToApprove).subscribe(result => {
       alert("Tasks approved successfully.");
       this.importDiagramHistory(this.canvas, this.elementRegistry);
@@ -374,6 +379,7 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
    */
   closeDatePickerButton() {
     this.selectedNode = null;
+
     let columnOfDiagram = document.getElementById("diagram-viewer-col");
     columnOfDiagram.classList.remove('col-9');
   }

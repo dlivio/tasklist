@@ -10,6 +10,7 @@
 
         public bool Completed { get; set; }
 
+        /*
         public TaskDTO(Task task)
         {
             Id = task.Id;
@@ -17,5 +18,6 @@
             ProjectId = task.ProjectId;
             Completed = task.Completed;
         }
+        */
     }
 }

@@ -7,7 +7,7 @@ namespace tasklist.Models
 {
 	public class TasksToApprove
 	{
-		public string[] ActivityIds { get; set; }
+		public string[][] Tasks { get; set; }
 		public string[][] Variables { get; set; }
 	}
 }

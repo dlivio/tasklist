@@ -14,14 +14,20 @@ namespace tasklist.Models
         [BsonRepresentation(BsonType.ObjectId)]
         public string Id { get; set; }
 
-        [BsonElement("taskName")]
-        public string TaskName { get; set; }
+        [BsonElement("activityId")]
+        public string ActivityId { get; set; }
 
-        [BsonElement("projectId")]
-        [BsonRepresentation(BsonType.ObjectId)]
-        public string ProjectId { get; set; }
+        [BsonElement("processInstanceId")]
+        public string ProcessInstanceId { get; set; }
 
-        [BsonElement("completed")]
-        public bool Completed { get; set; }
+        [BsonElement("completionTime")]
+        public DateTime CompletionTime { get; set; }
+
+        public Task(string activityId, string processInstanceId, string completionTime)
+		{
+            this.ActivityId = activityId;
+            this.ProcessInstanceId = processInstanceId;
+            this.CompletionTime = DateTime.Parse(completionTime);
+		}
     }
 }
