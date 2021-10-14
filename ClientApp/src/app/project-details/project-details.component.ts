@@ -123,32 +123,4 @@ export class ProjectDetailsComponent implements OnInit {
     this.importError = error;
   }
 
-  handleDatePickerTrigger(event) {
-    
-    const {
-      type
-    } = event;
-
-    // get the html elements
-    let columnOfDiagram = document.getElementById("diagram-viewer-col");
-    let columnOfDatePicker = document.getElementById("task-date-picker-col");
-
-    let datePicker = document.getElementById("task-completion-date-time") as HTMLInputElement;
-
-    if (type === 'open') {
-      columnOfDiagram.classList.add('col-9');
-      columnOfDatePicker.classList.remove('hidden');
-
-      let dateTimeUnparsed: string = new Date().toISOString();
-      let dateTime: string = dateTimeUnparsed.split(".")[0];
-
-      datePicker.value = dateTime;
-
-    } else if (type === 'close') {
-      columnOfDiagram.classList.remove('col-9');
-      columnOfDatePicker.classList.add('hidden');
-    }
-
-  }
-
 }
