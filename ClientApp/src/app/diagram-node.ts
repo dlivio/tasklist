@@ -104,6 +104,13 @@ export abstract class DiagramNode {
    */
   public abstract hasActivityId(activityId: string): boolean;
 
+  /**
+   * Method that returns the last BasicNode's 'completionTime' value. In case of a GatewayNode, return the last BasicNode's 
+   * 'completionTime', or the highest value amongst the last BasicNodes found.
+   * 
+   * @returns the previous BasicNode 'completionTime'
+   */
+  public abstract getPreviousCompletionTime(): Date;
 
   //public abstract where(predicate: (n: DiagramNode) => boolean): DiagramNode[];
 }

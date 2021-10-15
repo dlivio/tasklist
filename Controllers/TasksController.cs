@@ -158,7 +158,7 @@ namespace tasklist.Controllers
                         if (id == null) 
                             return NotFound();
                         else {
-                            _taskService.Create(new Task(task[0], currentProcessInstanceId, task[1]));
+                            _taskService.Create(new Task(task[0], currentProcessInstanceId, task[1], task[2]));
 
                             currentTasks = await _camundaService.GetOpenTasksByProcessInstanceIDAsync(currentProcessInstanceId);
                         }

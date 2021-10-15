@@ -2,11 +2,14 @@ import { DiagramNode } from "./diagram-node";
 import { GatewayNode } from "./gateway-node";
 
 export class BasicNode extends DiagramNode {
+  // the date and time defined in which the task started
+  public startTime: Date;
   // the date and time defined in which the task was completed
   public completionTime: Date;
 
   constructor(nextNode: DiagramNode, greenLight: boolean, activityId: string) {
     super(nextNode, activityId, greenLight);
+    this.startTime = null;
     this.completionTime = null;
   }
 
@@ -48,8 +51,33 @@ export class BasicNode extends DiagramNode {
 
   public enable(): void {
     this.greenLight = true;
+    this.fillTimeVariables();
     // automatically enable the next sequence flow
     this.nextNode.enable();
+  }
+
+  /**
+   * Auxiliary method to fill automatically the fields of 'startTime' and 'completionTime' based 
+   * on the previous node times. If the previous nodes don't have times filled, use the current
+   * Date and Time.
+   */
+  private fillTimeVariables(): void {
+    if (this.startTime == null) {
+      let previousCompletionTime: Date = this.getPreviousCompletionTime();
+
+      if (previousCompletionTime == null) 
+        this.startTime = new Date();
+      
+      else {
+        this.startTime = new Date(previousCompletionTime.getTime());
+        this.startTime.setMinutes(this.startTime.getMinutes() + 1);
+      }
+    }
+
+    if (this.completionTime == null) {
+      this.completionTime = new Date(this.startTime.getTime() );
+      this.completionTime.setMinutes(this.completionTime.getMinutes() + 1);
+    }
   }
 
   public disable(): Array<DiagramNode> {
@@ -103,6 +131,13 @@ export class BasicNode extends DiagramNode {
 
   public hasActivityId(activityId: string): boolean {
     return activityId == this.id;
+  }
+
+  public getPreviousCompletionTime(): Date {
+    if (this.previousNode != null) 
+      return this.previousNode.getPreviousCompletionTime();
+    
+    return null;
   }
 
 }

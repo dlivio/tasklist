@@ -13,44 +13,51 @@ export class DatePickerComponent implements OnInit {
   // trigger to show the dateTime form on the parent component
   @Output() private closeDatePickerTrigger: EventEmitter<any> = new EventEmitter();
   
-  private datePicker: HTMLInputElement;
+  private startDatePicker: HTMLInputElement;
+  private completedDatePicker: HTMLInputElement;
 
-  private _ref: ChangeDetectorRef;
+  // number of days between the start and end date
+  private dayDifference: number;
+  // remaining time after the 'dayDifference' in hours
+  private hourDifference: number;
+  // remaining time after the 'hourDifference' in minute
+  private minuteDifference: number;
 
-  constructor(private ref: ChangeDetectorRef) { 
-    this._ref = ref;
+  // error triggered by dayDifference < 0 || hourDifference < 0 || minuteDifference < 0
+  private error: boolean;
+
+  constructor() { 
+    this.dayDifference = 0;
+    this.hourDifference = 0;
+    this.minuteDifference = 0;
+    this.error = false;
   }
 
   ngAfterViewInit() {
-    this.datePicker = document.getElementById("task-completion-date-time") as HTMLInputElement;
+    this.startDatePicker = document.getElementById("task-completion-date-time") as HTMLInputElement;
+    this.completedDatePicker = document.getElementById("task-start-date-time") as HTMLInputElement;
+
+    // update the values displayed at the start
+    this.updateDateDifference();
   }
 
   ngOnChanges(changes: SimpleChanges) {
-    this.datePicker = document.getElementById("task-completion-date-time") as HTMLInputElement;
+    this.startDatePicker = document.getElementById("task-start-date-time") as HTMLInputElement;
+    this.completedDatePicker = document.getElementById("task-completion-date-time") as HTMLInputElement;
 
     // if no node is selected, change the current value to null
     if (changes.selectedNode.currentValue == null) {
-      this.datePicker.value = null;
+      this.startDatePicker.value = null;
+      this.completedDatePicker.value = null;
       return;
     } 
     
     let newSelectedNode: BasicNode = changes.selectedNode.currentValue;
     console.log("new node:");
     console.log(newSelectedNode);
-    //let datePicker = document.getElementById("task-completion-date-time") as HTMLInputElement;
 
-    if (newSelectedNode.completionTime == null) {
-      // show the current time as the completion time
-      let dateTimeUnparsed: Date = new Date();
-      let dateTime: string = dateTimeUnparsed.toISOString().split(".")[0]; // remove the milliseconds to work on the form
-
-      this.datePicker.value = dateTime;
-      // insert the new value in the object
-      this.selectedNode.completionTime = dateTimeUnparsed;
-    
-    } else {
-      this.datePicker.value = newSelectedNode.completionTime.toISOString().split(".")[0];
-    }
+    this.startDatePicker.value = newSelectedNode.startTime.toISOString().split(".")[0];
+    this.completedDatePicker.value = newSelectedNode.completionTime.toISOString().split(".")[0];
 
   }
 
@@ -58,14 +65,38 @@ export class DatePickerComponent implements OnInit {
   }
 
   saveChanges() {
-    console.log("saved changes on element");
-    this.datePicker = document.getElementById("task-completion-date-time") as HTMLInputElement;
-    console.log(this.datePicker.value);
-    this.selectedNode.completionTime = new Date(this.datePicker.value);
+    this.startDatePicker = document.getElementById("task-start-date-time") as HTMLInputElement;
+    this.selectedNode.startTime = new Date(this.startDatePicker.value);
+
+    this.completedDatePicker = document.getElementById("task-completion-date-time") as HTMLInputElement;
+    this.selectedNode.completionTime = new Date(this.completedDatePicker.value);
+
+    this.updateDateDifference();
   }
 
   closeButton() {
     this.closeDatePickerTrigger.emit({});
+  }
+
+  /**
+   * 
+   */
+  private updateDateDifference() {
+    let difference: number = this.selectedNode.completionTime.getTime() - this.selectedNode.startTime.getTime();
+    
+    let differenceInDays: number = difference / (1000 * 60 * 60 * 24);
+    this.dayDifference = Math.floor(differenceInDays);
+    
+    let differenceOfHours = (differenceInDays - this.dayDifference) * 24;
+    this.hourDifference = Math.floor(differenceOfHours);
+    
+    this.minuteDifference = Math.round((differenceOfHours - this.hourDifference) * 60);
+
+    // catch the error of the completionDate < startDate
+    if (this.dayDifference < 0 || this.hourDifference < 0 || this.minuteDifference < 0) 
+      this.error = true;
+    else
+      this.error = false;
   }
 
 }

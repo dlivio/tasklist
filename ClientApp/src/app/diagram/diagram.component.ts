@@ -318,16 +318,21 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
     // if the list to submit is empty do nothing
     if (nodesSelected.length == 0) return; 
 
-    var tasks: Map<string, string> = new Map<string, string>();
+    var tasks: Array<Array<string>> = new Array<Array<string>>();
+    //var tasks: Map<string, string> = new Map<string, string>();
     //var activityIds: string[] = [];
-    nodesSelected.forEach(node => tasks.set(node.id, node.completionTime.toISOString() ) );
+    nodesSelected.forEach(node => {
+      //tasks.set(node.id, node.completionTime.toISOString() );
+      let arr: Array<string> = [node.id, node.startTime.toISOString(), node.completionTime.toISOString()];
+      tasks.push(arr);
+    });
 
     console.log(tasks);
 
     var variablesArray = Array.from(variablesToSend.entries());
-    var tasksArray = Array.from(tasks.entries());
+    //var tasksArray = Array.from(tasks.entries());
 
-    var tasksToApprove: TasksToApprove = new TasksToApprove(tasksArray, variablesArray);
+    var tasksToApprove: TasksToApprove = new TasksToApprove(tasks, variablesArray);
     
     console.log(tasksToApprove);
 

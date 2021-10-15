@@ -122,4 +122,16 @@ export class SequenceFlowNode extends DiagramNode {
         return false;
     }
 
+    public getPreviousCompletionTime(): Date {
+        if (this.previousNode != null) {
+            if (this.previousNode instanceof BasicNode)
+                return this.previousNode.completionTime;
+                
+            else if (this.previousNode instanceof GatewayNode)
+                return this.previousNode.getPreviousCompletionTime();
+        }
+        
+        return null;
+    }
+
 }

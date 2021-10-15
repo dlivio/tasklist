@@ -20,13 +20,17 @@ namespace tasklist.Models
         [BsonElement("processInstanceId")]
         public string ProcessInstanceId { get; set; }
 
+        [BsonElement("startTime")]
+        public DateTime StartTime { get; set; }
+
         [BsonElement("completionTime")]
         public DateTime CompletionTime { get; set; }
 
-        public Task(string activityId, string processInstanceId, string completionTime)
+        public Task(string activityId, string processInstanceId, string startTime, string completionTime)
 		{
             this.ActivityId = activityId;
             this.ProcessInstanceId = processInstanceId;
+            this.StartTime = DateTime.Parse(startTime);
             this.CompletionTime = DateTime.Parse(completionTime);
 		}
     }

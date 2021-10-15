@@ -61,6 +61,10 @@ export class SubmittedNode extends DiagramNode{
     public hasActivityId(activityId: string): boolean {
         return false;
     }
+
+    public getPreviousCompletionTime(): Date {
+        return null;
+    }
   
   }
   

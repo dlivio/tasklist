@@ -105,4 +105,22 @@ export abstract class GatewayNode extends DiagramNode {
 
     return activityIdFound;
   }
+
+  public getPreviousCompletionTime(): Date {
+    let completionDate: Date = null;
+
+    this.branches.forEach(br => {
+      var currentNode: DiagramNode = br;
+
+      while (currentNode.getGreenLight() && currentNode.nextNode != null) {
+        currentNode = currentNode.nextNode;
+      }
+
+      if (completionDate == null || completionDate < currentNode.getPreviousCompletionTime() ) 
+        completionDate = currentNode.getPreviousCompletionTime();
+      
+    });
+    
+    return completionDate;
+  }
 }
