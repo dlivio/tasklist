@@ -21,9 +21,10 @@ export class ProjectFormComponent implements OnInit {
     this.route = router;
   }
 
-  model = new Project("-1", "", "", false, "", []);
+  model = new Project("-1", "", "", "", false, "", []);
 
   projectName: string = "";
+  licencePlate: string = "";
   clientExpectation: string = "";
   originalMaterials: boolean = false;
   carDocuments: boolean = false;
@@ -33,25 +34,26 @@ export class ProjectFormComponent implements OnInit {
     this.projectName = (<HTMLInputElement>document.getElementById("projectName")).value;
 
     // disallow submitting without writting a name
-    if (this.projectName.trim() == "") {
-      //alert("Project name can't be empty.");
-      //return;
+    if (this.projectName.trim() == "") 
       return document.getElementById("projectNameEmpty").innerHTML = "Project name can't be empty"; 
-    
-    } else {
+    else 
       document.getElementById("projectNameEmpty").innerHTML = "";
-    }
+
+    this.licencePlate = (<HTMLInputElement>document.getElementById("licencePlate")).value;
+    
+    // disallow submitting without writting a license plate
+    if (this.licencePlate.trim() == "") 
+      return document.getElementById("licencePlateEmpty").innerHTML = "Vehicle's license plate can't be empty"; 
+    else 
+      document.getElementById("licencePlateEmpty").innerHTML = "";
+    
 
     this.clientExpectation = (<HTMLInputElement>document.getElementById("clientExpectation")).value;
     this.originalMaterials = (<HTMLInputElement>document.getElementById("originalMaterials")).checked;
     this.carDocuments = (<HTMLInputElement>document.getElementById("carDocuments")).checked;
 
-    console.log(this.clientExpectation);
-    console.log(this.originalMaterials);
-    console.log(this.carDocuments);
-
     // build an object with the project name and creation datetime
-    let proj = new ProjectForm(this.projectName, this.clientExpectation, this.originalMaterials, 
+    let proj = new ProjectForm(this.projectName, this.licencePlate, this.clientExpectation, this.originalMaterials, 
       this.carDocuments, new Date().toISOString());
 
     // 

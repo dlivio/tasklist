@@ -20,6 +20,8 @@ export class ProjectDetailsComponent implements OnInit {
   private diagramComponent!: DiagramComponent;
 
   public project: Project;
+  public projectName: string;
+  public projectLicencePlate: string;
   public projectStartDate: string;
   public projectStartTime: string;
   public projectId: string;
@@ -56,6 +58,9 @@ export class ProjectDetailsComponent implements OnInit {
       }, error => console.error(error));
 
     }
+
+    this.projectName = this.project.projectName;
+    this.projectLicencePlate = this.project.licencePlate;
 
     let startDateTime: string[] = this.project.startDate.split("T");
     this.projectStartDate = startDateTime[0];
@@ -99,7 +104,7 @@ export class ProjectDetailsComponent implements OnInit {
     }
 
     this.http.get<Project>(this.currentBaseUrl + 'api/Projects/' + this.project.id).subscribe(result => {
-      this.project = new Project(result.id, result.projectName, result.startDate, result.isComplete, 
+      this.project = new Project(result.id, result.licencePlate, result.projectName, result.startDate, result.isComplete, 
         result.caseInstanceId, result.nextTaskName);
     }, error => console.error(error));
   }

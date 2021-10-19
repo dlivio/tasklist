@@ -1,9 +1,14 @@
 <p *ngIf="!project"><em>Loading Project...</em></p>
 
 <div *ngIf="project">
-  <h1 id="projectName">{{ project.projectName }}</h1>
+  <h1 id="projectName">{{ projectName }}</h1>
 
   <div class="col" id="projectDescription">
+    <div class="row">
+      <div class="col">
+        <p><b>Licence Plate: </b>{{ projectLicencePlate }}</p>
+      </div>
+    </div>
     <div class="row">
       <div class="col">
         <p><b>Started at: </b>{{ projectStartDate }}, {{ projectStartTime }}</p>

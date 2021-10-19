@@ -129,7 +129,10 @@ namespace tasklist.Controllers
             int noProjects = _projectService.Get().Count;
             string generatedId = projectForm.ProjectName + "_" + noProjects;
 
-            Project project = new Project(projectForm.ProjectName, projectForm.StartDate, generatedId);
+            // clean the string input of licence plate from possible unecessary characters
+            string sanitizedLicencePlate = projectForm.LicencePlate.Replace("-", "").Trim();
+
+            Project project = new Project(projectForm.ProjectName, sanitizedLicencePlate, projectForm.StartDate, generatedId);
 
             _projectService.Create(project);
             // start the process in Camunda with the generated ID

@@ -2,6 +2,7 @@ export class Project {
   constructor(
     public id: string,
     public projectName: string,
+    public licencePlate: string,
     public startDate: string,
     public isComplete: boolean,
     public caseInstanceId: string,
@@ -13,6 +14,7 @@ export class Project {
 export class ProjectForm {
   constructor(
     public projectName: string,
+    public licencePlate: string,
     public clientExpectation: string,
     public originalMaterials: boolean,
     public carDocuments: boolean,

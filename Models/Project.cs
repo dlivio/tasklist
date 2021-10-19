@@ -17,6 +17,9 @@ namespace tasklist.Models
         [BsonElement("projectName")]
         public string ProjectName { get; set; }
 
+        [BsonElement("licencePlate")]
+        public string LicencePlate { get; set; }
+
         [BsonElement("startDate")]
         [DataType(DataType.Date)]
         public DateTime StartDate { get; set; }
@@ -30,13 +33,14 @@ namespace tasklist.Models
         [BsonElement("processDefinitionId")]
         public List<string> ProcessInstanceIds { get; set; }
 
-        public Project(string projectName, DateTime startDate, string caseInstanceId)
+        public Project(string projectName, string licencePlate, DateTime startDate, string caseInstanceId)
         {
-            this.ProjectName = projectName;
-            this.StartDate = startDate;
-            this.IsComplete = false;
-            this.CaseInstanceId = caseInstanceId;
-            this.ProcessInstanceIds = new List<string>();
+            ProjectName = projectName;
+            LicencePlate = licencePlate;
+            StartDate = startDate;
+            IsComplete = false;
+            CaseInstanceId = caseInstanceId;
+            ProcessInstanceIds = new List<string>();
         }
     }
 }
