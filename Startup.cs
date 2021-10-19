@@ -37,11 +37,21 @@ namespace tasklist
             services.AddSingleton<ITasksDatabaseSettings>(sp =>
                 sp.GetRequiredService<IOptions<TasksDatabaseSettings>>().Value);
 
+            services.Configure<SensorTasksDatabaseSettings>(
+                Configuration.GetSection(nameof(SensorTasksDatabaseSettings)));
+
+            services.AddSingleton<ISensorTasksDatabaseSettings>(sp =>
+                sp.GetRequiredService<IOptions<SensorTasksDatabaseSettings>>().Value);
+
             services.AddSingleton<ProjectService>();
 
             services.AddSingleton<TaskService>();
 
+            services.AddSingleton<SensorTaskService>();
+
             services.AddSingleton<CamundaService>();
+
+            services.AddSingleton<AmazonS3Service>();
 
             services.AddControllersWithViews();
             // In production, the Angular files will be served from this directory

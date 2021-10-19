@@ -40,21 +40,7 @@ import { GatewayNode } from '../gateway-node';
 
 @Component({
   selector: 'app-diagram',
-  /*
-  template: `
-    <div #ref class="diagram-container"></div>
-  `,*/
   templateUrl: './diagram.component.html',
-  /*
-  styles: [
-    `
-      .diagram-container {
-        height: 100%;
-        width: 100%;
-      }
-    `
-  ]
-  */
   styleUrls: ['./diagram.component.css']
 })
 export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy {

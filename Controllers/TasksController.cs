@@ -1,6 +1,11 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Amazon;
+using Amazon.Runtime;
+using Amazon.S3;
+using Amazon.S3.Model;
+using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using tasklist.Models;
@@ -9,19 +14,30 @@ using Task = tasklist.Models.Task;
 
 namespace tasklist.Controllers
 {
-    [Route("api/[controller]")]
+	[Route("api/[controller]")]
     [ApiController]
     public class TasksController : ControllerBase
     {
         private readonly TaskService _taskService;
         private readonly ProjectService _projectService;
         private readonly CamundaService _camundaService;
+        private readonly AmazonS3Service _amazonS3Service;
 
-        public TasksController(TaskService taskService, ProjectService projectService, CamundaService camundaService)
+        private AmazonS3Client s3Client;
+
+        public TasksController(TaskService taskService, ProjectService projectService, CamundaService camundaService, 
+            AmazonS3Service amazonS3Service)
         {
             _taskService = taskService;
             _projectService = projectService;
             _camundaService = camundaService;
+            _amazonS3Service = amazonS3Service;
+
+            string AccessKeyId = "AKIA3XRN4IIB6P4QEL46";
+            string SecretAccessKey = "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";
+            BasicAWSCredentials awsCreds = new BasicAWSCredentials(AccessKeyId, SecretAccessKey);
+
+            s3Client = new AmazonS3Client(awsCreds, RegionEndpoint.EUCentral1);
         }
 
         // GET: api/Tasks
@@ -123,11 +139,12 @@ namespace tasklist.Controllers
 
         // POST: api/Tasks/5/Approve
         /// <summary>
-        /// 
+        /// Method that follows the tasks in the 'tasks' object received, approving one by one in the Camunda Workflow Engine
+        /// and creating the 'Task' objects in the database to save the inputed start and completion time.
         /// </summary>
-        /// <param name="projectId"></param>
-        /// <param name="activityIds"></param>
-        /// <returns></returns>
+        /// <param name="projectId">the id of the project related to the tasks</param>
+        /// <param name="tasks">the tasks, necessary workflow variables, and task timings to approve</param>
+        /// <returns>NoContent if successful, or NotFound if at least one task to be approved is not currently approvable</returns>
         [HttpPost("{projectId}/Approve")]
         public async Task<IActionResult> ApproveCamundaTasksAsync(string projectId, TasksToApprove tasks)
         {
@@ -137,7 +154,6 @@ namespace tasklist.Controllers
             if (currentProcessInstanceId == null)
                 return NotFound();
 
-            //List<string> activityIdsList = tasks.ActivityIds.ToList();
             List<string> activityIdsList = new List<string>();
 
             foreach (string[] task in tasks.Tasks)
@@ -147,11 +163,11 @@ namespace tasklist.Controllers
 
             List<CamundaTask> currentTasks = await _camundaService.GetOpenTasksByProcessInstanceIDAsync(currentProcessInstanceId);
 
-            foreach (string[] task in tasks.Tasks)//(string activityId in activityIdsList)
+            foreach (string[] task in tasks.Tasks)
 			{
                 foreach (CamundaTask t in currentTasks)
                 {
-                    if (t.TaskDefinitionKey == task[0])//(t.TaskDefinitionKey == activityId)
+                    if (t.TaskDefinitionKey == task[0])
                     {
                         string id = await _camundaService.CompleteCamundaTask(t.Id, tasks.Variables);
 
@@ -162,43 +178,58 @@ namespace tasklist.Controllers
 
                             currentTasks = await _camundaService.GetOpenTasksByProcessInstanceIDAsync(currentProcessInstanceId);
                         }
-                        //activityIdsList.Remove(activityId);
-                        break;
-                    }
-
-
-                }
-            }
-
-            /*
-            int activityIdCount = activityIdsList.Count;
-            while (activityIdsList.Count > 0)
-			{
-                string currentActivityId = activityIdsList.FirstOrDefault();
-
-                foreach (CamundaTask t in currentTasks) {
-                    if (t.TaskDefinitionKey == currentActivityId)
-                    {
-                        string id = await _camundaService.CompleteCamundaTask(t.Id, tasks.Variables);
-
-                        if (id == null) return NotFound();
-
-                        activityIdsList.Remove(currentActivityId);
                         break;
                     }
                 }
-
-                if (activityIdCount != activityIdsList.Count)
-				{
-                    currentTasks = await _camundaService.GetOpenTasksByProcessInstanceIDAsync(currentProcessInstanceId);
-                    activityIdCount--;
-                }
-
             }
-            */
 
             return NoContent();
         }
+
+        // POST: api/Tasks/Sensor/file_name_to_read
+        // https://docs.aws.amazon.com/code-samples/latest/catalog/dotnetv3-S3-ListObjectsExample-ListObjectsExample-ListObjects.cs.html
+        [HttpPost("/Sensor/{fileNameToRead}")]
+        public async Task<IActionResult> NewSensorInformationAvailable(string fileNameToRead)
+        {
+            string bucketName = "general-system-data";
+
+            try
+            {
+                GetObjectRequest request = new()
+                {
+                    BucketName = bucketName,
+                    Key = "processed-data/SensorBox_01/processed_SensorBox_01_data_07_09_2021_2.json",// + fileNameToRead + "/", SensorBox_01/processed_SensorBox_01_data_07_09_2021_2.json
+                };
+
+				// Issue request and remember to dispose of the response
+				using GetObjectResponse response = await s3Client.GetObjectAsync(request);
+
+				using StreamReader reader = new StreamReader(response.ResponseStream);
+
+				string contents = reader.ReadToEnd();
+			}
+            catch (AmazonS3Exception ex)
+            {
+                Console.WriteLine($"Error encountered on server. Message:'{ex.Message}' getting list of objects.");
+            }
+
+
+            return NoContent();
+        }
+
+        /// <summary>
+        /// Uses the client object to get a  list of the objects in the S3
+        /// bucket in the bucketName parameter.
+        /// </summary>
+        /// <param name="client">The initialized S3 client obect used to call
+        /// the ListObjectsAsync method.</param>
+        /// <param name="bucketName">The bucket name for which you want to
+        /// retrieve a list of objects.</param>
+        public static async void ListingObjectsAsync(IAmazonS3 client, string bucketName)
+        {
+            
+        }
+
 
         // DELETE: api/Tasks/5
         [HttpDelete("{id:length(24)}")]
