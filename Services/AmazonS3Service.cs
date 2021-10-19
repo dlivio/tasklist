@@ -3,12 +3,13 @@ using Amazon.Runtime;
 using Amazon.S3;
 using Amazon.S3.Model;
 using LumenWorks.Framework.IO.Csv;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
+using tasklist.Models;
 
 namespace tasklist.Services
 {
@@ -18,15 +19,15 @@ namespace tasklist.Services
 
 		public AmazonS3Service()
 		{
-			BasicAWSCredentials awsCreds = getCredentialsFromCSV();
+			BasicAWSCredentials awsCreds = GetCredentialsFromCSV();
 			_client = new AmazonS3Client(awsCreds, RegionEndpoint.EUCentral1);
 		}
 
 		/// <summary>
-		/// 
+		/// Auxiliary method that retrieves the credentials from the CSV file defined previously.
 		/// </summary>
-		/// <returns></returns>
-		private BasicAWSCredentials getCredentialsFromCSV()
+		/// <returns>a BasicAWSCredentials object with the credentials</returns>
+		private static BasicAWSCredentials GetCredentialsFromCSV()
 		{
 			var csvTable = new DataTable();
 
@@ -47,38 +48,45 @@ namespace tasklist.Services
 			return new BasicAWSCredentials(accessKeyId, secretAccessKey);
 		}
 
-		// POST: api/Tasks/Sensor/SensorBox_01/processed_SensorBox_01_data_07_09_2021_2.json
 		/// <summary>
+		/// Method that fetches the latest sensor information JSON file from AWS S3 and parses it to a 
+		/// List of 'AmazonS3SensorInfo' objects. 
 		/// 
-		/// https://docs.aws.amazon.com/code-samples/latest/catalog/dotnetv3-S3-ListObjectsExample-ListObjectsExample-ListObjects.cs.html
+		/// This method is based on the sample provided at:
+		/// https://docs.aws.amazon.com/code-samples/latest/catalog/dotnetv3-S3-GetObjectExample-GetObjectExample-GetObject.cs.html
 		/// </summary>
 		/// <param name="folderName"></param>
 		/// <param name="fileName"></param>
-		/// <returns></returns>
-		public async Task NewSensorInformationAvailable(string folderName, string fileName)
+		/// <returns>a list containing the latest sensor information</returns>
+		public async Task<List<AmazonS3SensorInfo>> GetSensorInformation(string folderName, string fileName)
 		{
 			string bucketName = "general-system-data";
 
+			List<AmazonS3SensorInfo> list = new();
+
 			try
 			{
+				// build the request object with the bucket name and key (path to file) defined in AWS
 				GetObjectRequest request = new()
 				{
 					BucketName = bucketName,
 					Key = "processed-data/" + folderName + "/" + fileName,// processed-data/SensorBox_01/processed_SensorBox_01_data_07_09_2021_2.json
 				};
 
-				// Issue request and remember to dispose of the response
 				using GetObjectResponse response = await _client.GetObjectAsync(request);
 
+				// read the stream and convert it to our structures
 				using StreamReader reader = new StreamReader(response.ResponseStream);
+				list = JsonConvert.DeserializeObject<List<AmazonS3SensorInfo>>(reader.ReadToEnd());
 
-				string contents = reader.ReadToEnd();
+				return list;
 			}
 			catch (AmazonS3Exception ex)
 			{
 				Console.WriteLine($"Error encountered on server. Message:'{ex.Message}' getting list of objects.");
 			}
 
+			return list;
 		}
 	}
 }

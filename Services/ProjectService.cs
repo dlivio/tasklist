@@ -40,6 +40,14 @@ namespace tasklist.Services
         public Project GetByCaseInstanceId(string caseInstanceId) =>
             _projects.Find<Project>(project => project.CaseInstanceId == caseInstanceId).FirstOrDefault();
 
+        /// <summary>
+        /// Get the Project with LicencePlate equal to the requested licencePlate.
+        /// </summary>
+        /// <param name="licencePlate"></param>
+        /// <returns>The Project with the requested LicencePlate.</returns>
+        public Project GetByLicencePlate(string licencePlate) =>
+            _projects.Find<Project>(project => project.LicencePlate == licencePlate).FirstOrDefault();
+
         public Project Create(Project project)
         {
             _projects.InsertOne(project);

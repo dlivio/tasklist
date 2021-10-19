@@ -21,23 +21,17 @@ namespace tasklist.Controllers
         private readonly TaskService _taskService;
         private readonly ProjectService _projectService;
         private readonly CamundaService _camundaService;
+        private readonly SensorTaskService _sensorTaskService;
         private readonly AmazonS3Service _amazonS3Service;
 
-        private AmazonS3Client s3Client;
-
-        public TasksController(TaskService taskService, ProjectService projectService, CamundaService camundaService, 
-            AmazonS3Service amazonS3Service)
+        public TasksController(TaskService taskService, ProjectService projectService, CamundaService camundaService,
+            SensorTaskService sensorTaskService, AmazonS3Service amazonS3Service)
         {
             _taskService = taskService;
             _projectService = projectService;
             _camundaService = camundaService;
+            _sensorTaskService = sensorTaskService;
             _amazonS3Service = amazonS3Service;
-
-            string AccessKeyId = "AKIA3XRN4IIB6P4QEL46";
-            string SecretAccessKey = "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";
-            BasicAWSCredentials awsCreds = new BasicAWSCredentials(AccessKeyId, SecretAccessKey);
-
-            s3Client = new AmazonS3Client(awsCreds, RegionEndpoint.EUCentral1);
         }
 
         // GET: api/Tasks
@@ -186,50 +180,31 @@ namespace tasklist.Controllers
             return NoContent();
         }
 
-        // POST: api/Tasks/Sensor/file_name_to_read
-        // https://docs.aws.amazon.com/code-samples/latest/catalog/dotnetv3-S3-ListObjectsExample-ListObjectsExample-ListObjects.cs.html
-        [HttpPost("/Sensor/{fileNameToRead}")]
-        public async Task<IActionResult> NewSensorInformationAvailable(string fileNameToRead)
+        // POST: api/Tasks/Sensor/SensorBox_01/processed_SensorBox_01_data_07_09_2021_2.json
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="folderName"></param>
+        /// <param name="fileName"></param>
+        /// <returns></returns>
+        [HttpPost("/Sensor/{folderName}/{fileName}")]
+        public async Task<IActionResult> NewSensorInformationAvailable(string folderName, string fileName)
         {
-            string bucketName = "general-system-data";
+            List<AmazonS3SensorInfo> list = await _amazonS3Service.GetSensorInformation(folderName, fileName);
 
-            try
-            {
-                GetObjectRequest request = new()
-                {
-                    BucketName = bucketName,
-                    Key = "processed-data/SensorBox_01/processed_SensorBox_01_data_07_09_2021_2.json",// + fileNameToRead + "/", SensorBox_01/processed_SensorBox_01_data_07_09_2021_2.json
-                };
+            // TODO: logic to implement
+            // connect AmazonS3SensorInfo to Project to get project Id
+            // create SensorTask objects without ActivityId (connection has to be done posteriorly)
 
-				// Issue request and remember to dispose of the response
-				using GetObjectResponse response = await s3Client.GetObjectAsync(request);
-
-				using StreamReader reader = new StreamReader(response.ResponseStream);
-
-				string contents = reader.ReadToEnd();
-			}
-            catch (AmazonS3Exception ex)
-            {
-                Console.WriteLine($"Error encountered on server. Message:'{ex.Message}' getting list of objects.");
-            }
-
+            list.ForEach(si => {
+                Project p = _projectService.GetByLicencePlate(si.BoxId); // should be si.LicencePlate or similar
+                SensorTask st = new SensorTask(si, p.Id);
+                _sensorTaskService.Create(st);
+            });
+       
 
             return NoContent();
         }
-
-        /// <summary>
-        /// Uses the client object to get a  list of the objects in the S3
-        /// bucket in the bucketName parameter.
-        /// </summary>
-        /// <param name="client">The initialized S3 client obect used to call
-        /// the ListObjectsAsync method.</param>
-        /// <param name="bucketName">The bucket name for which you want to
-        /// retrieve a list of objects.</param>
-        public static async void ListingObjectsAsync(IAmazonS3 client, string bucketName)
-        {
-            
-        }
-
 
         // DELETE: api/Tasks/5
         [HttpDelete("{id:length(24)}")]
