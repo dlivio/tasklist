@@ -46,8 +46,6 @@ export class SequenceFlowNode extends DiagramNode {
     }
 
     public canBeValidated(): boolean {
-        console.log("inside can be validated of flow: " + this.id);
-
         if (this.nextNode == null) return true; 
 
         return this.nextNode.canBeValidated();

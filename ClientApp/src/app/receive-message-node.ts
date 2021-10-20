@@ -1,13 +1,22 @@
 import { BasicNode } from "./basic-node";
 import { DiagramNode } from "./diagram-node";
 
-export class MessageNode extends BasicNode {
+export class ReceiveMessageNode extends BasicNode {
   // the message reference used to trigger the event 'ReceiveMessage' in the bpmn
   public messageRef: string;
 
   constructor(nextNode: DiagramNode, greenLight: boolean, activityId: string, messageRef: string) {
     super(nextNode, greenLight, activityId);
     this.messageRef = messageRef;
+  }
+
+  public canBeValidated(): boolean {
+    if (this.greenLight == true && this.nextNode != null) 
+        return this.nextNode.canBeValidated();
+    // similarly to a GatewayNode, the previous 'BasicNode' can't be selected without the following 
+    // 'MessageNode' being selected because of the needed variables
+    else 
+      return false;
   }
 
   /**

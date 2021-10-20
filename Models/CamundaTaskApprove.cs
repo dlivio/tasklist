@@ -13,6 +13,13 @@ namespace tasklist.Models
 
 	}
 
+	public class CamundaSignalReceiveTask
+	{
+		public string MessageName { get; set; }
+		public string ProcessInstanceId { get; set; }
+		public Dictionary<string, PairKeyValueType> ProcessVariables { get; set; }
+	}
+
 	public class PairKeyValue
 	{
 		public string Value { get; set; }

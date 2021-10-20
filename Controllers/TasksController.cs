@@ -161,11 +161,19 @@ namespace tasklist.Controllers
 
             foreach (string[] task in tasks.Tasks)
 			{
+                // the result of the task approval
+                string id = null;
+
                 foreach (CamundaTask t in currentTasks)
                 {
                     if (t.TaskDefinitionKey == task[0])
                     {
-                        string id = await _camundaService.CompleteCamundaTask(t.Id, tasks.Variables);
+                        // check if the task is a 'ReceiveTask' to approve accordingly
+                        if (task[3] != "")
+                            id = await _camundaService.SignalCamundaReceiveTask(task[3], currentProcessInstanceId, tasks.Variables);
+                        else
+                            id = await _camundaService.CompleteCamundaTask(t.Id, tasks.Variables);
+
 
                         if (id == null) 
                             return NotFound();
@@ -177,6 +185,23 @@ namespace tasklist.Controllers
                         break;
                     }
                 }
+                // if no current open task corresponds, check if a message task is waiting
+                if (id == null)
+				{
+                    // check if the task is a 'ReceiveTask' to approve accordingly
+                    if (task[3] != "")
+                        id = await _camundaService.SignalCamundaReceiveTask(task[3], currentProcessInstanceId, tasks.Variables);
+
+                    if (id == null)
+                        return NotFound();
+                    else
+                    {
+                        _taskService.Create(new Task(task[0], currentProcessInstanceId, task[1], task[2]));
+
+                        currentTasks = await _camundaService.GetOpenTasksByProcessInstanceIDAsync(currentProcessInstanceId);
+                    }
+                }
+
             }
 
             return NoContent();

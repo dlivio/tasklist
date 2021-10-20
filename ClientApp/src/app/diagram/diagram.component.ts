@@ -37,7 +37,8 @@ import { SubmittedNode } from '../submitted-node';
 import { TasksToApprove } from '../task';
 import { SequenceFlowNode } from '../sequence-flow-node';
 import { GatewayNode } from '../gateway-node';
-import { MessageNode } from '../message-node';
+import { ReceiveMessageNode } from '../receive-message-node';
+import { SendMessageNode } from '../send-message-node';
 
 @Component({
   selector: 'app-diagram',
@@ -312,7 +313,7 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
     nodesSelected.forEach(node => {
       //tasks.set(node.id, node.completionTime.toISOString() );
       let arr: Array<string> = [node.id, node.startTime.toISOString(), node.completionTime.toISOString(), 
-        node instanceof MessageNode? node.getMessageRefForSubmission() : ""];
+        node instanceof ReceiveMessageNode? node.getMessageRefForSubmission() : ""];
       tasks.push(arr);
     });
 
@@ -325,7 +326,7 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
     
     console.log(tasksToApprove);
 
-    return; // temp
+    // return; // temp
 
     // send the tasks for approval to the server
     this.http.post<TasksToApprove>(this.currentBaseUrl + 'api/Tasks/' + projectId + '/Approve', tasksToApprove).subscribe(result => {
@@ -556,7 +557,7 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
    * @param stoppingNode the node that serves as criteria to stop the parsing
    * @param isSendTask a boolean to distinguish a 'SendTask' parse
    * @param isReceiveTask a boolean to distinguish a 'ReceiveTask' parse
-   * @returns the parsed node as a BasicNode (subtype of DiagramNode) or MessageNode  (subtype of BasicNode)
+   * @returns the parsed node as a BasicNode (subtype of DiagramNode) or ReceiveMessageNode  (subtype of BasicNode)
    */
   private parseBasicTask(node: any, stoppingNode: any = null, isSendTask: boolean = false, 
     isReceiveTask: boolean = false): DiagramNode {
@@ -585,8 +586,10 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
       return new SubmittedNode(nextNode, node.id);
     }
 
-    if (isReceiveTask)
-      return new MessageNode(nextNode, false, node.id, this.getMessageRef(node));
+    if (isReceiveTask) 
+      return new ReceiveMessageNode(nextNode, false, node.id, this.getMessageRef(node));
+    else if (isSendTask)
+      return new SendMessageNode(nextNode, false, node.id);
     else
       return new BasicNode(nextNode, false, node.id);
   }
@@ -762,7 +765,7 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
         }
 
       } else {
-        builtNode = new SequenceFlowNode(nextNode, false, node.id, "");
+        builtNode = new SequenceFlowNode(nextNode, false, node.id, nextObj.id)//""); // WARNING: This may give an error but I can't see it now
       }
 
     }

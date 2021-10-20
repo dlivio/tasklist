@@ -81,18 +81,18 @@ export class ExclusiveNode extends GatewayNode {
       if (submittedPath.nextNode != null) 
         submittedPath.nextNode.getVariables().forEach((v, k) => variables.set(k, v));
     
-      } else {
+    } else {
       this.branches.forEach(br => { 
         if (br.getGreenLight()) {
           variables.set(br.nextNodeId, br.id);
-  
+
           if (br.nextNode != null) 
             br.nextNode.getVariables().forEach((v, k) => variables.set(k, v));
             
         } else {
           variables.set(br.nextNodeId, "");
-            
         }
+        
       });
     }
 

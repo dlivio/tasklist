@@ -92,7 +92,7 @@ namespace tasklist.Services
             Dictionary<string, PairKeyValueType> variables = new Dictionary<string, PairKeyValueType>();
 
             // Add necessary variables to the object
-            variables.Add("clientExpectation", new PairKeyValueType() { Value = projectForm.ClientExpectation, Type = "String"  });
+            variables.Add("clientExpectation", new PairKeyValueType() { Value = projectForm.ClientExpectation, Type = "String" });
             variables.Add("originalMaterials", new PairKeyValueType() { Value = projectForm.OriginalMaterials, Type = "Boolean" });
             variables.Add("carDocuments", new PairKeyValueType() { Value = projectForm.CarDocuments, Type = "Boolean" });
 
@@ -187,12 +187,15 @@ namespace tasklist.Services
         }
 
         /// <summary>
-        /// 
+        /// Method that fetches all the variables from a 'processInstanceId' and returns a list with all of 
+        /// them that have a 'Value' property different than an empty string. This is used to infer which of
+        /// the paths was followed on that given 'processInstanceId' by making use of the generated variables
+        /// using the methods described previously.
         /// </summary>
         /// <param name="processInstanceId"></param>
         /// <returns></returns>
         public async Task<List<CamundaHistoryVariables>> GetDiagramVariableHistoryAsync(string processInstanceId)
-		{
+        {
             List<CamundaHistoryVariables> history = new();
 
             HttpResponseMessage response = await _client.GetAsync(BASE_URL + "history/variable-instance?processInstanceId=" + processInstanceId);
@@ -204,21 +207,28 @@ namespace tasklist.Services
             // sort the list to order the elements by creation time
             history = history.OrderBy(v => v.CreateTime).ToList();
 
-            history = history.Where(t => (t.Value is string) && (t.Value != "") ).ToList();
+            history = history.Where(t => (t.Value is string) && (t.Value != "")).ToList();
 
             return history;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="vars"></param>
+        /// <returns></returns>
 		public async Task<string> CompleteCamundaTask(string id, string[][] vars)
-		{
+        {
             Dictionary<string, PairKeyValue> variables = new Dictionary<string, PairKeyValue>();
 
-            foreach(string[] var in vars)
-			{
+            foreach (string[] var in vars)
+            {
                 variables.Add(var[0], new PairKeyValue() { Value = var[1] });
             }
-            
-            var processArgs = new CamundaTaskApprove() {
+
+            var processArgs = new CamundaTaskApprove()
+            {
                 Variables = variables,
                 WithVariablesInReturn = true
             };
@@ -230,7 +240,7 @@ namespace tasklist.Services
             var processArgsSerialized = JsonSerializer.Serialize(processArgs, serializeOptions);
             var requestContent = new StringContent(processArgsSerialized, Encoding.UTF8, "application/json");
 
-            HttpResponseMessage response = await _client.PostAsync(BASE_URL + "task/" + id 
+            HttpResponseMessage response = await _client.PostAsync(BASE_URL + "task/" + id
                 + "/complete", requestContent);
             if (response.IsSuccessStatusCode)
             {
@@ -240,5 +250,45 @@ namespace tasklist.Services
 
             return null;
         }
-	}
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="vars"></param>
+        /// <returns></returns>
+        public async Task<string> SignalCamundaReceiveTask(string messageName, string processInstanceId, string[][] vars)
+        {
+            Dictionary<string, PairKeyValueType> processVariables = new Dictionary<string, PairKeyValueType>();
+
+            foreach (string[] var in vars)
+            {
+                processVariables.Add(var[0], new PairKeyValueType() { Value = var[1], Type = "String" }); // if var[0] == "" do nothing
+            }
+
+            var processArgs = new CamundaSignalReceiveTask()
+            {
+                MessageName = messageName,
+                ProcessInstanceId = processInstanceId,
+                ProcessVariables = processVariables
+            };
+            var serializeOptions = new JsonSerializerOptions
+            {
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                WriteIndented = true
+            };
+            var processArgsSerialized = JsonSerializer.Serialize(processArgs, serializeOptions);
+            var requestContent = new StringContent(processArgsSerialized, Encoding.UTF8, "application/json");
+
+            HttpResponseMessage response = await _client.PostAsync(BASE_URL + "message", requestContent);
+            if (response.IsSuccessStatusCode)
+            {
+                var res = response.Content.ReadAsStringAsync();
+                return processInstanceId;
+            }
+
+            return null;
+        }
+
+    }
 }
