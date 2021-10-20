@@ -39,6 +39,11 @@ export class BasicNode extends DiagramNode {
     return true;
   }
 
+  /**
+   * Method to retrieve all the BasicNodes that were selected in the user interface to be submitted.
+   * 
+   * @returns an array of BasicNode's to be submitted
+   */
   public getNodesForSubmission(): BasicNode[] {
     var nodesToSubmit: Array<BasicNode> = new Array<BasicNode>();
     if (this.greenLight == true)

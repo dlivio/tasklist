@@ -37,6 +37,7 @@ import { SubmittedNode } from '../submitted-node';
 import { TasksToApprove } from '../task';
 import { SequenceFlowNode } from '../sequence-flow-node';
 import { GatewayNode } from '../gateway-node';
+import { MessageNode } from '../message-node';
 
 @Component({
   selector: 'app-diagram',
@@ -220,7 +221,8 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
         if (nodeForEnableFound != undefined || nodeForDisableFound != undefined) {
           // filter the elements in the diagram to limit those who are clickable
           var tasksFound = this.elementRegistry.filter(function (el) {
-            return (el.type == "bpmn:UserTask" || el.type == "bpmn:SequenceFlow")
+            return (el.type == "bpmn:UserTask" || el.type == "bpmn:SendTask" || 
+              el.type == "bpmn:ReceiveTask" || el.type == "bpmn:SequenceFlow")
           });
           // remove the 'pointer' property from all user tasks
           for (let i = 0; i < tasksFound.length; i++) {
@@ -309,7 +311,8 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
     //var activityIds: string[] = [];
     nodesSelected.forEach(node => {
       //tasks.set(node.id, node.completionTime.toISOString() );
-      let arr: Array<string> = [node.id, node.startTime.toISOString(), node.completionTime.toISOString()];
+      let arr: Array<string> = [node.id, node.startTime.toISOString(), node.completionTime.toISOString(), 
+        node instanceof MessageNode? node.getMessageRefForSubmission() : ""];
       tasks.push(arr);
     });
 
@@ -321,6 +324,8 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
     var tasksToApprove: TasksToApprove = new TasksToApprove(tasks, variablesArray);
     
     console.log(tasksToApprove);
+
+    return; // temp
 
     // send the tasks for approval to the server
     this.http.post<TasksToApprove>(this.currentBaseUrl + 'api/Tasks/' + projectId + '/Approve', tasksToApprove).subscribe(result => {
@@ -463,7 +468,13 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
 
     switch (nodeType) {
       case "bpmn:UserTask":
-        return this.parseUserTask(node, stoppingNode);
+        return this.parseBasicTask(node, stoppingNode);
+        break;
+      case "bpmn:SendTask":
+        return this.parseBasicTask(node, stoppingNode, true);
+        break;
+      case "bpmn:ReceiveTask":
+        return this.parseBasicTask(node, stoppingNode, false, true);
         break;
       case "bpmn:ExclusiveGateway":
         return this.parseGateway(node, stoppingNode, "exclusive");
@@ -498,6 +509,7 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
    * nodes, in which case to retrieve the next node the property 'targetRef' is needed to be called.
    * 
    * @param sequenceFlowNode the unparsed SequenceFlow
+   * @returns the seuq
    */
   private getSequenceFlowOutgoing(sequenceFlowNode: any): any {
     if (sequenceFlowNode.businessObject != undefined) {
@@ -510,6 +522,7 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
    * Auxiliary method to retrieve the node type of a requested node.
    * 
    * @param node the unparsed node
+   * @returns the string with the node type
    */
   private getNodeType(node: any): string {
     var nodeType: string = node.type;
@@ -521,14 +534,44 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
   }
 
   /**
-   * Method to build a node of type BasicNode (which correlates to a 'UserTask' in BPMN).
+   * Auxiliary method to retrive the messageRef in the case of a 'bpmn:ReceiveTask'. This is needed due to the 
+   * existance of a 'businessObject' property in the outer nodes that is seemingly inexistant in the inner 
+   * nodes, in which case to retrieve the next node the property 'messageRef' is needed to be called.
+   * 
+   * @param node 
+   * @returns the string with the message referenced
+   */
+  private getMessageRef(node: any): string {
+    if (node.businessObject != undefined) {
+      return node.businessObject.messageRef.name;
+    }
+    return node.messageRef.name;
+  }
+
+  /**
+   * Method to build a node of type BasicNode (which correlates to nodes of type 'UserTask', 'SendTask', 
+   * and 'ReceiveTask' in BPMN). This are the types of Tasks that are 'clickable' in the user interface.
    * 
    * @param node the unparsed node
    * @param stoppingNode the node that serves as criteria to stop the parsing
-   * @returns the parsed node as a BasicNode (subtype of DiagramNode)
+   * @param isSendTask a boolean to distinguish a 'SendTask' parse
+   * @param isReceiveTask a boolean to distinguish a 'ReceiveTask' parse
+   * @returns the parsed node as a BasicNode (subtype of DiagramNode) or MessageNode  (subtype of BasicNode)
    */
-  private parseUserTask(node: any, stoppingNode: any = null): DiagramNode {
-    var nextNode: DiagramNode = this.parseNode(node.outgoing[0], stoppingNode);
+  private parseBasicTask(node: any, stoppingNode: any = null, isSendTask: boolean = false, 
+    isReceiveTask: boolean = false): DiagramNode {
+    var nextNode: DiagramNode;
+
+    // if a 'bpmn:SendTask' is being processed, make sure to follow the 'bpmn:SequenceFlow' 
+    // instead of the 'bpmn:MessageFlow'
+    if (isSendTask) {
+      if (this.getNodeType(node.outgoing[0]) == "bpmn:SequenceFlow") 
+        nextNode = this.parseNode(node.outgoing[0], stoppingNode);
+      else
+        nextNode = this.parseNode(node.outgoing[1], stoppingNode);
+      
+    } else
+      nextNode = this.parseNode(node.outgoing[0], stoppingNode);
 
     // if node is in historyNodes then return new SubmittedNode
     if (this.taskHistoryIds.indexOf(node.id) != -1) {
@@ -542,7 +585,10 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
       return new SubmittedNode(nextNode, node.id);
     }
 
-    return new BasicNode(nextNode, false, node.id);
+    if (isReceiveTask)
+      return new MessageNode(nextNode, false, node.id, this.getMessageRef(node));
+    else
+      return new BasicNode(nextNode, false, node.id);
   }
 
   /**
@@ -551,7 +597,7 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
    * @param beginningGatewayNode
    * @param gatewayType
    */
-  private getLastGateway(beginningGatewayNode: any, gatewayType: string): any { //TODO: if no gateway is found and an endEvent is found return null
+  private getLastGateway(beginningGatewayNode: any, gatewayType: string): any {
     // check if the beginningGatewayNode is the ending node of a gateway
     if (beginningGatewayNode.incoming.length > 1 && beginningGatewayNode.outgoing.length == 1) {
       return beginningGatewayNode;
@@ -574,6 +620,8 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
 
       } else if (nodeType == "bpmn:SequenceFlow") {
         node = this.getSequenceFlowOutgoing(node);
+      } else if (nodeType == "bpmn:EndEvent") { // create a imaginary end-gateway to build the gateway node
+        return beginningGatewayNode;
       } else {
         node = node.outgoing[0];
       }
@@ -597,14 +645,25 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
     // if the gateway found equals the endGateway, the first node of the graph is inside a gateway;
     // in this case we want to skip the interpretation of the gateway as a gatewayNode and just interpret 
     // it as a regular node
+    /*
     if (node.id == endGateway.id) {
       return this.parseNode(node.outgoing[0], stoppingNode);
     }
+    */
 
     var branches: Array<SequenceFlowNode> = new Array<SequenceFlowNode>();
-    node.outgoing.forEach(obj => branches.push(this.parseSequenceFlow(obj, endGateway) ) );
+    var nextNode: DiagramNode;
 
-    var nextNode: DiagramNode = this.parseNode(endGateway.outgoing[0], stoppingNode);
+    if (node.id == endGateway.id) {
+      node.outgoing.forEach(obj => branches.push(this.parseSequenceFlow(obj) ) );
+
+      nextNode = null;
+    } else {
+      node.outgoing.forEach(obj => branches.push(this.parseSequenceFlow(obj, endGateway) ) );
+
+      nextNode = this.parseNode(endGateway.outgoing[0], stoppingNode);
+    }
+    
 
     switch (gatewayType) {
       case "exclusive":
@@ -726,9 +785,10 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
     var nextNode: DiagramNode = this.parseNode(node.outgoing[0], stoppingNode);
 
     // if node is in historyNodes then return new SubmittedNode
-    if (this.taskHistoryIds.indexOf(node.id) != -1) 
+    if (this.taskHistoryIds.indexOf(node.id) != -1) {
+      this.colourHistoryNode("basic", node.id, nextNode.id);
       return new SubmittedNode(nextNode, node.id);
-
+    }
     return null;
   }
 
