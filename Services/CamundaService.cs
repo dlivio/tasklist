@@ -204,7 +204,7 @@ namespace tasklist.Services
             // sort the list to order the elements by creation time
             history = history.OrderBy(v => v.CreateTime).ToList();
 
-            history = history.Where(t => t.Value != "").ToList();
+            history = history.Where(t => (t.Value is string) && (t.Value != "") ).ToList();
 
             return history;
         }

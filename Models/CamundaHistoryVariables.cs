@@ -10,7 +10,7 @@ namespace tasklist.Models
         public string Id { get; set; }
         public string Name { get; set; }
         public string Type { get; set; }
-        public string Value { get; set; }
+        public dynamic Value { get; set; }
         public object ValueInfo { get; set; }
         public string ProcessDefinitionKey { get; set; }
         public string ProcessDefinitionId { get; set; }
