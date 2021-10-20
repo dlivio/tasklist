@@ -82,7 +82,9 @@ namespace tasklist.Controllers
 
             List<CamundaHistoryVariables> historyVariables = await _camundaService.GetDiagramVariableHistoryAsync(processInstanceId);
 
-            return new HistoryTasks(currentTasksActivityIds, historyTasks.Select(t => t.ActivityId).ToList(), historyVariables.Select(v => v.Value).ToList());
+            //List<string> historyVars = historyVariables.Where(v => v.Value is string).Select(v => v.Value as string).ToList();
+
+            return new HistoryTasks(currentTasksActivityIds, historyTasks.Select(t => t.ActivityId).ToList(), historyVariables.Select(v => v.Value as string).ToList());
         }
 
         /*
@@ -197,11 +199,12 @@ namespace tasklist.Controllers
             // create SensorTask objects without ActivityId (connection has to be done posteriorly)
 
             list.ForEach(si => {
-                Project p = _projectService.GetByLicencePlate(si.BoxId); // should be si.LicencePlate or similar
-                SensorTask st = new SensorTask(si, p.Id);
-                _sensorTaskService.Create(st);
+                Project p = _projectService.GetByCaseInstanceId(si.Car);
+                if (p != null) {
+                    SensorTask st = new SensorTask(si, p.Id);
+                    _sensorTaskService.Create(st);
+                }
             });
-       
 
             return NoContent();
         }

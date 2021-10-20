@@ -8,9 +8,10 @@ namespace tasklist.Models
 	public class AmazonS3SensorInfo
 	{
 		public string BoxId { get; set; }
+		public string Car { get; set; }
 		public int Location { get; set; }
 		public List<string> Event { get; set; }
-		public long StartTimestamp { get; set; }
-		public long EndTimestamp { get; set; }
+		public int StartTimestamp { get; set; }
+		public int EndTimestamp { get; set; }
 	}
 }
