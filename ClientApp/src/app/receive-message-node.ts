@@ -10,6 +10,7 @@ export class ReceiveMessageNode extends BasicNode {
     this.messageRef = messageRef;
   }
 
+  /*
   public canBeValidated(): boolean {
     if (this.greenLight == true && this.nextNode != null) 
         return this.nextNode.canBeValidated();
@@ -18,6 +19,7 @@ export class ReceiveMessageNode extends BasicNode {
     else 
       return false;
   }
+  */
 
   /**
    * Method that returns the 'messageRef' associated with a BasicNode. In case of a BasicNode made 

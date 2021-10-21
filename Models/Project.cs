@@ -33,6 +33,9 @@ namespace tasklist.Models
         [BsonElement("processDefinitionId")]
         public List<string> ProcessInstanceIds { get; set; }
 
+        [BsonElement("lastProcessDefinitionId")]
+        public string LastProcessDefinitionId { get; set; }
+
         public Project(string projectName, string licencePlate, DateTime startDate, string caseInstanceId)
         {
             ProjectName = projectName;
@@ -41,6 +44,7 @@ namespace tasklist.Models
             IsComplete = false;
             CaseInstanceId = caseInstanceId;
             ProcessInstanceIds = new List<string>();
+            LastProcessDefinitionId = null;
         }
     }
 }

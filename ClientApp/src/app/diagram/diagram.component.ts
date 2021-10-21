@@ -443,7 +443,7 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
 
         // filter the elements in the diagram to limit those who are clickable
         var tasksFound = elementRegistry.filter(function (el) {
-          return (el.type == "bpmn:UserTask")
+          return (el.type == "bpmn:UserTask" || el.type == "bpmn:SendTask" || el.type == "bpmn:ReceiveTask")
         });
         // add the 'pointer' html property to the enableable nodes
         for (let i = 0; i < tasksFound.length; i++) {
@@ -557,7 +557,8 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
    * @param stoppingNode the node that serves as criteria to stop the parsing
    * @param isSendTask a boolean to distinguish a 'SendTask' parse
    * @param isReceiveTask a boolean to distinguish a 'ReceiveTask' parse
-   * @returns the parsed node as a BasicNode (subtype of DiagramNode) or ReceiveMessageNode  (subtype of BasicNode)
+   * @returns the parsed node as a BasicNode (subtype of DiagramNode), ReceiveMessageNode  (subtype of 
+   * BasicNode), or SendMessageNode (subtype of BasicNode)
    */
   private parseBasicTask(node: any, stoppingNode: any = null, isSendTask: boolean = false, 
     isReceiveTask: boolean = false): DiagramNode {
@@ -576,7 +577,7 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
 
     // if node is in historyNodes then return new SubmittedNode
     if (this.taskHistoryIds.indexOf(node.id) != -1) {
-      console.log("user task " + node.id + " parsed as submitted node");
+      
       // if the node is submitted the following sequence flow node should also be
       if (nextNode instanceof SequenceFlowNode)
         nextNode.submitted = true; 

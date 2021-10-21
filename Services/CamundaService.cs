@@ -181,7 +181,8 @@ namespace tasklist.Services
 
             // get all activityId's that correspond to UserTasks, ManualTasks or unassigned Tasks
             history = history.Where(t => t.ActivityType == "userTask" || t.ActivityType == "manualTask"
-                || t.ActivityType == "task" || t.ActivityType == "callActivity" || t.ActivityType == "businessRuleTask").ToList();
+                || t.ActivityType == "task" || t.ActivityType == "callActivity" || t.ActivityType == "businessRuleTask"
+                || t.ActivityType == "sendTask" || t.ActivityType == "receiveTask").ToList();
 
             return history;
         }
@@ -207,7 +208,7 @@ namespace tasklist.Services
             // sort the list to order the elements by creation time
             history = history.OrderBy(v => v.CreateTime).ToList();
 
-            history = history.Where(t => (t.Value is string) && (t.Value != "")).ToList();
+            history = history.Where(t => (t.Type == "String") && (Convert.ToString(t.Value) != "")).ToList();
 
             return history;
         }

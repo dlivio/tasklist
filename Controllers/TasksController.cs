@@ -82,9 +82,9 @@ namespace tasklist.Controllers
 
             List<CamundaHistoryVariables> historyVariables = await _camundaService.GetDiagramVariableHistoryAsync(processInstanceId);
 
-            //List<string> historyVars = historyVariables.Where(v => v.Value is string).Select(v => v.Value as string).ToList();
+            //List<string> historyVars = historyVariables.Where(v => v.Value is string).Select(v => v.Value as string).ToList(); Convert.ToString(t.Value)
 
-            return new HistoryTasks(currentTasksActivityIds, historyTasks.Select(t => t.ActivityId).ToList(), historyVariables.Select(v => v.Value as string).ToList());
+            return new HistoryTasks(currentTasksActivityIds, historyTasks.Select(t => t.ActivityId).ToList(), historyVariables.Select(v => (string)Convert.ToString(v.Value)).ToList());
         }
 
         /*
@@ -168,12 +168,7 @@ namespace tasklist.Controllers
                 {
                     if (t.TaskDefinitionKey == task[0])
                     {
-                        // check if the task is a 'ReceiveTask' to approve accordingly
-                        if (task[3] != "")
-                            id = await _camundaService.SignalCamundaReceiveTask(task[3], currentProcessInstanceId, tasks.Variables);
-                        else
-                            id = await _camundaService.CompleteCamundaTask(t.Id, tasks.Variables);
-
+                        id = await _camundaService.CompleteCamundaTask(t.Id, tasks.Variables);
 
                         if (id == null) 
                             return NotFound();

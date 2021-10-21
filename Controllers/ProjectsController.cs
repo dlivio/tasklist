@@ -50,7 +50,11 @@ namespace tasklist.Controllers
 
                 if (foundTasks.Count > 0)
                     projectDTOs.Add(new ProjectDTO(project, foundTasks));
-
+                else
+                { // the case when it's waiting for a message trigger
+                    CamundaTask waitingForMessage = new CamundaTask { Name = "Waiting for message"};
+                    projectDTOs.Add(new ProjectDTO(project, new List<CamundaTask>() { waitingForMessage }));
+                }
             }
 
             return projectDTOs;
@@ -87,21 +91,24 @@ namespace tasklist.Controllers
             CamundaTask task = (await _camundaService.GetOpenTasksAsync()).Find(t => t.CaseInstanceId == caseInstanceId);
 
             if (task == null) { 
-                return NotFound(); 
-            
-            } else
+                if (project.ProcessInstanceIds.Count == 0) 
+                    return NotFound();
+
+            }
+            else
             {
                 // if the current ProcessInstanceId is not on the list add it and update the object (useful when retrieving history)
                 if (task.ProcessInstanceId != project.ProcessInstanceIds.LastOrDefault())
                 {
                     project.ProcessInstanceIds.Add(task.ProcessInstanceId);
+                    project.LastProcessDefinitionId = task.ProcessDefinitionId;
 
                     _projectService.Update(project.Id, project);
                 } 
             }
 
             // get the diagram xml from Camunda
-            CamundaDiagramXML xml = await _camundaService.GetXMLAsync(task.ProcessDefinitionId);
+            CamundaDiagramXML xml = await _camundaService.GetXMLAsync(project.LastProcessDefinitionId);
 
             return xml.Bpmn20Xml;
         }
