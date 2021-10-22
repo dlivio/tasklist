@@ -99,7 +99,7 @@ export abstract class GatewayNode extends DiagramNode {
 
   public hasActivityId(activityId: string): boolean {
     var activityIdFound: boolean = false;
-    // search all the branch for the activity id
+    // search all the branches for the activity id
     this.branches.forEach(br => {
       var node: DiagramNode = br;
       while (node != null ) {

@@ -30,9 +30,6 @@ export class ExclusiveNode extends GatewayNode {
   }
 
   public canBeValidated(): boolean {
-
-    console.log("inside can be validated of gateway exclusive: " + this.id + " green light: " + this.getGreenLight());
-
     var isValid: boolean = true;
 
     var selectedBranchCount: number = 0;
