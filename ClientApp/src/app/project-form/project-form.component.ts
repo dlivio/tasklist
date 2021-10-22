@@ -59,7 +59,7 @@ export class ProjectFormComponent implements OnInit {
     // 
     this.client.post<ProjectForm>(this.baseUrl + 'api/Projects', proj).subscribe(result => {
       let response = result;
-      this.route.navigate(['/projects']);
+      this.route.navigate(['']);
     }, error => console.error(error));
 
   }

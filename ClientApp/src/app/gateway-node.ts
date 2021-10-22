@@ -13,7 +13,12 @@ export abstract class GatewayNode extends DiagramNode {
     branches.forEach(br => this.addBranch(br));
   }
 
-  public addBranch(branch: SequenceFlowNode): void {
+  /**
+   * Auxiliary method that adds a branch to the 'branches' array.
+   * 
+   * @param branch the 'SequenceFlowNode' that represents the branch 
+   */
+  private addBranch(branch: SequenceFlowNode): void {
     this.branches.push(branch);
 
     var currentNode: DiagramNode = branch;
@@ -57,6 +62,11 @@ export abstract class GatewayNode extends DiagramNode {
     return nodesDisabled;
   }
 
+  /**
+   * Method that counts the number of branches that are fully submitted/complete.
+   * 
+   * @returns the count of fully submitted/complete branches
+   */
   public completedBranches(): number {
     var completedBranches: number = 0;
 
@@ -111,11 +121,11 @@ export abstract class GatewayNode extends DiagramNode {
 
     this.branches.forEach(br => {
       var currentNode: DiagramNode = br;
-
+      // select the last selected node of the branch
       while (currentNode.getGreenLight() && currentNode.nextNode != null) {
         currentNode = currentNode.nextNode;
       }
-
+      // save the latest completion date
       if (completionDate == null || completionDate < currentNode.getPreviousCompletionTime() ) 
         completionDate = currentNode.getPreviousCompletionTime();
       

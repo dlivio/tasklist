@@ -19,9 +19,9 @@ import { DatePickerComponent } from './date-picker/date-picker.component';
   declarations: [
     AppComponent,
     NavMenuComponent,
-    HomeComponent,
-    CounterComponent,
-    FetchDataComponent,
+    //HomeComponent,
+    //CounterComponent,
+   //FetchDataComponent,
     ProjectsComponent,
     ProjectDetailsComponent,
     DiagramComponent,
@@ -33,10 +33,15 @@ import { DatePickerComponent } from './date-picker/date-picker.component';
     HttpClientModule,
     FormsModule,
     RouterModule.forRoot([
+      /*
       { path: '', component: HomeComponent, pathMatch: 'full' },
       { path: 'counter', component: CounterComponent },
       { path: 'fetch-data', component: FetchDataComponent },
       { path: 'projects', component: ProjectsComponent },
+      { path: 'projects/new', component: ProjectFormComponent },
+      { path: 'project-details/:projectId', component: ProjectDetailsComponent }
+      */
+      { path: '', component: ProjectsComponent, pathMatch: 'full' },
       { path: 'projects/new', component: ProjectFormComponent },
       { path: 'project-details/:projectId', component: ProjectDetailsComponent }
     ])
