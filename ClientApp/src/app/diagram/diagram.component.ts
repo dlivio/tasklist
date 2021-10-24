@@ -39,6 +39,7 @@ import { SequenceFlowNode } from '../sequence-flow-node';
 import { GatewayNode } from '../gateway-node';
 import { ReceiveMessageNode } from '../receive-message-node';
 import { SendMessageNode } from '../send-message-node';
+import { ProcessNode } from '../process-node';
 
 @Component({
   selector: 'app-diagram',
@@ -392,6 +393,40 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
   }
 
   /**
+   * Auxiliary method to retrieve the node type of the parent of the requested node
+   * 
+   * @param node the unparsed node
+   * @returns the string with the node type
+   */
+  private getParentNodeType(node: any): any {
+    var nodeParent: string = node.parent;
+
+    if (parent == undefined) {
+      parent = node.businessObject.$parent;
+    }
+
+    return this.getNodeType(nodeParent);
+  }
+
+  /**
+   * Auxiliary method that receives every found 'bpmn:StartEvent' nodes in the diagram and returns the main start event,
+   * which is the one where the process starts.
+   *  
+   * @param startNodes an array of start nodes 
+   * @returns the main start event
+   */
+  private getMainStartEventNode(startNodes: any[]): any {
+    var startNode: any = null;
+
+    startNodes.forEach(n => {
+      if (this.getParentNodeType(n) == "bpmn:Process" || this.getParentNodeType(n) == "bpmn:Participant" ) 
+        startNode = n;
+    });
+
+    return startNode;
+  }
+
+  /**
    * Method used to retrieve the diagram history for the current project and current diagram from Camunda Workflow Engine, and build 
    * the graph accordingly. Additionally, it colors the tasks which have already been submitted for better user understanding.
    * 
@@ -427,10 +462,20 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
 
         // get the start event of the diagram
         // var foundEl = elementRegistry.filter(el => el.id == this.currentTaskIds[0])[0];
-        var foundEl = elementRegistry.filter(el => el.type == "bpmn:StartEvent")[0];
+        
+        //var foundEl = elementRegistry.filter(el => el.type == "bpmn:StartEvent")[0];
+        var foundStartEvents: any[] = elementRegistry.filter(el => el.type == "bpmn:StartEvent");
+        // get the main start event of the process
+        var foundStart = this.getMainStartEventNode(foundStartEvents);
+        console.log("start node found:");
+        console.log(foundStart);
+        // filter the 'foundStartEvents' array to get only the secondary
+        var conditionalStartingNodes = foundStartEvents.filter(n => n != foundStart && this.getParentNodeType(n) != "bpmn:SubProcess");
 
         // parse the diagram be calling the parseNode on the pseudo-root (first task to approve)
-        this.currentNode = this.parseNode(foundEl.outgoing[0]);                                                 // change var name
+        //this.currentNode = this.parseNode(foundEl.outgoing[0]);                                                 // change var name
+        //this.currentNode = this.parseNode(foundStart.outgoing[0], null, true, conditionalStartingNodes);
+        this.currentNode = this.parseProcess(foundStart, conditionalStartingNodes);
         console.log("Built graph:");
         console.log(this.currentNode);
 
@@ -459,48 +504,43 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
    * in the graph.
    * 
    * @param node the unparsed node
-   * @param stoppingNode, the node that serves as criteria to stop the parsing
+   * @param stoppingNode the node that serves as criteria to stop the parsing
+   * @param isMainStartEvent boolean that identifies that the main start event of the diagram is being parsed
    * @returns the built 'node' called with the entire graph built
    */
-  private parseNode(node: any, stoppingNode: any = null): DiagramNode {
+  private parseNode(node: any, stoppingNode: any = null, isMainStartEvent: boolean = false, conditionalStartingNodes: any[] = []): DiagramNode {
     if (stoppingNode != null && node.id == stoppingNode.id) return null; 
 
     var nodeType: string = this.getNodeType(node);
 
     switch (nodeType) {
+      case "bpmn:StartEvent":
+        return this.parseNode(node.outgoing[0], stoppingNode);
+      case "bpmn:SubProcess":
+        return this.parseSubProcess(node, stoppingNode);
       case "bpmn:UserTask":
         return this.parseBasicTask(node, stoppingNode);
-        break;
       case "bpmn:SendTask":
         return this.parseBasicTask(node, stoppingNode, true);
-        break;
       case "bpmn:ReceiveTask":
         return this.parseBasicTask(node, stoppingNode, false, true);
-        break;
       case "bpmn:ExclusiveGateway":
         return this.parseGateway(node, stoppingNode, "exclusive");
-        break;
       case "bpmn:InclusiveGateway":
         return this.parseGateway(node, stoppingNode, "inclusive");
-        break;
       case "bpmn:ParallelGateway":
         return this.parseGateway(node, stoppingNode, "parallel");
-        break;
       case "bpmn:SequenceFlow":
         return this.parseSequenceFlow(node, stoppingNode);
-        break;
       case "bpmn:ManualTask":
       case "bpmn:BusinessRuleTask":
       case "bpmn:CallActivity":
         return this.parseServerRequiredTask(node, stoppingNode);
-        break;
       case "bpmn:EndEvent":
         return null;
-        break;
       default:
         console.log("Node type not found.");
         return null;
-        break;
     }
   }
 
@@ -535,11 +575,74 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
   }
 
   /**
+   * Method to build a node of type ProcessNode which contains the entire process definition for the entire diagram.
+   * 
+   * @param startEventNode the unparsed main event node where the diagram starts
+   * @param conditionalStartingEventNodes an array of the remaining unparsed secondary event nodes
+   * @returns the parsed node as a ProcessNode
+   */
+  private parseProcess(startEventNode: any, conditionalStartingEventNodes: any[]): DiagramNode {
+    var nextNode: DiagramNode = null;
+
+    var startNode: DiagramNode = this.parseNode(startEventNode);
+
+    var conditionalStartingNodes: DiagramNode[] = [];
+
+    conditionalStartingEventNodes.forEach(n => conditionalStartingNodes.push(this.parseNode(n) ) );
+
+    return new ProcessNode(nextNode, false, "", startNode, conditionalStartingNodes);
+  }
+
+  /**
+   * Auxiliary method to extract the start event node from a subProcess node.
+   * 
+   * @param subProcessNode the unparsed subProcess node
+   * @returns the unparsed start event
+   */
+  private getSubProcessStart(subProcessNode: any): any {
+    var children: any[] = subProcessNode.children;
+    var foundStart: any = null;
+
+    if (children == undefined) 
+      children = subProcessNode.flowElements;
+
+    for(let node of children) {
+      if (this.getNodeType(node) == "bpmn:StartEvent") { 
+        foundStart = node;
+        break;
+      }
+    }
+
+    return foundStart;
+  }
+
+  /**
+   * Method to build a node of type ProcessNode (which in this case correlates to a node of type 'SubProcess' in 
+   * BPMN), which encapsules the entire collection of nodes between the start and end event of the 'SubProcess' 
+   * (including possible ProcessNode's).
+   * 
+   * @param node the unparsed node
+   * @param stoppingNode the node that serves as criteria to stop the parsing
+   * @returns the parsed node as a ProcessNode
+   */
+  private parseSubProcess(node: any, stoppingNode: any = null): DiagramNode {
+    var unparsedStartNode: any = this.getSubProcessStart(node);
+
+    var startNode: DiagramNode = this.parseNode(unparsedStartNode);
+    var nextNode: DiagramNode = this.parseNode(node.outgoing[0], stoppingNode);
+
+    if (ProcessNode.inferSubProcessInstance(startNode, nextNode) ) 
+      return new ProcessNode(nextNode, false, node.id, startNode);
+
+    return new SubmittedNode(nextNode, node.id);
+  }
+
+  /**
    * Auxiliary method to retrive the messageRef in the case of a 'bpmn:ReceiveTask'. This is needed due to the 
    * existance of a 'businessObject' property in the outer nodes that is seemingly inexistant in the inner 
    * nodes, in which case to retrieve the next node the property 'messageRef' is needed to be called.
    * 
-   * @param node 
+   * @param node the unparsed node
    * @returns the string with the message referenced
    */
   private getMessageRef(node: any): string {

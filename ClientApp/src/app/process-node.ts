@@ -8,9 +8,10 @@ export class ProcessNode extends DiagramNode {
   // the starting nodes of the event subProcesses (in case of an Start Conditional Event)
   public conditionalStartingNodes: DiagramNode[]; 
 
-  constructor(nextNode: DiagramNode, greenLight: boolean, activityId: string, startNode: DiagramNode) {
+  constructor(nextNode: DiagramNode, greenLight: boolean, activityId: string, startNode: DiagramNode, conditionalStartingNodes: DiagramNode[] = [] ) {
     super(nextNode, activityId, greenLight);
     this.startNode = startNode;
+    this.conditionalStartingNodes = conditionalStartingNodes;
   }
 
   public canEnable(): DiagramNode[] {
@@ -207,4 +208,27 @@ export class ProcessNode extends DiagramNode {
     
     return completionDate;
   }
+
+  public static inferSubProcessInstance(startNode: DiagramNode, nextNode: DiagramNode): boolean {
+    // if the next node is already submitted, the subProcess has to be a SubmittedNode
+    if (nextNode != null && nextNode.isSubmitted() ) {
+      return false;
+    }
+
+    var currentNode: DiagramNode = startNode;
+
+    while (currentNode.isSubmitted() && currentNode.nextNode != null) {
+      currentNode = currentNode.nextNode;
+    }
+
+    if (currentNode instanceof SequenceFlowNode) { // always should be
+      // last node before the end of subProcess
+      if (currentNode.previousNode != null && currentNode.previousNode.isSubmitted() && currentNode.nextNode == null) 
+        return false;
+
+    }
+
+    return true;
+  }
+
 }

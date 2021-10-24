@@ -99,6 +99,12 @@ export class ExclusiveNode extends GatewayNode {
     return variables;
   }
 
+  /**
+   * TODO
+   * @param nextNode 
+   * @param branches 
+   * @returns 
+   */
   public static inferGatewayInstance(nextNode: DiagramNode, branches: Array<DiagramNode>): boolean {
     // if the next node is already submitted, the gateway has to be a SubmittedNode
     if (nextNode != null && nextNode.isSubmitted() ) {
