@@ -28,7 +28,8 @@ export class ProjectsComponent implements OnInit {
   }
 
   changeVisibleProjects() {
-    this.visibleProjects = this.projects.filter(p => this.search == p.projectName.substring(0, this.search.length));
+    let searchWord: string = this.search.trim();
+    this.visibleProjects = this.projects.filter(p => p.projectName.includes(searchWord));
   }
 
   goToProjectDetails(project: Project) {
