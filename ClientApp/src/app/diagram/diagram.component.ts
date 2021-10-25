@@ -66,8 +66,8 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
   private currentTaskIds: string[];
 
   
-  // the starting node that can be approved
-  private currentNode: DiagramNode;
+  // the node that represents the diagram
+  private currentNode: ProcessNode;
   // nodes that can be selected
   private nodesEnableable: DiagramNode[];
   // nodes that can be unselected
@@ -294,11 +294,16 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
 
     var variablesToSend: Map<string, string> = this.currentNode.getVariables();
 
+    var startEventTriggers: string[] = this.currentNode.getStartEventTriggers();
+
     console.log("inside submit tasks variables");
     console.log(variablesToSend);
 
     console.log("nodes to submit: ");
     console.log(nodesSelected);
+
+    console.log("signalNames: ");
+    console.log(startEventTriggers);
 
     //return; // temp
 
@@ -323,7 +328,7 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
     var variablesArray = Array.from(variablesToSend.entries());
     //var tasksArray = Array.from(tasks.entries());
 
-    var tasksToApprove: TasksToApprove = new TasksToApprove(tasks, variablesArray);
+    var tasksToApprove: TasksToApprove = new TasksToApprove(tasks, variablesArray, startEventTriggers);
     
     console.log(tasksToApprove);
 
@@ -427,6 +432,54 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
   }
 
   /**
+   * Auxiliary method to retrieve the Signal Event Name that triggers the Conditional Start Event execution.
+   * 
+   * @param node the unparsed node
+   * @returns a string containing the Signal Event Name if the node is a Conditional Start Event, empty string otherwise
+   */
+  private getStartEventSignalRef(node: any): string {
+    console.log("getting signal ref");
+    console.log(node);
+
+
+    // get the 'eventDefinitions' child of the node
+    var eventDefinitions: any = node.eventDefinitions;
+
+    if (eventDefinitions == undefined) 
+      eventDefinitions = node.businessObject.eventDefinitions;
+    
+    // if the node has no 'eventDefinitions' object, it isn't a Conditional Start Event and return empty string
+    if (eventDefinitions == undefined)
+      return "";
+
+    return eventDefinitions[0].signalRef.name;
+  }
+
+  /**
+   * Auxiliary method that receives an array containing all the Start Events and returns the Conditional Start Event's with the 
+   * respective Signal Event Name's.
+   * 
+   * @param foundStartEvents an array with all the unparsed Start Event nodes
+   * @returns two arrays: the first one containing the Conditional Start Nodes found; and the second containing the respective 
+   * Signal Event Name's.
+   */
+  private getConditionalStartEventNodes(foundStartEvents: any[]): [any[], string[]] {
+    var conditionalStartingNodes: any[] = [];
+    var conditionalSignalNames: string[] = [];
+
+    foundStartEvents.forEach(n => {
+      var signalRefName: string = this.getStartEventSignalRef(n);
+
+      if (signalRefName != "") {
+        conditionalStartingNodes.push(n);
+        conditionalSignalNames.push(signalRefName);
+      }
+    });
+
+    return [conditionalStartingNodes, conditionalSignalNames];
+  }
+
+  /**
    * Method used to retrieve the diagram history for the current project and current diagram from Camunda Workflow Engine, and build 
    * the graph accordingly. Additionally, it colors the tasks which have already been submitted for better user understanding.
    * 
@@ -470,12 +523,14 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
         console.log("start node found:");
         console.log(foundStart);
         // filter the 'foundStartEvents' array to get only the secondary
-        var conditionalStartingNodes = foundStartEvents.filter(n => n != foundStart && this.getParentNodeType(n) != "bpmn:SubProcess");
+        //var conditionalStartingNodes = foundStartEvents.filter(n => n != foundStart && this.getParentNodeType(n) != "bpmn:SubProcess");
+
+        var conditionalStartingNodes = this.getConditionalStartEventNodes(foundStartEvents);
 
         // parse the diagram be calling the parseNode on the pseudo-root (first task to approve)
         //this.currentNode = this.parseNode(foundEl.outgoing[0]);                                                 // change var name
         //this.currentNode = this.parseNode(foundStart.outgoing[0], null, true, conditionalStartingNodes);
-        this.currentNode = this.parseProcess(foundStart, conditionalStartingNodes);
+        this.currentNode = this.parseProcess(foundStart, conditionalStartingNodes[0], conditionalStartingNodes[1]);
         console.log("Built graph:");
         console.log(this.currentNode);
 
@@ -581,16 +636,23 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
    * @param conditionalStartingEventNodes an array of the remaining unparsed secondary event nodes
    * @returns the parsed node as a ProcessNode
    */
-  private parseProcess(startEventNode: any, conditionalStartingEventNodes: any[]): DiagramNode {
-    var nextNode: DiagramNode = null;
+  private parseProcess(startEventNode: any, conditionalStartingEventNodes: any[], 
+    conditionalSignalNames: string[] ): ProcessNode {
 
+    var nextNode: DiagramNode = null;
     var startNode: DiagramNode = this.parseNode(startEventNode);
 
     var conditionalStartingNodes: DiagramNode[] = [];
+    conditionalStartingEventNodes.forEach(n => {
+      // parse each conditional subprocess
+      var parsedSequenceFlow: SequenceFlowNode = this.parseSequenceFlow(n.outgoing[0]);
+      // enable the SequenceFlowNode which starts the subprocess to enable the click on the first UserTask
+      parsedSequenceFlow.submitted = true;
+      this.colourHistoryNode("flow", parsedSequenceFlow.id);
+      conditionalStartingNodes.push(parsedSequenceFlow);
+    });
 
-    conditionalStartingEventNodes.forEach(n => conditionalStartingNodes.push(this.parseNode(n) ) );
-
-    return new ProcessNode(nextNode, false, "", startNode, conditionalStartingNodes);
+    return new ProcessNode(nextNode, false, "", startNode, conditionalStartingNodes, conditionalSignalNames);
   }
 
   /**

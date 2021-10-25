@@ -150,6 +150,15 @@ namespace tasklist.Controllers
             if (currentProcessInstanceId == null)
                 return NotFound();
 
+            // start by triggering the Signal Start Events of the subprocesses
+            foreach (string signalRefName in tasks.StartEventTriggers)
+            {
+                string triggerResult = await _camundaService.TriggerCamundaSignalStartEvent(signalRefName, currentProcessInstanceId);
+
+                if (triggerResult != currentProcessInstanceId)
+                    return NotFound();
+            }
+
             List<string> activityIdsList = new List<string>();
 
             foreach (string[] task in tasks.Tasks)

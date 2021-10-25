@@ -5,13 +5,17 @@ import { SequenceFlowNode } from "./sequence-flow-node";
 export class ProcessNode extends DiagramNode {
   // the starting node of the process
   public startNode: DiagramNode;
-  // the starting nodes of the event subProcesses (in case of an Start Conditional Event)
+  // the starting nodes of the event subProcesses (in case of an Signal Start Event)
   public conditionalStartingNodes: DiagramNode[]; 
+  // an array containing the necessary signal names to trigger the conditionalStartingNodes
+  public conditionalSignalNames: string[];
 
-  constructor(nextNode: DiagramNode, greenLight: boolean, activityId: string, startNode: DiagramNode, conditionalStartingNodes: DiagramNode[] = [] ) {
+  constructor(nextNode: DiagramNode, greenLight: boolean, activityId: string, startNode: DiagramNode, 
+    conditionalStartingNodes: DiagramNode[] = [], conditionalSignalNames: string[] = [] ) {
     super(nextNode, activityId, greenLight);
     this.startNode = startNode;
     this.conditionalStartingNodes = conditionalStartingNodes;
+    this.conditionalSignalNames = conditionalSignalNames;
   }
 
   public canEnable(): DiagramNode[] {
@@ -171,6 +175,28 @@ export class ProcessNode extends DiagramNode {
     });
 
     return activityIdFound;
+  }
+
+  /**
+   * Method that retrieves all the signal names that are needed to activate the selected paths in the diagram.
+   * 
+   * @returns an array containing all the signal names needed for proceeding to the selected paths
+   */
+  public getStartEventTriggers(): string[] {
+    var conditionalSignalNames: string[] = [];
+
+    for (var i: number = 0; i < this.conditionalStartingNodes.length; i++) {
+      var currentNode: DiagramNode = this.conditionalStartingNodes[i];
+
+      if (currentNode.canDisable().length > 0) {
+        // if the first node is not submitted we need to add the signal name to trigger it
+        if (currentNode.nextNode != null && !currentNode.nextNode.isSubmitted() ) 
+          conditionalSignalNames.push(this.conditionalSignalNames[i]);
+        
+      }
+    }
+
+    return conditionalSignalNames;
   }
 
   /**

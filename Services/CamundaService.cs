@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
@@ -106,7 +107,7 @@ namespace tasklist.Services
                 PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
                 WriteIndented = true
             };
-            var processArgsSerialized = JsonSerializer.Serialize(processArgs, serializeOptions);
+            var processArgsSerialized = System.Text.Json.JsonSerializer.Serialize(processArgs, serializeOptions);
             var requestContent = new StringContent(processArgsSerialized, Encoding.UTF8, "application/json");
 
 
@@ -238,7 +239,7 @@ namespace tasklist.Services
                 PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
                 WriteIndented = true
             };
-            var processArgsSerialized = JsonSerializer.Serialize(processArgs, serializeOptions);
+            var processArgsSerialized = System.Text.Json.JsonSerializer.Serialize(processArgs, serializeOptions);
             var requestContent = new StringContent(processArgsSerialized, Encoding.UTF8, "application/json");
 
             HttpResponseMessage response = await _client.PostAsync(BASE_URL + "task/" + id
@@ -278,7 +279,7 @@ namespace tasklist.Services
                 PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
                 WriteIndented = true
             };
-            var processArgsSerialized = JsonSerializer.Serialize(processArgs, serializeOptions);
+            var processArgsSerialized = System.Text.Json.JsonSerializer.Serialize(processArgs, serializeOptions);
             var requestContent = new StringContent(processArgsSerialized, Encoding.UTF8, "application/json");
 
             HttpResponseMessage response = await _client.PostAsync(BASE_URL + "message", requestContent);
@@ -287,9 +288,45 @@ namespace tasklist.Services
                 var res = response.Content.ReadAsStringAsync();
                 return processInstanceId;
             }
+            else
+            {
+                var errorContent = JsonConvert.DeserializeObject<dynamic>(response.Content.ReadAsStringAsync().Result);
+            }
 
             return null;
         }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="messageName"></param>
+        /// <param name="processInstanceId"></param>
+        /// <returns></returns>
+        public async Task<string> TriggerCamundaSignalStartEvent(string messageName, string processInstanceId)
+        {
+            var processArgs = new CamundaTriggerSignalStartEvent()
+            {
+                Name = messageName,
+                ExecutionId = processInstanceId
+            };
+            var serializeOptions = new JsonSerializerOptions
+            {
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                WriteIndented = true
+            };
+            var processArgsSerialized = System.Text.Json.JsonSerializer.Serialize(processArgs, serializeOptions);
+            var requestContent = new StringContent(processArgsSerialized, Encoding.UTF8, "application/json");
+
+            HttpResponseMessage response = await _client.PostAsync(BASE_URL + "signal", requestContent);
+            if (response.IsSuccessStatusCode)
+            {
+                var res = response.Content.ReadAsStringAsync();
+                return processInstanceId;
+            }
+
+            return null;
+        }
+
 
     }
 }

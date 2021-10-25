@@ -9,5 +9,6 @@ namespace tasklist.Models
 	{
 		public string[][] Tasks { get; set; }
 		public string[][] Variables { get; set; }
+		public string[] StartEventTriggers { get; set; }
 	}
 }

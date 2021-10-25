@@ -3,6 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
+/// <summary>
+/// Class used to define the request bodies of tasks/events related to task approvals. This includes 
+/// a regular 'UserTask' approval, the signal that has to be sent to the 'ReceiveMessageTask' to complete
+/// that task, and the trigger of the 'Signal Start Event'.
+/// </summary>
 namespace tasklist.Models
 {
 	public class CamundaTaskApprove
@@ -18,6 +23,12 @@ namespace tasklist.Models
 		public string MessageName { get; set; }
 		public string ProcessInstanceId { get; set; }
 		public Dictionary<string, PairKeyValueType> ProcessVariables { get; set; }
+	}
+
+	public class CamundaTriggerSignalStartEvent
+	{
+		public string Name { get; set; }
+		public string ExecutionId { get; set; }
 	}
 
 	public class PairKeyValue

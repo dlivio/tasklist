@@ -30,7 +30,7 @@ namespace tasklist.Models
         [BsonElement("caseInstanceId")]
         public string CaseInstanceId { get; set; }
 
-        [BsonElement("processDefinitionId")]
+        [BsonElement("processInstanceIds")]
         public List<string> ProcessInstanceIds { get; set; }
 
         [BsonElement("lastProcessDefinitionId")]
