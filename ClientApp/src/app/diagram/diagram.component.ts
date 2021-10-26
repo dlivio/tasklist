@@ -80,7 +80,7 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
 
   // the currently selected node on the 'date-picker', injected to the component with 
   // the @Inject parameter
-  private selectedNode: BasicNode;
+  public selectedNode: BasicNode;
 
   constructor(private http: HttpClient, @Inject('BASE_URL') baseUrl: string) {
 

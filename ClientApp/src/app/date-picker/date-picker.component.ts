@@ -24,7 +24,7 @@ export class DatePickerComponent implements OnInit {
   private minuteDifference: number;
 
   // error triggered by dayDifference < 0 || hourDifference < 0 || minuteDifference < 0
-  private error: boolean;
+  public error: boolean;
 
   constructor() { 
     this.dayDifference = 0;
