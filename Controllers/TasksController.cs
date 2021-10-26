@@ -213,19 +213,17 @@ namespace tasklist.Controllers
 
         // POST: api/Tasks/Sensor/SensorBox_01/processed_SensorBox_01_data_07_09_2021_2.json
         /// <summary>
-        /// 
+        /// Method that serves as a trigger to retrieve sensor information from the Amazon servers.
         /// </summary>
-        /// <param name="folderName"></param>
-        /// <param name="fileName"></param>
-        /// <returns></returns>
+        /// <param name="folderName">the name of the folder to get the file from (i.e. 'SensorBox_01')</param>
+        /// <param name="fileName">the name of the file to retrieve (i.e. 'processed_SensorBox_01_data_07_09_2021_1.json')</param>
+        /// <returns>a List containing the parsed SensorInfo objects</returns>
         [HttpPost("/Sensor/{folderName}/{fileName}")]
-        public async Task<IActionResult> NewSensorInformationAvailable(string folderName, string fileName)
+        public async Task<List<AmazonS3SensorInfo>> NewSensorInformationAvailable(string folderName, string fileName)
         {
             List<AmazonS3SensorInfo> list = await _amazonS3Service.GetSensorInformation(folderName, fileName);
 
-            // TODO: logic to implement
-            // connect AmazonS3SensorInfo to Project to get project Id
-            // create SensorTask objects without ActivityId (connection has to be done posteriorly)
+            List<AmazonS3SensorInfo> tmp = list;
 
             list.ForEach(si => {
                 Project p = _projectService.GetByCaseInstanceId(si.Car);
@@ -235,7 +233,7 @@ namespace tasklist.Controllers
                 }
             });
 
-            return NoContent();
+            return tmp;
         }
 
         // DELETE: api/Tasks/5
