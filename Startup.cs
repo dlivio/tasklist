@@ -43,6 +43,12 @@ namespace tasklist
             services.AddSingleton<ISensorTasksDatabaseSettings>(sp =>
                 sp.GetRequiredService<IOptions<SensorTasksDatabaseSettings>>().Value);
 
+            services.Configure<CredentialsDatabaseSettings>(
+                Configuration.GetSection(nameof(CredentialsDatabaseSettings)));
+
+            services.AddSingleton<ICredentialsDatabaseSettings>(sp =>
+                sp.GetRequiredService<IOptions<CredentialsDatabaseSettings>>().Value);
+
             services.AddSingleton<ProjectService>();
 
             services.AddSingleton<TaskService>();
@@ -71,8 +77,8 @@ namespace tasklist
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
-                app.UseSwagger();
-                app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "tasklist_api v1"));
+                //app.UseSwagger();
+                //app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "tasklist_api v1"));
             }
             else
             {
@@ -80,6 +86,9 @@ namespace tasklist
                 // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
                 app.UseHsts();
             }
+
+            app.UseSwagger();
+            app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "tasklist_api v1"));
 
             app.UseHttpsRedirection();
             app.UseStaticFiles();
