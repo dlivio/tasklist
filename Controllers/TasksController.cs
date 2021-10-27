@@ -144,8 +144,9 @@ namespace tasklist.Controllers
         [HttpPost("{projectId}/Approve")]
         public async Task<IActionResult> ApproveCamundaTasksAsync(string projectId, TasksToApprove tasks)
         {
+            Project currentProject = _projectService.Get(projectId);
             // get the process instance from the Project object
-            string currentProcessInstanceId = _projectService.Get(projectId).ProcessInstanceIds.Last();
+            string currentProcessInstanceId = currentProject.ProcessInstanceIds.Last();
 
             if (currentProcessInstanceId == null)
                 return NotFound();
@@ -185,6 +186,11 @@ namespace tasklist.Controllers
                             _taskService.Create(new Task(task[0], currentProcessInstanceId, task[1], task[2]));
 
                             currentTasks = await _camundaService.GetOpenTasksByProcessInstanceIDAsync(currentProcessInstanceId);
+
+                            // complete the current project
+                            if (t.TaskDefinitionKey == "Activity_096zd4f") // last task of the diagram
+                                _projectService.Complete(currentProject.Id, currentProject);
+                            
                         }
                         break;
                     }
