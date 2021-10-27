@@ -36,21 +36,26 @@ export class ProjectDetailsComponent implements OnInit {
   private currentBaseUrl: string;
 
   constructor(private http: HttpClient, @Inject('BASE_URL') baseUrl: string, private router: Router, private activatedRoute: ActivatedRoute) {
+    this.project = new Project("-1", "", "", "", false, "", []);
+    this.projectId = this.project.id;
+    this.tasksForApproval = [];
 
     this.currentBaseUrl = baseUrl;
 
     // get the selected Project info
-    if (this.router.getCurrentNavigation().extras.state) {
+    if (this.router != null && this.router.getCurrentNavigation()?.extras.state) {
       console.log("by state");
 
-      this.project = this.router.getCurrentNavigation().extras.state.project;
+      this.project = this.router.getCurrentNavigation()!.extras.state!.project;
 
     } else { // retrieve the project by id from url
 
       console.log("by url");
       // get id from url
       this.activatedRoute.paramMap.subscribe(params => {
-        this.projectId = params.get('projectId')
+        var tmpProjectId: string| null = params.get('projectId');
+        if (tmpProjectId != null)
+          this.projectId = tmpProjectId;
       })
 
       http.get<Project>(baseUrl + 'api/Projects/' + this.projectId).subscribe(result => {
@@ -109,7 +114,7 @@ export class ProjectDetailsComponent implements OnInit {
     }, error => console.error(error));
   }
 
-  handleImported(event) {
+  handleImported(event: any) {
 
     const {
       type,

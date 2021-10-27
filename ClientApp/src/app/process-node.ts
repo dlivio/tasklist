@@ -10,7 +10,7 @@ export class ProcessNode extends DiagramNode {
   // an array containing the necessary signal names to trigger the conditionalStartingNodes
   public conditionalSignalNames: string[];
 
-  constructor(nextNode: DiagramNode, greenLight: boolean, activityId: string, startNode: DiagramNode, 
+  constructor(nextNode: DiagramNode| null, greenLight: boolean, activityId: string, startNode: DiagramNode, 
     conditionalStartingNodes: DiagramNode[] = [], conditionalSignalNames: string[] = [] ) {
     super(nextNode, activityId, greenLight);
     this.startNode = startNode;
@@ -151,7 +151,7 @@ export class ProcessNode extends DiagramNode {
   private pathHasActivityId(path: DiagramNode, activityId: string): boolean {
     var activityIdFound: boolean = false;
     
-    var node: DiagramNode = path;
+    var node: DiagramNode| null = path;
     while (node != null ) {
       activityIdFound = activityIdFound || node.hasActivityId(activityId);
 
@@ -206,7 +206,7 @@ export class ProcessNode extends DiagramNode {
    * @returns the Date corresponding to the completion time of the last node of the path
    */
   private getPathLatestCompletionTime(node: DiagramNode): Date {
-    let completionDate: Date = null;
+    let completionDate: Date| null = null;
 
     var currentNode: DiagramNode = node;
     // select the last selected node of the branch
@@ -235,7 +235,7 @@ export class ProcessNode extends DiagramNode {
     return completionDate;
   }
 
-  public static inferSubProcessInstance(startNode: DiagramNode, nextNode: DiagramNode): boolean {
+  public static inferSubProcessInstance(startNode: DiagramNode, nextNode: DiagramNode| null): boolean {
     // if the next node is already submitted, the subProcess has to be a SubmittedNode
     if (nextNode != null && nextNode.isSubmitted() ) {
       return false;

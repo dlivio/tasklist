@@ -3,7 +3,7 @@ import { DiagramNode } from "./diagram-node";
 
 export class SubmittedNode extends DiagramNode{
 
-    constructor(nextNode: DiagramNode, id: string) {
+    constructor(nextNode: DiagramNode| null, id: string) {
         super(nextNode, id, true);
     }
 
@@ -63,7 +63,7 @@ export class SubmittedNode extends DiagramNode{
     }
 
     public getPreviousCompletionTime(): Date {
-        return null;
+        return new Date();
     }
   
   }

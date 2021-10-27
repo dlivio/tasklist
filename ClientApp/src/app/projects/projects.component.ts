@@ -17,6 +17,9 @@ export class ProjectsComponent implements OnInit {
   public search: string = "";
 
   constructor(http: HttpClient, @Inject('BASE_URL') baseUrl: string, private router: Router) {
+    this.projects = [];
+    this.visibleProjects = [];
+
     http.get<Project[]>(baseUrl + 'api/Projects').subscribe(result => {
       this.projects = result;
       this.visibleProjects = this.projects;

@@ -3,7 +3,7 @@ import { DiagramNode } from "./diagram-node";
 
 export class SendMessageNode extends BasicNode {
 
-  constructor(nextNode: DiagramNode, greenLight: boolean, activityId: string) {
+  constructor(nextNode: DiagramNode| null, greenLight: boolean, activityId: string) {
     super(nextNode, greenLight, activityId);
   }
 
@@ -28,7 +28,7 @@ export class SendMessageNode extends BasicNode {
     var variables: Map<string, string> = new Map<string, string>();
     // if this node is selected add the path variables needed for approving a 'ReceivingTask' in 
     // Camunda Workflow Engine
-    if (this.greenLight)
+    if (this.greenLight && this.previousNode != null)
       variables.set(this.id, this.previousNode.id);
 
     if (this.nextNode != null && this.getGreenLight())

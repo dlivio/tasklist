@@ -52,7 +52,7 @@ export class ParallelNode extends GatewayNode {
     return new Map<string, string>();
   }
 
-  public static inferGatewayInstance(nextNode: DiagramNode, branches: Array<DiagramNode>): boolean {
+  public static inferGatewayInstance(nextNode: DiagramNode| null, branches: Array<DiagramNode>): boolean {
     // if the next node is already submitted, the gateway has to be a SubmittedNode
     if (nextNode != null && nextNode.isSubmitted() ) {
       return false;

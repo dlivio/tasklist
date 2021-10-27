@@ -1,23 +1,19 @@
-import { notDeepStrictEqual } from "assert";
-import { BasicNode } from "./basic-node";
 import { DiagramNode } from "./diagram-node";
 import { GatewayNode } from "./gateway-node";
 import { SequenceFlowNode } from "./sequence-flow-node";
-import { InclusiveNode } from "./inclusive-node";
-import { ParallelNode } from "./parallel-node";
 
 export class ExclusiveNode extends GatewayNode {
 
   public canEnable(): DiagramNode[] {
-    var selectedNode: DiagramNode = null;
+    var selectedNode: DiagramNode| null = null as DiagramNode| null;
     // do a first iteration to see if there is already as selected path and prevent the others from 
     // entering the canEnable array
-    this.branches.forEach(br => {
+    this.branches.forEach((br: SequenceFlowNode) => {
       if (selectedNode == null && br.getGreenLight() == true) selectedNode = br;
     });
 
     var canEnable: Array<DiagramNode> = new Array<DiagramNode>();
-
+    
     if (selectedNode != null) 
       canEnable = canEnable.concat(selectedNode.canEnable());
     else 
@@ -67,7 +63,7 @@ export class ExclusiveNode extends GatewayNode {
   public getVariables(): Map<string, string> {
     var variables: Map<string, string> = new Map<string, string>();
 
-    var submittedPath: DiagramNode = null;
+    var submittedPath: DiagramNode| null = null as DiagramNode| null;
     // do a first iteration to see if there is already as selected path and prevent the others from 
     // entering the canEnable array
     this.branches.forEach(br => {
@@ -105,7 +101,7 @@ export class ExclusiveNode extends GatewayNode {
    * @param branches 
    * @returns 
    */
-  public static inferGatewayInstance(nextNode: DiagramNode, branches: Array<DiagramNode>): boolean {
+  public static inferGatewayInstance(nextNode: DiagramNode| null, branches: Array<DiagramNode>): boolean {
     // if the next node is already submitted, the gateway has to be a SubmittedNode
     if (nextNode != null && nextNode.isSubmitted() ) {
       return false;

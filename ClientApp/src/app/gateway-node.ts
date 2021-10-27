@@ -6,7 +6,7 @@ export abstract class GatewayNode extends DiagramNode {
   // array with the first node of each branch of the gateway
   public branches: Array<SequenceFlowNode>;
 
-  constructor(nextNode: DiagramNode, greenLight: boolean, branches: Array<SequenceFlowNode>, gatewayId: string) {
+  constructor(nextNode: DiagramNode| null, greenLight: boolean, branches: Array<SequenceFlowNode>, gatewayId: string) {
     super(nextNode, gatewayId, greenLight);
 
     this.branches = new Array<SequenceFlowNode>();
@@ -21,7 +21,7 @@ export abstract class GatewayNode extends DiagramNode {
   private addBranch(branch: SequenceFlowNode): void {
     this.branches.push(branch);
 
-    var currentNode: DiagramNode = branch;
+    var currentNode: DiagramNode| null = branch;
     while (currentNode != null) {
       currentNode.setParentGatewayNode(this);
       currentNode = currentNode.nextNode;
@@ -101,7 +101,7 @@ export abstract class GatewayNode extends DiagramNode {
     var activityIdFound: boolean = false;
     // search all the branches for the activity id
     this.branches.forEach(br => {
-      var node: DiagramNode = br;
+      var node: DiagramNode| null = br;
       while (node != null ) {
         activityIdFound = activityIdFound || node.hasActivityId(activityId);
 
@@ -117,7 +117,7 @@ export abstract class GatewayNode extends DiagramNode {
   }
 
   public getPreviousCompletionTime(): Date {
-    let completionDate: Date = null;
+    let completionDate: Date = new Date();
 
     this.branches.forEach(br => {
       var currentNode: DiagramNode = br;

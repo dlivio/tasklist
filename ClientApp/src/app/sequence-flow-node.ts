@@ -8,7 +8,7 @@ export class SequenceFlowNode extends DiagramNode {
     // property that indicated whether the current node was already submitted in the system
     public submitted: boolean;
 
-    constructor(nextNode: DiagramNode, greenLight: boolean, sequenceFlowId: string, nextNodeId: string) {
+    constructor(nextNode: DiagramNode| null, greenLight: boolean, sequenceFlowId: string, nextNodeId: string) {
         super(nextNode, sequenceFlowId, greenLight);
         this.nextNodeId = nextNodeId;
         this.submitted = false;
@@ -75,7 +75,7 @@ export class SequenceFlowNode extends DiagramNode {
             nodesDisabled = nodesDisabled.concat(this.nextNode.disable());
         }
         else {
-            var currentParentGatewayNode: GatewayNode = this.parentGatewayNode;
+            var currentParentGatewayNode: GatewayNode| null = this.parentGatewayNode;
             // disable the next nodes if the disabling of the current node has changed the green light
             // of the parent gateway node
             while (currentParentGatewayNode != null && !currentParentGatewayNode.getGreenLight()) {
@@ -123,13 +123,13 @@ export class SequenceFlowNode extends DiagramNode {
     public getPreviousCompletionTime(): Date {
         if (this.previousNode != null) {
             if (this.previousNode instanceof BasicNode)
-                return this.previousNode.completionTime;
+                return this.previousNode.completionTime!;
                 
             else if (this.previousNode instanceof GatewayNode)
                 return this.previousNode.getPreviousCompletionTime();
         }
         
-        return null;
+        return new Date();
     }
 
 }

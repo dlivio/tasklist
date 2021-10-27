@@ -48,11 +48,11 @@ import { ProcessNode } from '../process-node';
 })
 export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy {
   private bpmnJS: BpmnJS;
-  @ViewChild('ref', { static: true }) private el: ElementRef;
+  @ViewChild('ref', { static: true }) private el: ElementRef|undefined = undefined;
   @Output() private importDone: EventEmitter<any> = new EventEmitter();
 
-  @Input() private url: string;
-  @Input() private caseInstanceId: string;
+  @Input() public url: string = "";
+  @Input() public caseInstanceId: string = "";
 
   private events = [
     'element.click'
@@ -67,7 +67,7 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
 
   
   // the node that represents the diagram
-  private currentNode: ProcessNode;
+  private currentNode: ProcessNode| null = null;
   // nodes that can be selected
   private nodesEnableable: DiagramNode[];
   // nodes that can be unselected
@@ -80,12 +80,13 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
 
   // the currently selected node on the 'date-picker', injected to the component with 
   // the @Inject parameter
-  public selectedNode: BasicNode;
+  public selectedNode: BasicNode| null;
 
   constructor(private http: HttpClient, @Inject('BASE_URL') baseUrl: string) {
 
     // Global variables init
     this.taskHistoryIds = [];
+    this.sequenceFlowHistoryIds = [];
     this.currentTaskIds = [];
 
     this.nodesEnableable = [];
@@ -104,7 +105,7 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
     this.elementRegistry = this.bpmnJS.get('elementRegistry');
 
     // Initialize the BPMN viewer and build the graph with current diagram information
-    this.bpmnJS.on('import.done', ({ error }) => {
+    this.bpmnJS.on('import.done', ({ error }: any) => {
       if (!error) {
         this.bpmnJS.get('canvas').zoom('fit-viewport');
       }
@@ -113,12 +114,12 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
     });
 
     // open datetime picker if user right clicks on element
-    this.bpmnJS.on('element.contextmenu', (e) => {
+    this.bpmnJS.on('element.contextmenu', (e: any) => {
       // prevent the default right click event
       e.originalEvent.preventDefault();
       e.originalEvent.stopPropagation();
 
-      let columnOfDiagram = document.getElementById("diagram-viewer-col");
+      let columnOfDiagram = document.getElementById("diagram-viewer-col")!;
 
       // check if the user clicked on the background
       if (e.element.type == "bpmn:Lane" || e.element.type == "bpmn:Participant" || e.element.type == "bpmn:Collaboration") {
@@ -130,7 +131,7 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
       }
 
       // check if the right click was on a disableable node
-      var nodeForDisableFound: DiagramNode = this.nodesDisableable.find(n => n.id == e.element.id);
+      var nodeForDisableFound: DiagramNode| undefined = this.nodesDisableable.find(n => n.id == e.element.id);
 
       if (nodeForDisableFound != undefined && nodeForDisableFound instanceof BasicNode ) {
         this.selectedNode = nodeForDisableFound;
@@ -147,7 +148,7 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
     // interpret the click events
     this.events.forEach(event => {
 
-      eventBus.on(event, e => {
+      eventBus.on(event, (e: any) => {
         // e.element = the model element
         // e.gfx = the graphical element
         console.log(event, 'on', e.gfx);
@@ -156,9 +157,9 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
         console.log("nodes enableable:");
         console.log(this.nodesEnableable);
 
-        var nodeForEnableFound: DiagramNode = this.nodesEnableable.find(n => n.id == e.element.id);
+        var nodeForEnableFound: DiagramNode| undefined = this.nodesEnableable.find(n => n.id == e.element.id);
 
-        var nodeForDisableFound: DiagramNode = this.nodesDisableable.find(n => n.id == e.element.id);
+        var nodeForDisableFound: DiagramNode| undefined = this.nodesDisableable.find(n => n.id == e.element.id);
 
         if (nodeForEnableFound != undefined) {
           console.log("found it enable");
@@ -173,15 +174,15 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
             else {
               this.canvas.addMarker(e.element.id, 'highlight');
               // highlight the next SequenceFlow (that had been automatically enabled)
-              this.canvas.addMarker(nodeForEnableFound.nextNode.id, 'highlight-flow');
+              this.canvas.addMarker(nodeForEnableFound.nextNode!.id, 'highlight-flow');
             }
 
-            this.nodesEnableable = this.currentNode.canEnable();
+            this.nodesEnableable = this.currentNode!.canEnable();
 
             console.log("new nodes enableable:");
             console.log(this.nodesEnableable);
 
-            this.nodesDisableable = this.currentNode.canDisable();
+            this.nodesDisableable = this.currentNode!.canDisable();
 
             console.log("new nodes disableable:");
             console.log(this.nodesDisableable);
@@ -206,12 +207,12 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
             console.log("nodes disabled");
             console.log(nodesDisabled);
 
-            this.nodesEnableable = this.currentNode.canEnable();
+            this.nodesEnableable = this.currentNode!.canEnable();
 
             console.log("new nodes enableable:");
             console.log(this.nodesEnableable);
 
-            this.nodesDisableable = this.currentNode.canDisable();
+            this.nodesDisableable = this.currentNode!.canDisable();
 
             console.log("new nodes disableable:");
             console.log(this.nodesDisableable);
@@ -222,7 +223,7 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
         // add the cursor html change to the new enableable nodes
         if (nodeForEnableFound != undefined || nodeForDisableFound != undefined) {
           // filter the elements in the diagram to limit those who are clickable
-          var tasksFound = this.elementRegistry.filter(function (el) {
+          var tasksFound = this.elementRegistry.filter(function (el: any) {
             return (el.type == "bpmn:UserTask" || el.type == "bpmn:SendTask" || 
               el.type == "bpmn:ReceiveTask" || el.type == "bpmn:SequenceFlow")
           });
@@ -256,7 +257,7 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
   }
 
   ngAfterContentInit(): void {
-    this.bpmnJS.attachTo(this.el.nativeElement);
+    this.bpmnJS.attachTo(this.el!.nativeElement);
   }
 
   ngOnChanges(changes: SimpleChanges) {
@@ -280,6 +281,9 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
    * to be approved in the Camunda Workflow Engine.
    */
   submitTasks(projectId: string): boolean {
+    
+    if (this.currentNode == null) return false;
+
     if (!this.currentNode.canBeValidated()) {
       alert("Please select a task inside de decision or remove the last selected task.");
       return false;
@@ -311,14 +315,14 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
     console.log(variablesToSend);
 
     // if the list to submit is empty do nothing
-    if (nodesSelected.length == 0) return; 
+    if (nodesSelected.length == 0) return false;
 
     var tasks: Array<Array<string>> = new Array<Array<string>>();
     //var tasks: Map<string, string> = new Map<string, string>();
     //var activityIds: string[] = [];
     nodesSelected.forEach(node => {
       //tasks.set(node.id, node.completionTime.toISOString() );
-      let arr: Array<string> = [node.id, node.startTime.toISOString(), node.completionTime.toISOString(), 
+      let arr: Array<string> = [node.id, node.startTime!.toISOString(), node.completionTime!.toISOString(), 
         node instanceof ReceiveMessageNode? node.getMessageRefForSubmission() : ""];
       tasks.push(arr);
     });
@@ -384,7 +388,7 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
     this.selectedNode = null;
 
     let columnOfDiagram = document.getElementById("diagram-viewer-col");
-    columnOfDiagram.classList.remove('col-9');
+    columnOfDiagram!.classList.remove('col-9');
   }
 
   /**
@@ -517,7 +521,7 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
         // var foundEl = elementRegistry.filter(el => el.id == this.currentTaskIds[0])[0];
         
         //var foundEl = elementRegistry.filter(el => el.type == "bpmn:StartEvent")[0];
-        var foundStartEvents: any[] = elementRegistry.filter(el => el.type == "bpmn:StartEvent");
+        var foundStartEvents: any[] = elementRegistry.filter((el: any) => el.type == "bpmn:StartEvent");
         // get the main start event of the process
         var foundStart = this.getMainStartEventNode(foundStartEvents);
         console.log("start node found:");
@@ -542,7 +546,7 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
         console.log(this.nodesEnableable);
 
         // filter the elements in the diagram to limit those who are clickable
-        var tasksFound = elementRegistry.filter(function (el) {
+        var tasksFound = elementRegistry.filter(function (el: any) {
           return (el.type == "bpmn:UserTask" || el.type == "bpmn:SendTask" || el.type == "bpmn:ReceiveTask")
         });
         // add the 'pointer' html property to the enableable nodes
@@ -563,7 +567,7 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
    * @param isMainStartEvent boolean that identifies that the main start event of the diagram is being parsed
    * @returns the built 'node' called with the entire graph built
    */
-  private parseNode(node: any, stoppingNode: any = null, isMainStartEvent: boolean = false, conditionalStartingNodes: any[] = []): DiagramNode {
+  private parseNode(node: any, stoppingNode: any = null, isMainStartEvent: boolean = false, conditionalStartingNodes: any[] = []): DiagramNode| null {
     if (stoppingNode != null && node.id == stoppingNode.id) return null; 
 
     var nodeType: string = this.getNodeType(node);
@@ -639,8 +643,8 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
   private parseProcess(startEventNode: any, conditionalStartingEventNodes: any[], 
     conditionalSignalNames: string[] ): ProcessNode {
 
-    var nextNode: DiagramNode = null;
-    var startNode: DiagramNode = this.parseNode(startEventNode);
+    var nextNode: DiagramNode| null = null;
+    var startNode: DiagramNode| null = this.parseNode(startEventNode);
 
     var conditionalStartingNodes: DiagramNode[] = [];
     conditionalStartingEventNodes.forEach(n => {
@@ -651,6 +655,10 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
       this.colourHistoryNode("flow", parsedSequenceFlow.id);
       conditionalStartingNodes.push(parsedSequenceFlow);
     });
+
+    if (startNode == null) {
+      throw new Error("Starting node is null");
+    }
 
     return new ProcessNode(nextNode, false, "", startNode, conditionalStartingNodes, conditionalSignalNames);
   }
@@ -690,10 +698,10 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
   private parseSubProcess(node: any, stoppingNode: any = null): DiagramNode {
     var unparsedStartNode: any = this.getSubProcessStart(node);
 
-    var startNode: DiagramNode = this.parseNode(unparsedStartNode);
-    var nextNode: DiagramNode = this.parseNode(node.outgoing[0], stoppingNode);
+    var startNode: DiagramNode| null = this.parseNode(unparsedStartNode);
+    var nextNode: DiagramNode| null = this.parseNode(node.outgoing[0], stoppingNode);
 
-    if (ProcessNode.inferSubProcessInstance(startNode, nextNode) ) 
+    if (startNode != null && ProcessNode.inferSubProcessInstance(startNode, nextNode) ) 
       return new ProcessNode(nextNode, false, node.id, startNode);
 
     return new SubmittedNode(nextNode, node.id);
@@ -727,7 +735,7 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
    */
   private parseBasicTask(node: any, stoppingNode: any = null, isSendTask: boolean = false, 
     isReceiveTask: boolean = false): DiagramNode {
-    var nextNode: DiagramNode;
+    var nextNode: DiagramNode| null = null;
 
     // if a 'bpmn:SendTask' is being processed, make sure to follow the 'bpmn:SequenceFlow' 
     // instead of the 'bpmn:MessageFlow'
@@ -748,7 +756,8 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
         nextNode.submitted = true; 
 
       // color the affected nodes by making a submitted node
-      this.colourHistoryNode("basic", node.id, nextNode.id);
+      if (nextNode != null)
+        this.colourHistoryNode("basic", node.id, nextNode.id);
       return new SubmittedNode(nextNode, node.id);
     }
 
@@ -808,7 +817,7 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
    * @param gatewayType the type of gateway to create ("exclusive", "inclusive", and "parallel")
    * @returns the parsed node as a GatewayNode (subtype of DiagramNode)
    */
-  private parseGateway(node: any, stoppingNode: any = null, gatewayType: string): DiagramNode {
+  private parseGateway(node: any, stoppingNode: any = null, gatewayType: string): DiagramNode| null {
     var endGateway = this.getLastGateway(node, this.getNodeType(node));
 
     // if the gateway found equals the endGateway, the first node of the graph is inside a gateway;
@@ -821,14 +830,14 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
     */
 
     var branches: Array<SequenceFlowNode> = new Array<SequenceFlowNode>();
-    var nextNode: DiagramNode;
+    var nextNode: DiagramNode| null;
 
     if (node.id == endGateway.id) {
-      node.outgoing.forEach(obj => branches.push(this.parseSequenceFlow(obj) ) );
+      node.outgoing.forEach((obj: any) => branches.push(this.parseSequenceFlow(obj) ) );
 
       nextNode = null;
     } else {
-      node.outgoing.forEach(obj => branches.push(this.parseSequenceFlow(obj, endGateway) ) );
+      node.outgoing.forEach((obj: any) => branches.push(this.parseSequenceFlow(obj, endGateway) ) );
 
       nextNode = this.parseNode(endGateway.outgoing[0], stoppingNode);
     }
@@ -843,7 +852,8 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
           if (nextNode instanceof SequenceFlowNode)
             nextNode.submitted = true;
           // color the affected nodes by making a submitted node
-          this.colourHistoryNode("gateway", node.id, nextNode.id);
+          if (nextNode != null)
+            this.colourHistoryNode("gateway", node.id, nextNode.id);
           return new SubmittedNode(nextNode, node.id);
         }
 
@@ -856,7 +866,8 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
           if (nextNode instanceof SequenceFlowNode)
             nextNode.submitted = true;
           // color the affected nodes by making a submitted node
-          this.colourHistoryNode("gateway", node.id, nextNode.id);
+          if (nextNode != null)
+            this.colourHistoryNode("gateway", node.id, nextNode.id);
           return new SubmittedNode(nextNode, node.id);
         }
 
@@ -869,7 +880,8 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
           if (nextNode instanceof SequenceFlowNode)
             nextNode.submitted = true;
           // color the affected nodes by making a submitted node
-          this.colourHistoryNode("gateway", node.id, nextNode.id);
+          if (nextNode != null)
+            this.colourHistoryNode("gateway", node.id, nextNode.id);
           return new SubmittedNode(nextNode, node.id);
         }
 
@@ -891,7 +903,7 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
    */
   private parseSequenceFlow(node: any, stoppingNode: any = null): SequenceFlowNode {
     var nextObj: any = this.getSequenceFlowOutgoing(node);
-    var nextNode: DiagramNode = this.parseNode(nextObj, stoppingNode);
+    var nextNode: DiagramNode| null = this.parseNode(nextObj, stoppingNode);
 
     var builtNode: SequenceFlowNode;// = new SequenceFlowNode(nextNode, false, node.id, nextObj.id);
 
@@ -912,7 +924,7 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
       } else if (nextNode instanceof GatewayNode) {
         this.currentTaskIds.forEach(id => {
       
-          if (nextNode.hasActivityId(id)) { 
+          if (nextNode!.hasActivityId(id)) { 
             builtNode.submitted = true;
             this.colourHistoryNode("flow", builtNode.id);
           }
@@ -950,11 +962,11 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
    * @param stoppingNode the node that serves as criteria to stop the parsing
    * @returns the parsed node as a SubmittedNode (subtype of DiagramNode), or null if it hasn't occurred yet
    */
-  private parseServerRequiredTask(node: any, stoppingNode: any = null): DiagramNode {
-    var nextNode: DiagramNode = this.parseNode(node.outgoing[0], stoppingNode);
+  private parseServerRequiredTask(node: any, stoppingNode: any = null): DiagramNode| null {
+    var nextNode: DiagramNode| null = this.parseNode(node.outgoing[0], stoppingNode);
 
     // if node is in historyNodes then return new SubmittedNode
-    if (this.taskHistoryIds.indexOf(node.id) != -1) {
+    if (this.taskHistoryIds.indexOf(node.id) != -1 && nextNode != null) {
       this.colourHistoryNode("basic", node.id, nextNode.id);
       return new SubmittedNode(nextNode, node.id);
     }
@@ -982,7 +994,7 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
    * @param nodeId the id of the node to color
    * @param nextNodeId the id of the next node (can be ommited in case of being null, after SequenceFlowNode)
    */
-  private colourHistoryNode(nodeType: string, nodeId: string, nextNodeId: string = null) {
+  private colourHistoryNode(nodeType: string, nodeId: string, nextNodeId: string = "") {
     
     switch (nodeType) {
       case "flow": // color only itself

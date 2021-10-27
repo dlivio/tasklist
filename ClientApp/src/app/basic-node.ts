@@ -3,11 +3,11 @@ import { GatewayNode } from "./gateway-node";
 
 export class BasicNode extends DiagramNode {
   // the date and time defined in which the task started
-  public startTime: Date;
+  public startTime: Date| null;
   // the date and time defined in which the task was completed
-  public completionTime: Date;
+  public completionTime: Date| null;
 
-  constructor(nextNode: DiagramNode, greenLight: boolean, activityId: string) {
+  constructor(nextNode: DiagramNode| null, greenLight: boolean, activityId: string) {
     super(nextNode, activityId, greenLight);
     this.startTime = null;
     this.completionTime = null;
@@ -58,7 +58,7 @@ export class BasicNode extends DiagramNode {
     this.greenLight = true;
     this.fillTimeVariables();
     // automatically enable the next sequence flow
-    this.nextNode.enable();
+    this.nextNode?.enable();
   }
 
   /**
@@ -97,7 +97,7 @@ export class BasicNode extends DiagramNode {
       nodesDisabled = nodesDisabled.concat(this.nextNode.disable());
     }
     else {
-      var currentParentGatewayNode: GatewayNode = this.parentGatewayNode;
+      var currentParentGatewayNode: GatewayNode| null = this.parentGatewayNode;
       // disable the next nodes if the disabling of the current node has changed the green light
       // of the parent gateway node
       while (currentParentGatewayNode != null && !currentParentGatewayNode.getGreenLight()) {
@@ -142,7 +142,7 @@ export class BasicNode extends DiagramNode {
     if (this.previousNode != null) 
       return this.previousNode.getPreviousCompletionTime();
     
-    return null;
+    return new Date();
   }
 
 }

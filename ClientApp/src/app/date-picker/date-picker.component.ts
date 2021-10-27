@@ -9,19 +9,19 @@ import { DiagramNode } from '../diagram-node';
 })
 export class DatePickerComponent implements OnInit {
   // node of which the date in the date picker relates to
-  @Input() private selectedNode: BasicNode;
+  @Input() public selectedNode: BasicNode|null = null;
   // trigger to show the dateTime form on the parent component
   @Output() private closeDatePickerTrigger: EventEmitter<any> = new EventEmitter();
   
-  private startDatePicker: HTMLInputElement;
-  private completedDatePicker: HTMLInputElement;
+  private startDatePicker: HTMLInputElement|undefined = undefined;
+  private completedDatePicker: HTMLInputElement|undefined = undefined;
 
   // number of days between the start and end date
-  private dayDifference: number;
+  public dayDifference: number;
   // remaining time after the 'dayDifference' in hours
-  private hourDifference: number;
+  public hourDifference: number;
   // remaining time after the 'hourDifference' in minute
-  private minuteDifference: number;
+  public minuteDifference: number;
 
   // error triggered by dayDifference < 0 || hourDifference < 0 || minuteDifference < 0
   public error: boolean;
@@ -47,17 +47,18 @@ export class DatePickerComponent implements OnInit {
 
     // if no node is selected, change the current value to null
     if (changes.selectedNode.currentValue == null) {
-      this.startDatePicker.value = null;
-      this.completedDatePicker.value = null;
+      this.startDatePicker.value = "";
+      this.completedDatePicker.value = "";
       return;
     } 
     
     let newSelectedNode: BasicNode = changes.selectedNode.currentValue;
     console.log("new node:");
     console.log(newSelectedNode);
-
-    this.startDatePicker.value = newSelectedNode.startTime.toISOString().split(".")[0];
-    this.completedDatePicker.value = newSelectedNode.completionTime.toISOString().split(".")[0];
+    if (newSelectedNode != null) {
+      this.startDatePicker.value = newSelectedNode.startTime!.toISOString().split(".")[0];
+      this.completedDatePicker.value = newSelectedNode.completionTime!.toISOString().split(".")[0];
+    }
 
   }
 
@@ -66,10 +67,10 @@ export class DatePickerComponent implements OnInit {
 
   saveChanges() {
     this.startDatePicker = document.getElementById("task-start-date-time") as HTMLInputElement;
-    this.selectedNode.startTime = new Date(this.startDatePicker.value);
+    this.selectedNode!.startTime = new Date(this.startDatePicker.value);
 
     this.completedDatePicker = document.getElementById("task-completion-date-time") as HTMLInputElement;
-    this.selectedNode.completionTime = new Date(this.completedDatePicker.value);
+    this.selectedNode!.completionTime = new Date(this.completedDatePicker.value);
 
     this.updateDateDifference();
   }
@@ -82,7 +83,7 @@ export class DatePickerComponent implements OnInit {
    * 
    */
   private updateDateDifference() {
-    let difference: number = this.selectedNode.completionTime.getTime() - this.selectedNode.startTime.getTime();
+    let difference: number = this.selectedNode!.completionTime!.getTime() - this.selectedNode!.startTime!.getTime();
     
     let differenceInDays: number = difference / (1000 * 60 * 60 * 24);
     this.dayDifference = Math.floor(differenceInDays);

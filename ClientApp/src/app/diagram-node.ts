@@ -5,22 +5,24 @@ export abstract class DiagramNode {
   // identifies if a node is validly selected
   protected greenLight: boolean;
   // next node connected
-  public nextNode: DiagramNode;
+  public nextNode: DiagramNode| null;
   // previous node connected
-  public previousNode: DiagramNode;
+  public previousNode: DiagramNode| null;
   // the id that identifies the node (activityId, gatewayId, or sequenceFlowId)
   public id: string;
   // identifies the parent of the current node (if it exists)
-  public parentGatewayNode: GatewayNode;
+  public parentGatewayNode: GatewayNode| null;
 
-  constructor(nextNode: DiagramNode, id: string, greenLight: boolean) {
+  constructor(nextNode: DiagramNode| null, id: string, greenLight: boolean) {
     this.nextNode = nextNode;
+    this.previousNode = null;
 
-    if (nextNode != null)
+    if (this.nextNode)
       this.nextNode.previousNode = this;
     
     this.id = id;
     this.greenLight = greenLight;
+    this.parentGatewayNode = null;
   }
 
   public setParentGatewayNode(gatewayNode: GatewayNode): void {

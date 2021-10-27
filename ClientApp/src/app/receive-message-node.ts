@@ -5,7 +5,7 @@ export class ReceiveMessageNode extends BasicNode {
   // the message reference used to trigger the event 'ReceiveMessage' in the bpmn
   public messageRef: string;
 
-  constructor(nextNode: DiagramNode, greenLight: boolean, activityId: string, messageRef: string) {
+  constructor(nextNode: DiagramNode| null, greenLight: boolean, activityId: string, messageRef: string) {
     super(nextNode, greenLight, activityId);
     this.messageRef = messageRef;
   }

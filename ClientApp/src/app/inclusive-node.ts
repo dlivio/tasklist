@@ -106,7 +106,7 @@ export class InclusiveNode extends GatewayNode {
     return variables;
   }
 
-  public static inferGatewayInstance(nextNode: DiagramNode, branches: Array<DiagramNode>, currentActivityIds: Array<string>): boolean {
+  public static inferGatewayInstance(nextNode: DiagramNode| null, branches: Array<DiagramNode>, currentActivityIds: Array<string>): boolean {
     // if the next node is already submitted, the gateway has to be a SubmittedNode
     if (nextNode != null && nextNode.isSubmitted() ) {
       return false;

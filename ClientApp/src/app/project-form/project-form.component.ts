@@ -31,37 +31,43 @@ export class ProjectFormComponent implements OnInit {
 
   onSubmit() {
 
+    var hasErrors: boolean = false;
+
     this.projectName = (<HTMLInputElement>document.getElementById("projectName")).value;
 
     // disallow submitting without writting a name
-    if (this.projectName.trim() == "") 
-      return document.getElementById("projectNameEmpty").innerHTML = "Project name can't be empty"; 
-    else 
-      document.getElementById("projectNameEmpty").innerHTML = "";
+    if (this.projectName.trim() == "") {
+      hasErrors = true;
+      document.getElementById("projectNameEmpty")!.innerHTML = "Project name can't be empty"; 
+    } else 
+      document.getElementById("projectNameEmpty")!.innerHTML = "";
 
     this.licencePlate = (<HTMLInputElement>document.getElementById("licencePlate")).value;
     
     // disallow submitting without writting a license plate
-    if (this.licencePlate.trim() == "") 
-      return document.getElementById("licencePlateEmpty").innerHTML = "Vehicle's license plate can't be empty"; 
-    else 
-      document.getElementById("licencePlateEmpty").innerHTML = "";
+    if (this.licencePlate.trim() == "") {
+      hasErrors = true;
+      document.getElementById("licencePlateEmpty")!.innerHTML = "Vehicle's license plate can't be empty"; 
+    } else 
+      document.getElementById("licencePlateEmpty")!.innerHTML = "";
+
+
+    if (!hasErrors) {
+      this.clientExpectation = (<HTMLInputElement>document.getElementById("clientExpectation")).value;
+      this.originalMaterials = (<HTMLInputElement>document.getElementById("originalMaterials")).checked;
+      this.carDocuments = (<HTMLInputElement>document.getElementById("carDocuments")).checked;
+
+      // build an object with the project name and creation datetime
+      let proj = new ProjectForm(this.projectName, this.licencePlate, this.clientExpectation, this.originalMaterials, 
+        this.carDocuments, new Date().toISOString());
+
+      // 
+      this.client.post<ProjectForm>(this.baseUrl + 'api/Projects', proj).subscribe(result => {
+        let response = result;
+        this.route.navigate(['']);
+      }, error => console.error(error));
+    } 
     
-
-    this.clientExpectation = (<HTMLInputElement>document.getElementById("clientExpectation")).value;
-    this.originalMaterials = (<HTMLInputElement>document.getElementById("originalMaterials")).checked;
-    this.carDocuments = (<HTMLInputElement>document.getElementById("carDocuments")).checked;
-
-    // build an object with the project name and creation datetime
-    let proj = new ProjectForm(this.projectName, this.licencePlate, this.clientExpectation, this.originalMaterials, 
-      this.carDocuments, new Date().toISOString());
-
-    // 
-    this.client.post<ProjectForm>(this.baseUrl + 'api/Projects', proj).subscribe(result => {
-      let response = result;
-      this.route.navigate(['']);
-    }, error => console.error(error));
-
   }
 
   ngOnInit() {
