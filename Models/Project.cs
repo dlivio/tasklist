@@ -27,6 +27,10 @@ namespace tasklist.Models
         [BsonElement("isComplete")]
         public bool IsComplete { get; set; }
 
+        [BsonElement("endDate")]
+        [DataType(DataType.Date)]
+        public DateTime EndDate { get; set; }
+
         [BsonElement("caseInstanceId")]
         public string CaseInstanceId { get; set; }
 
@@ -42,6 +46,7 @@ namespace tasklist.Models
             LicencePlate = licencePlate;
             StartDate = startDate;
             IsComplete = false;
+            EndDate = startDate;
             CaseInstanceId = caseInstanceId;
             ProcessInstanceIds = new List<string>();
             LastProcessDefinitionId = null;

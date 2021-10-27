@@ -34,7 +34,7 @@ namespace tasklist.Controllers
         /// </summary>
         /// <returns>A list of Projects with the next Task name.</returns>
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<ProjectDTO>>> GetAsync()
+        public async Task<ActionResult<IEnumerable<ProjectDTO>>> GetOpenProjectsAsync()
         {
             // get the tasks from Camunda
             List<CamundaTask> tasks = await _camundaService.GetOpenTasksAsync();
@@ -59,6 +59,22 @@ namespace tasklist.Controllers
 
             return projectDTOs;
 
+        }
+
+        [HttpGet("Closed", Name = "GetClosedProjects")]
+        public ActionResult<IEnumerable<ProjectClosedDTO>> GetClosedProjectsAsync()
+        {
+            // get the projects created in the system
+            List<Project> projects = _projectService.GetClosedProjects();
+
+            List<ProjectClosedDTO> projectsClosedDTOs = new();
+
+            foreach (Project project in projects)
+            {
+                projectsClosedDTOs.Add(new ProjectClosedDTO(project));
+            }
+
+            return projectsClosedDTOs;
         }
 
         // GET: api/Projects/5

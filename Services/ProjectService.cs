@@ -29,6 +29,13 @@ namespace tasklist.Services
         public List<Project> GetOpenProjects() =>
             _projects.Find(project => project.IsComplete == false).ToList();
 
+        /// <summary>
+        /// Get all the completed Projects in the database. 
+        /// </summary>
+        /// <returns>A List with all the completed projects.</returns>
+        public List<Project> GetClosedProjects() =>
+            _projects.Find(project => project.IsComplete == true).ToList();
+
         public Project Get(string id) =>
             _projects.Find<Project>(project => project.Id == id).FirstOrDefault();
 
@@ -56,6 +63,20 @@ namespace tasklist.Services
 
         public void Update(string id, Project projectIn) =>
             _projects.ReplaceOne(project => project.Id == id, projectIn);
+
+        /// <summary>
+        /// Update the Project object with the property 'IsComplete' changed to the boolean 'true' and 
+        /// update the the property 'EndDate' with the current DateTime.
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="projectIn"></param>
+        public void Complete(string id, Project projectIn)
+		{
+            projectIn.IsComplete = true;
+            projectIn.EndDate = new DateTime();
+
+            _projects.ReplaceOne(project => project.Id == id, projectIn);
+        }
 
         public void Remove(Project projectIn) =>
             _projects.DeleteOne(project => project.Id == projectIn.Id);
