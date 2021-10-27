@@ -1,3 +1,7 @@
+db = db.getSiblingDB('TasklistDb');
+
+db.createCollection('Credentials');
+
 db.Credentials.insertOne(
 		{
 			username: "s3-processed-data-read-access-user",
