@@ -29,7 +29,7 @@ export class SendMessageNode extends BasicNode {
     // if this node is selected add the path variables needed for approving a 'ReceivingTask' in 
     // Camunda Workflow Engine
     if (this.greenLight && this.previousNode != null)
-      variables.set(this.id, this.previousNode.id);
+      variables.set(this.previousNode.id, this.id);
 
     if (this.nextNode != null && this.getGreenLight())
       this.nextNode.getVariables().forEach((v, k) => variables.set(k, v));
