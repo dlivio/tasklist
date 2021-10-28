@@ -20,6 +20,9 @@ namespace tasklist.Services
         public List<SensorTask> Get() =>
             _sensorTasks.Find(sensorTask => true).ToList();
 
+        public List<SensorTask> GetByProjectId(string projectId) =>
+           _sensorTasks.Find(sensorTask => sensorTask.ProjectId == projectId).ToList();
+
         public SensorTask Get(string id) =>
             _sensorTasks.Find<SensorTask>(sensorTask => sensorTask.Id == id).FirstOrDefault();
 

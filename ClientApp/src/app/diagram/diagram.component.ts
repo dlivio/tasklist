@@ -34,7 +34,7 @@ import { InclusiveNode } from '../inclusive-node';
 import { ParallelNode } from '../parallel-node';
 import { HistoryTasks } from '../diagram';
 import { SubmittedNode } from '../submitted-node';
-import { TasksToApprove } from '../task';
+import { PredictedTasks, TasksToApprove } from '../task';
 import { SequenceFlowNode } from '../sequence-flow-node';
 import { GatewayNode } from '../gateway-node';
 import { ReceiveMessageNode } from '../receive-message-node';
@@ -65,7 +65,8 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
   // the current task activity id available to click
   private currentTaskIds: string[];
 
-  
+  private predictedTasks: PredictedTasks[];
+
   // the node that represents the diagram
   private currentNode: ProcessNode| null = null;
   // nodes that can be selected
@@ -88,6 +89,8 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
     this.taskHistoryIds = [];
     this.sequenceFlowHistoryIds = [];
     this.currentTaskIds = [];
+
+    this.predictedTasks = [];
 
     this.nodesEnableable = [];
     this.nodesDisableable = [];
@@ -517,6 +520,11 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
     }, error => console.error(error)
       , () => { // on complete this path is activated
 
+        // get the tasks completed in the current diagram
+      this.http.get<PredictedTasks[]>(this.currentBaseUrl + 'api/Tasks/' + this.caseInstanceId + '/Diagram/Predictions').subscribe(result => {
+        this.predictedTasks = result;
+      } , error => console.error(error)
+      , () => {
         // get the start event of the diagram
         // var foundEl = elementRegistry.filter(el => el.id == this.currentTaskIds[0])[0];
         
@@ -554,8 +562,9 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
           if (this.nodesEnableable.find(n => n.id == tasksFound[i].id) != undefined) 
             canvas.addMarker(tasksFound[i].id, 'pointer');
         }
-
       });
+
+    });
   }
 
   /**
@@ -759,6 +768,19 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
       if (nextNode != null)
         this.colourHistoryNode("basic", node.id, nextNode.id);
       return new SubmittedNode(nextNode, node.id);
+    
+    } 
+    
+    // see if it is one of the predicted tasks
+    var prediction: PredictedTasks| undefined = this.predictedTasks.find(t => t.activityId == node.id);
+    if (prediction != undefined) {
+      var currentNode: BasicNode = new BasicNode(nextNode, false, node.id);
+      currentNode.startTime = new Date(prediction.startTime);
+      currentNode.completionTime = new Date(prediction.endTime);
+
+      this.colourHistoryNode("prediction", node.id);
+
+      return currentNode;
     }
 
     if (isReceiveTask) 
@@ -1014,6 +1036,10 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
         if (!this.canvas.hasMarker(nextNodeId, 'highlight-flow-history') )
           this.canvas.addMarker(nextNodeId, 'highlight-flow-history');
         
+        break;
+      case "prediction":
+        if (!this.canvas.hasMarker(nodeId, 'highlight-prediction') )
+          this.canvas.addMarker(nodeId, 'highlight-prediction');
         break;
       default:
         console.log("Node type not found.");

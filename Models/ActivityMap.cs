@@ -16,6 +16,9 @@ namespace tasklist.Models
 
         [BsonElement("diagramId")]
         public string DiagramId { get; set; }
+        
+        [BsonElement("diagramOrder")]
+        public int DiagramOrder { get; set; }
 
         [BsonElement("sensorsRelated")]
         public List<string> SensorsRelated { get; set; }

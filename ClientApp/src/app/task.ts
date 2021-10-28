@@ -16,3 +16,9 @@ export class TasksToApprove {
     this.startEventTriggers = startEventTriggers;
   }
 }
+
+export interface PredictedTasks {
+  activityId: string;
+  startTime: string;
+  endTime: string;
+}

@@ -23,15 +23,17 @@ namespace tasklist.Controllers
         private readonly CamundaService _camundaService;
         private readonly SensorTaskService _sensorTaskService;
         private readonly AmazonS3Service _amazonS3Service;
+        private readonly ActivityMapService _activityMapService;
 
         public TasksController(TaskService taskService, ProjectService projectService, CamundaService camundaService,
-            SensorTaskService sensorTaskService, AmazonS3Service amazonS3Service)
+            SensorTaskService sensorTaskService, AmazonS3Service amazonS3Service, ActivityMapService activityMapService)
         {
             _taskService = taskService;
             _projectService = projectService;
             _camundaService = camundaService;
             _sensorTaskService = sensorTaskService;
             _amazonS3Service = amazonS3Service;
+            _activityMapService = activityMapService;
         }
 
         // GET: api/Tasks
@@ -55,7 +57,9 @@ namespace tasklist.Controllers
 
         // GET: api/Tasks/invoice:112/Diagram/History
         /// <summary>
-        /// Method that retrieves the history of tasks in the Diagram in which the task from the requested caseInstanceId is currently in.
+        /// Method that retrieves the 'HistoryTasks' object for the Diagram in which the task from the requested caseInstanceId is currently in. 
+        /// This object is composed by an array of the current activity id's, the previously completed activity id's, and some completed sequence 
+        /// flows infered from the variables existing in the system (variables used to pick paths in gateways).
         /// </summary>
         /// <param name="caseInstanceId"></param>
         /// <returns>A List with the id's of the tasks completed in the diagram.</returns>
@@ -85,6 +89,54 @@ namespace tasklist.Controllers
             //List<string> historyVars = historyVariables.Where(v => v.Value is string).Select(v => v.Value as string).ToList(); Convert.ToString(t.Value)
 
             return new HistoryTasks(currentTasksActivityIds, historyTasks.Select(t => t.ActivityId).ToList(), historyVariables.Select(v => (string)Convert.ToString(v.Value)).ToList());
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="caseInstanceId"></param>
+        /// <returns></returns>
+        [HttpGet("{caseInstanceId}/Diagram/Predictions", Name = "GetCurrentDiagramPredictions")]
+        public ActionResult<List<TaskPredictionsDTO>> GetCurrentDiagramPredictions(string caseInstanceId)
+		{
+            Project currentProject = _projectService.GetByCaseInstanceId(caseInstanceId);
+
+            if (currentProject == null) return NotFound();
+
+            // get the last processDefinitionId from the project with the requested caseInstanceId
+            string processInstanceId = currentProject.ProcessInstanceIds.LastOrDefault();
+
+            if (processInstanceId == null) return NotFound();
+
+            IEnumerable<SensorTask> predictions = _sensorTaskService.GetByProjectId(currentProject.Id).OrderBy(pred => pred.StartTime);
+
+            List<ActivityMap> mappings = _activityMapService.GetByDiagramId(currentProject.LastDiagramId).OrderBy(map => map.DiagramOrder).ToList();
+
+            List<TaskPredictionsDTO> predictionsToReturn = new();
+
+            if (mappings.Count > 0)
+			{
+                foreach (SensorTask task in predictions)
+                {
+
+                    foreach (ActivityMap activity in mappings)
+                    {
+                        // check if a mapping has any of the found sensor events
+                        if (activity.SensorsRelated.Exists(s => task.Events.Contains(s)))
+                        {
+                            predictionsToReturn.Add(new TaskPredictionsDTO { ActivityId = activity.ActivityId, StartTime = task.StartTime, EndTime = task.EndTime });
+                            mappings.Remove(activity); // remove the mapping to avoid correlating another SensorTask to it
+
+                            task.ActivityId = activity.ActivityId;
+                            _sensorTaskService.Update(task.Id, task); // update the object with the id to indicate it was a prediction for it
+                        }
+
+                        break;
+                    }
+                }
+            }
+
+            return predictionsToReturn;
         }
 
         /*
@@ -169,6 +221,8 @@ namespace tasklist.Controllers
 
             List<CamundaTask> currentTasks = await _camundaService.GetOpenTasksByProcessInstanceIDAsync(currentProcessInstanceId);
 
+            List<SensorTask> predictions = _sensorTaskService.GetByProjectId(currentProject.Id).ToList();
+
             foreach (string[] task in tasks.Tasks)
 			{
                 // the result of the task approval
@@ -186,6 +240,11 @@ namespace tasklist.Controllers
                             _taskService.Create(new Task(task[0], currentProcessInstanceId, task[1], task[2]));
 
                             currentTasks = await _camundaService.GetOpenTasksByProcessInstanceIDAsync(currentProcessInstanceId);
+
+                            // delete the prediction if it was submitted
+                            SensorTask prediction = predictions.Find(p => p.ActivityId != null && p.ActivityId == t.TaskDefinitionKey);
+                            if (prediction != null)
+                                _sensorTaskService.Remove(prediction);
 
                             // complete the current project
                             if (t.TaskDefinitionKey == "Activity_096zd4f") // last task of the diagram
