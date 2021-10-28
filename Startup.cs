@@ -49,6 +49,12 @@ namespace tasklist
             services.AddSingleton<ICredentialsDatabaseSettings>(sp =>
                 sp.GetRequiredService<IOptions<CredentialsDatabaseSettings>>().Value);
 
+            services.Configure<ActivityMapsDatabaseSettings>(
+                Configuration.GetSection(nameof(ActivityMapsDatabaseSettings)));
+
+            services.AddSingleton<IActivityMapsDatabaseSettings>(sp =>
+                sp.GetRequiredService<IOptions<ActivityMapsDatabaseSettings>>().Value);
+
             services.AddSingleton<ProjectService>();
 
             services.AddSingleton<TaskService>();

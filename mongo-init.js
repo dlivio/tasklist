@@ -9,3 +9,18 @@ db.Credentials.insertOne(
 			secret_access_key: "o3qJdtTGkNCn5QW6rNdTeKB4HgZ5abc40IsCjnT0"
 		}
 );
+
+db.createCollection('ActivityMaps');
+
+db.ActivityMaps.insertMany([
+	{
+		activityId: "",
+		diagramId: "",
+		sensorsRelated: ["Electric Sander", "Polisher"]
+	},
+	{
+		activityId: "",
+		diagramId: "",
+		sensorsRelated: ["Electric Sander", "Polisher"]
+	}
+]);

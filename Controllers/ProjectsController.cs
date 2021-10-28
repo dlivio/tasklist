@@ -106,6 +106,8 @@ namespace tasklist.Controllers
             // get the task from Camunda
             CamundaTask task = (await _camundaService.GetOpenTasksAsync()).Find(t => t.CaseInstanceId == caseInstanceId);
 
+			bool updateLastDiagramId = false;
+
             if (task == null) { 
                 if (project.ProcessInstanceIds.Count == 0) 
                     return NotFound();
@@ -116,6 +118,8 @@ namespace tasklist.Controllers
                 // if the current ProcessInstanceId is not on the list add it and update the object (useful when retrieving history)
                 if (task.ProcessInstanceId != project.ProcessInstanceIds.LastOrDefault())
                 {
+                    updateLastDiagramId = true;
+
                     project.ProcessInstanceIds.Add(task.ProcessInstanceId);
                     project.LastProcessDefinitionId = task.ProcessDefinitionId;
 
@@ -125,6 +129,12 @@ namespace tasklist.Controllers
 
             // get the diagram xml from Camunda
             CamundaDiagramXML xml = await _camundaService.GetXMLAsync(project.LastProcessDefinitionId);
+
+            // update the last diagram name on the 'Project' object if needed
+            if (updateLastDiagramId) { 
+                project.LastDiagramId = xml.DiagramId;
+                _projectService.Update(project.Id, project);
+            }
 
             return xml.Bpmn20Xml;
         }
