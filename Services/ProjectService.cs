@@ -73,7 +73,7 @@ namespace tasklist.Services
         public void Complete(string id, Project projectIn)
 		{
             projectIn.IsComplete = true;
-            projectIn.EndDate = new DateTime();
+            projectIn.EndDate = DateTime.Now;
 
             _projects.ReplaceOne(project => project.Id == id, projectIn);
         }

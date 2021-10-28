@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace tasklist.Models
 {
-    public class ProjectDTO
+    public class ProjectClosedDTO
     {
         public string Id { get; set; }
         public string ProjectName { get; set; }
@@ -12,9 +12,8 @@ namespace tasklist.Models
         public DateTime EndDate { get; set; }
         public bool IsComplete { get; set; }
         public string CaseInstanceId { get; set; }
-        public List<string> NextTaskName { get; set; }
 
-        public ProjectDTO(Project project, List<CamundaTask> nextTasks)
+        public ProjectClosedDTO(Project project)
         {
             Id = project.Id;
             ProjectName = project.ProjectName;
@@ -23,10 +22,6 @@ namespace tasklist.Models
             EndDate = project.EndDate;
             IsComplete = project.IsComplete;
             CaseInstanceId = project.CaseInstanceId;
-
-            NextTaskName = new List<string>();
-            foreach (CamundaTask task in nextTasks)
-                NextTaskName.Add(task.Name);
         }
 
     }

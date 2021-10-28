@@ -11,6 +11,7 @@ import { ProjectDetailsComponent } from './project-details/project-details.compo
 import { DiagramComponent } from './diagram/diagram.component';
 import { ProjectFormComponent } from './project-form/project-form.component';
 import { DatePickerComponent } from './date-picker/date-picker.component';
+import { ClosedProjectsComponent } from './closed-projects/closed-projects.component';
 
 @NgModule({
   declarations: [
@@ -20,7 +21,8 @@ import { DatePickerComponent } from './date-picker/date-picker.component';
     ProjectDetailsComponent,
     DiagramComponent,
     ProjectFormComponent,
-    DatePickerComponent
+    DatePickerComponent,
+    ClosedProjectsComponent
   ],
   imports: [
     BrowserModule.withServerTransition({ appId: 'ng-cli-universal' }),
@@ -36,6 +38,7 @@ import { DatePickerComponent } from './date-picker/date-picker.component';
       { path: 'project-details/:projectId', component: ProjectDetailsComponent }
       */
       { path: '', component: ProjectsComponent, pathMatch: 'full' },
+      { path: 'closed', component: ClosedProjectsComponent },
       { path: 'projects/new', component: ProjectFormComponent },
       { path: 'project-details/:projectId', component: ProjectDetailsComponent }
     ])

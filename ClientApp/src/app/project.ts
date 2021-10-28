@@ -21,3 +21,16 @@ export class ProjectForm {
     public startDate: string
   ) { }
 }
+
+
+export class ClosedProject {
+  constructor(
+    public id: string,
+    public projectName: string,
+    public licencePlate: string,
+    public startDate: string,
+    public endDate: string,
+    public isComplete: boolean,
+    public caseInstanceId: string
+  ) { }
+}
