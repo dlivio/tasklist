@@ -22,3 +22,9 @@ export interface PredictedTasks {
   startTime: string;
   endTime: string;
 }
+
+export interface CompletedHistoryTasks {
+  activityName: string;
+  startTime: string;
+  completionTime: string;
+}

@@ -57,9 +57,14 @@ export class ProjectFormComponent implements OnInit {
       this.originalMaterials = (<HTMLInputElement>document.getElementById("originalMaterials")).checked;
       this.carDocuments = (<HTMLInputElement>document.getElementById("carDocuments")).checked;
 
+      // get the current Date object
+      let currentDate: Date = new Date();
+      // fix the problem caused by summer time
+      currentDate.setTime( currentDate.getTime() - new Date().getTimezoneOffset() * 60 * 1000 );
+
       // build an object with the project name and creation datetime
       let proj = new ProjectForm(this.projectName, this.licencePlate, this.clientExpectation, this.originalMaterials, 
-        this.carDocuments, new Date().toISOString());
+        this.carDocuments, currentDate.toISOString());
 
       // 
       this.client.post<ProjectForm>(this.baseUrl + 'api/Projects', proj).subscribe(result => {

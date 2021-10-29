@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Router, ActivatedRoute } from '@angular/router';
 
 import { Project } from '../project';
-import { Task } from '../task';
+import { CompletedHistoryTasks, Task } from '../task';
 import { DiagramXML } from '../diagram';
 import { DiagramComponent } from '../diagram/diagram.component';
 
@@ -112,6 +112,68 @@ export class ProjectDetailsComponent implements OnInit {
       this.project = new Project(result.id, result.licencePlate, result.projectName, result.startDate, result.isComplete, 
         result.caseInstanceId, result.nextTaskName);
     }, error => console.error(error));
+  }
+
+  downloadProjectHistory() {
+    var completedHistoryTasks: CompletedHistoryTasks[] = [];
+
+    this.http.get<CompletedHistoryTasks[]>(this.currentBaseUrl + 'api/Tasks/' + this.camundaCaseInstanceId + "/History").subscribe(result => {
+      completedHistoryTasks = result;
+
+    }, error => console.error(error)
+    , () => {
+      // auxiliary button to build the file contents and avoid the user having to click x2 times
+      var ghostDownload = document.createElement("a");
+
+      // get the button from the diagram
+      //var downloadButton: HTMLAnchorElement =  (document.getElementById("download-history") as HTMLAnchorElement);
+
+      var filename = this.camundaCaseInstanceId + "-history.txt";
+      var filetype = "text/plain";
+
+      var fileContents = "";
+      
+      // fill the start of the file with car info
+      fileContents = fileContents + this.projectName + '\n'; // Car make and model
+      fileContents = fileContents + '\n'; // Blank line
+      fileContents = fileContents + "Licence Plate: " + this.projectLicencePlate + '\n'; // Licence plate
+      fileContents = fileContents + "Start Date: " + this.projectStartDate + " - " + this.projectStartTime + '\n'; // Start date
+      if (this.project.isComplete)
+        fileContents = fileContents + "Completion Date: " + this.projectStartDate + " - " + this.projectStartTime + '\n'; // Completion date
+      else
+        fileContents = fileContents + "Completion Date: " + "ongoing project" + '\n'; 
+      fileContents = fileContents + '\n'; // Blank line
+
+      fileContents = fileContents + "Timeline of completed activities:" + '\n'; // Activities title
+      fileContents = fileContents + '\n'; // Blank line
+
+      // fill the completed tasks
+      completedHistoryTasks.forEach(t => {
+        fileContents = fileContents + t.activityName + '\n'; // Activity name
+
+        let startDateTime: string[] = t.startTime.split("T");
+        let projectStartDate = startDateTime[0];
+        let projectStartTime = startDateTime[1].substring(0, 8);
+
+        fileContents = fileContents + " - Started at: " + projectStartDate + " - " + projectStartTime + '\n'; // Start time
+
+        let endDateTime: string[] = t.completionTime.split("T");
+        let projectEndDate = endDateTime[0];
+        let projectEndTime = endDateTime[1].substring(0, 8);
+
+        fileContents = fileContents + " - Finished at: " + projectEndDate + " - " + projectEndTime + '\n'; // End time
+        fileContents = fileContents + '\n'; // Blank line
+      });
+
+      var dataURI = "data:" + filetype + ";base64," + btoa(fileContents);
+      ghostDownload.href = dataURI;
+      ghostDownload['download'] = filename;
+      // "click" the ghost button when the info is built
+      ghostDownload.click();
+      // delete the element
+      ghostDownload.remove();
+    });
+
   }
 
   handleImported(event: any) {

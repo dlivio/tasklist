@@ -23,6 +23,9 @@ namespace tasklist.Services
         public List<Task> Get() =>
             _tasks.Find(task => true).ToList();
 
+        public List<Task> GetByProcessInstanceId(string processInstanceId) =>
+            _tasks.Find(task => task.ProcessInstanceId == processInstanceId).ToList();
+
         public Task Get(string id) =>
             _tasks.Find<Task>(task => task.Id == id).FirstOrDefault();
 
