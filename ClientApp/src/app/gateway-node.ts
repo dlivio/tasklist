@@ -117,7 +117,11 @@ export abstract class GatewayNode extends DiagramNode {
   }
 
   public getPreviousCompletionTime(): Date {
-    let completionDate: Date = new Date();
+    let currentDate: Date = new Date();
+    // fix the problem caused by summer time
+    currentDate.setTime( currentDate.getTime() - new Date().getTimezoneOffset() * 60 * 1000 );
+
+    let completionDate: Date = currentDate;
 
     this.branches.forEach(br => {
       var currentNode: DiagramNode = br;

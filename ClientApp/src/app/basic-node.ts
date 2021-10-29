@@ -7,7 +7,7 @@ export class BasicNode extends DiagramNode {
   // the date and time defined in which the task was completed
   public completionTime: Date| null;
 
-  constructor(nextNode: DiagramNode| null, greenLight: boolean, activityId: string) { // add startTime and completionTime to constructor
+  constructor(nextNode: DiagramNode| null, greenLight: boolean, activityId: string) {
     super(nextNode, activityId, greenLight);
     this.startTime = null;
     this.completionTime = null;

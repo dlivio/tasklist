@@ -129,7 +129,11 @@ export class SequenceFlowNode extends DiagramNode {
                 return this.previousNode.getPreviousCompletionTime();
         }
         
-        return new Date();
+        let currentDate: Date = new Date() ;
+        // fix the problem caused by summer time
+        currentDate.setTime( currentDate.getTime() - new Date().getTimezoneOffset() * 60 * 1000 );
+
+        return currentDate;
     }
 
 }
