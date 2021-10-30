@@ -4,7 +4,6 @@ import { Router, ActivatedRoute } from '@angular/router';
 
 import { Project } from '../project';
 import { CompletedHistoryTasks, Task } from '../task';
-import { DiagramXML } from '../diagram';
 import { DiagramComponent } from '../diagram/diagram.component';
 
 @Component({
@@ -24,6 +23,8 @@ export class ProjectDetailsComponent implements OnInit {
   public projectLicencePlate: string;
   public projectStartDate: string;
   public projectStartTime: string;
+  public projectEndDate: string;
+  public projectEndTime: string;
   public projectId: string;
   public tasksForApproval: Task[];
 
@@ -36,15 +37,21 @@ export class ProjectDetailsComponent implements OnInit {
   private currentBaseUrl: string;
 
   constructor(private http: HttpClient, @Inject('BASE_URL') baseUrl: string, private router: Router, private activatedRoute: ActivatedRoute) {
-    this.project = new Project("", "", "", "", false, "", []); // initialize the project with default values
+    // save the base url
+    this.currentBaseUrl = baseUrl;
+
+    // Initialize the project variables
     this.projectName = "Project name placeholder";
     this.projectLicencePlate = "000000";
     this.projectStartDate = "Start date placeholder";
     this.projectStartTime = "Start time placeholder";
+    this.projectEndDate = "End date placeholder";
+    this.projectEndTime = "End time placeholder";
     this.projectId = "-1";
+    this.project = new Project(this.projectId, this.projectName, this.projectLicencePlate, this.projectStartDate, 
+      this.projectEndDate, false, "", []); // initialize the project with default values
+    
     this.tasksForApproval = [];
-
-    this.currentBaseUrl = baseUrl;
 
     // get the selected Project info
     if (this.router != null && this.router.getCurrentNavigation()?.extras.state) {
@@ -86,8 +93,7 @@ export class ProjectDetailsComponent implements OnInit {
     }
 
     this.http.get<Project>(this.currentBaseUrl + 'api/Projects/' + this.project.id).subscribe(result => {
-      this.project = new Project(result.id, result.licencePlate, result.projectName, result.startDate, result.isComplete, 
-        result.caseInstanceId, result.nextTaskName);
+      this.project = result;
     }, error => console.error(error));
   }
 
@@ -179,6 +185,10 @@ export class ProjectDetailsComponent implements OnInit {
     let startDateTime: string[] = this.project.startDate.split("T");
     this.projectStartDate = startDateTime[0];
     this.projectStartTime = startDateTime[1].substring(0, 8);
+
+    let endDateTime: string[] = this.project.endDate.split("T");
+    this.projectEndDate = endDateTime[0];
+    this.projectEndTime = endDateTime[1].substring(0, 8);
 
     console.log(this.project);
 

@@ -62,19 +62,19 @@ namespace tasklist.Controllers
         }
 
         [HttpGet("Closed", Name = "GetClosedProjects")]
-        public ActionResult<IEnumerable<ProjectClosedDTO>> GetClosedProjectsAsync()
+        public ActionResult<IEnumerable<ProjectDTO>> GetClosedProjectsAsync()
         {
             // get the projects created in the system
             List<Project> projects = _projectService.GetClosedProjects();
 
-            List<ProjectClosedDTO> projectsClosedDTOs = new();
+            List<ProjectDTO> projectDTOs = new();
 
             foreach (Project project in projects)
             {
-                projectsClosedDTOs.Add(new ProjectClosedDTO(project));
+                projectDTOs.Add(new ProjectDTO(project, new List<CamundaTask>() ) );
             }
 
-            return projectsClosedDTOs;
+            return projectDTOs;
         }
 
         // GET: api/Projects/5

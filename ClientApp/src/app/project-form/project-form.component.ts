@@ -21,7 +21,7 @@ export class ProjectFormComponent implements OnInit {
     this.route = router;
   }
 
-  model = new Project("-1", "", "", "", false, "", []);
+  model = new Project("-1", "", "", "", "", false, "", []);
 
   projectName: string = "";
   licencePlate: string = "";

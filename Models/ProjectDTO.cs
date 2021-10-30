@@ -9,6 +9,7 @@ namespace tasklist.Models
         public string ProjectName { get; set; }
         public string LicencePlate { get; set; }
         public DateTime StartDate { get; set; }
+        public DateTime EndDate { get; set; }
         public bool IsComplete { get; set; }
         public string CaseInstanceId { get; set; }
         public List<string> NextTaskName { get; set; }
@@ -19,6 +20,7 @@ namespace tasklist.Models
             ProjectName = project.ProjectName;
             LicencePlate = project.LicencePlate;
             StartDate = project.StartDate;
+            EndDate = project.EndDate;
             IsComplete = project.IsComplete;
             CaseInstanceId = project.CaseInstanceId;
 

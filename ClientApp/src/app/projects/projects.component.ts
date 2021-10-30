@@ -31,8 +31,8 @@ export class ProjectsComponent implements OnInit {
   }
 
   changeVisibleProjects() {
-    let searchWord: string = this.search.trim();
-    this.visibleProjects = this.projects.filter(p => p.projectName.includes(searchWord));
+    let searchWord: string = this.search.trim().toLowerCase();
+    this.visibleProjects = this.projects.filter(p => p.projectName.toLowerCase().includes(searchWord));
   }
 
   goToProjectDetails(project: Project) {

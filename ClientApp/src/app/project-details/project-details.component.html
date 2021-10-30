@@ -23,6 +23,11 @@
         <p><b>Started at: </b>{{ projectStartDate }}, {{ projectStartTime }}</p>
       </div>
     </div>
+    <div class="row" *ngIf="project.isComplete">
+      <div class="col">
+        <p><b>Completed at: </b>{{ projectEndDate }}, {{ projectEndTime }}</p>
+      </div>
+    </div>
     <div class="row" *ngIf="!project.isComplete">
       <div class="col">
         <p><b>Task awaiting approval: </b>{{ project.nextTaskName }}</p>
@@ -35,13 +40,13 @@
 
   <hr>
 
-  <div class="diagram-parent" style="background-color: lightgray; height: 60vh;">
+  <div class="diagram-parent" *ngIf="!project.isComplete" style="background-color: lightgray; height: 60vh;">
     <app-diagram [url]="diagramUrl" [caseInstanceId]="camundaCaseInstanceId" (importDone)="handleImported($event)"></app-diagram>
   </div>
 
-  <hr>
+  <hr *ngIf="!project.isComplete">
 
-  <div id="instructions">
+  <div id="instructions" *ngIf="!project.isComplete">
     <h4>Instructions of use:</h4>
     <br>
     <p><b>Selecting elements:</b></p>
@@ -87,8 +92,12 @@
     <p><b>Downloading the Project File:</b></p>
     <ul>
       <li>By clicking the download button, a text file is downloaded containing some details relative of the car and all of the of the previously completed
-        tasks.
-      </li>
+        tasks.</li>
+    </ul>
+    <p><b>Diagram location and Zoom:</b></p>
+    <ul>
+      <li>The diagram default location is generated automatically to fit the entire diagram in the viewing area. It's possible to move the diagram by simply 
+        clicking and dragging within the canvas, and to zoom by simultaneously clicking 'Ctrl' key and scrolling the mouse wheel.</li>
     </ul>
   </div>
   

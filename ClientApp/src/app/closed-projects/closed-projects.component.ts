@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Component, Inject, OnInit } from '@angular/core';
 import { NavigationExtras, Router } from '@angular/router';
-import { ClosedProject } from '../project';
+import { Project } from '../project';
 
 @Component({
   selector: 'app-closed-projects',
@@ -10,9 +10,9 @@ import { ClosedProject } from '../project';
 })
 export class ClosedProjectsComponent implements OnInit {
 
-  public projects: ClosedProject[];
+  public projects: Project[];
 
-  public visibleProjects: ClosedProject[];
+  public visibleProjects: Project[];
   public search: string;
 
   constructor(http: HttpClient, @Inject('BASE_URL') baseUrl: string, private router: Router) { 
@@ -20,7 +20,7 @@ export class ClosedProjectsComponent implements OnInit {
     this.visibleProjects = [];
     this.search = "";
 
-    http.get<ClosedProject[]>(baseUrl + 'api/Projects/Closed').subscribe(result => {
+    http.get<Project[]>(baseUrl + 'api/Projects/Closed').subscribe(result => {
       this.projects = result;
       this.visibleProjects = this.projects;
     }, error => console.error(error));
@@ -30,19 +30,17 @@ export class ClosedProjectsComponent implements OnInit {
   }
 
   changeVisibleProjects() {
-    let searchWord: string = this.search.trim();
-    this.visibleProjects = this.projects.filter(p => p.projectName.includes(searchWord));
+    let searchWord: string = this.search.trim().toLowerCase();
+    this.visibleProjects = this.projects.filter(p => p.projectName.toLowerCase().includes(searchWord));
   }
 
-  goToClosedProjectDetails(project: ClosedProject) {
-    /*
+  goToProjectDetails(project: Project) {
     let navigationExtras: NavigationExtras = {
       state: {
         project: project
       }
     };
     this.router.navigate(['/project-details/' + project.id], navigationExtras);
-    */
   }
 
 }

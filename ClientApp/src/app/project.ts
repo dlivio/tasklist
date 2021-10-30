@@ -4,6 +4,7 @@ export class Project {
     public projectName: string,
     public licencePlate: string,
     public startDate: string,
+    public endDate: string,
     public isComplete: boolean,
     public caseInstanceId: string,
     public nextTaskName: string[]
@@ -22,15 +23,3 @@ export class ProjectForm {
   ) { }
 }
 
-
-export class ClosedProject {
-  constructor(
-    public id: string,
-    public projectName: string,
-    public licencePlate: string,
-    public startDate: string,
-    public endDate: string,
-    public isComplete: boolean,
-    public caseInstanceId: string
-  ) { }
-}
