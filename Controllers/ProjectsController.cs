@@ -91,6 +91,35 @@ namespace tasklist.Controllers
             return project;
         }
 
+        // GET: api/Projects/DTO/5
+        [HttpGet("{id:length(24)}/DTO", Name = "GetProjectDTO")]
+        public async Task<ActionResult<ProjectDTO>> GetProjectDTO(string id)
+        {
+            Project project = _projectService.Get(id);
+
+            if (project == null)
+            {
+                return NotFound();
+            }
+
+            // get the tasks from Camunda
+            List<CamundaTask> tasks = await _camundaService.GetOpenTasksAsync();
+
+            List<CamundaTask> foundTasks = tasks.FindAll(t => t.CaseInstanceId == project.CaseInstanceId);
+
+            ProjectDTO projectDTO = null;
+
+            if (foundTasks.Count > 0)
+                projectDTO = new ProjectDTO(project, foundTasks);
+            else
+            { // the case when it's waiting for a message trigger
+                CamundaTask waitingForMessage = new CamundaTask { Name = "Waiting for message" };
+                projectDTO = new ProjectDTO(project, new List<CamundaTask>() { waitingForMessage });
+            }
+
+            return projectDTO;
+        }
+
         // GET: api/Projects/invoice:112/Diagram
         /// <summary>
         /// Method that retrieves the current XML Diagram in which the task from the requested caseInstanceId is currently in.

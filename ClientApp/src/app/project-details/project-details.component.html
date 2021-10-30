@@ -23,7 +23,7 @@
         <p><b>Started at: </b>{{ projectStartDate }}, {{ projectStartTime }}</p>
       </div>
     </div>
-    <div class="row">
+    <div class="row" *ngIf="!project.isComplete">
       <div class="col">
         <p><b>Task awaiting approval: </b>{{ project.nextTaskName }}</p>
       </div>
@@ -41,53 +41,56 @@
 
   <hr>
 
-  <h4>Instructions of use:</h4>
-  <br>
-  <p><b>Selecting elements:</b></p>
-  <ul>
-    <li>An element can be selected by clicking directly on top of it or in it's very near vicinities. On approach of an element that can be 
-      selected, a <code style="color: aqua;">blue tint</code> will appear surrounding the objected.</li>
-    <li>After clicking an element that could be selected, it will change color to <code style="color: aqua;">blue</code>, indicating that it has 
-      been selected.</li>
-    <li>The 'clickable' elements in the diagram are the Tasks (which are represented by the boxes with activity descriptions); and the Sequence Flows
-      (which are the arrows leading from and to Tasks and Gateways).</li>
-  </ul>
-  <p><b>Selecting a path:</b></p>
-  <ul>
-    <li>During the selection of elements, the user will encounter 'Gateway' elements. These are some diamond shaped 'boxes' with a symbol inside 
-      which have Sequence Flows leading to and from it.</li>
-    <li>Gateways represent decisions in the diagram, meaning that depending on the symbol represented inside the Gateway different actions will be
-      available.</li>
-      <ul>
-        <li><strong>Exclusive Gateways</strong> are the ones represented with an 'X' inside it. In this element, it's only possible to choose one Sequence Flow 
-          leading from it.</li>
-        <li><strong>Inclusive Gateways</strong> are the ones represented with an 'O' inside it. In this element, it's possible to choose one or more Sequence 
-          Flow's leading from it.</li>
-        <li><strong>Parallel Gateways</strong> are the ones represented with an '+' inside it. In this element, it's the user has to choose every Sequence Flow
-          leading from it in order to continue.</li>
-      </ul>
-  </ul>
-  <p><b>Element colors:</b></p>
-  <ul>
-    <li>Uncolored elements are the ones that either haven't been selected yet, or aren't available for selection anymore for being in optional 
-      paths that are no longer accessible upon previous submissions.</li>
-    <li><code style="color: aqua;">Blue</code> elements are the current elements being selected in the ongoing session, and are awaiting a possible
-      submission to turn into 'history' elements and be colored <code style="color: #1CAC78;">green</code>.</li>
-    <li><code style="color: #1CAC78;">Green</code> elements are the elements that were previously submitted and aren't available anymore for 
-      selection. These elements show us the previous paths used in earlier sessions.<code style="color: #1CAC78;">green</code>.</li>
-  </ul>
-  <p><b>Submitting a selection:</b></p>
-  <ul>
-    <li>After doing a task selection, it's possible to click the button <code style="color: #0069d9;">Submit tasks</code> to send the selected tasks 
-      to the server for submission.</li>
-    <li>After clicking the <code style="color: #0069d9;">Submit tasks</code> button the diagram will refresh to either account for the new elements
-      submitted in that action or retrieve the new diagram if the current one has reached it's end.</li>
-  </ul>
-  <p><b>Downloading the Project File:</b></p>
-  <ul>
-    <li>By clicking the download button, a text file is downloaded containing some details relative of the car and all of the of the previously completed
-      tasks.
-    </li>
-  </ul>
+  <div id="instructions">
+    <h4>Instructions of use:</h4>
+    <br>
+    <p><b>Selecting elements:</b></p>
+    <ul>
+      <li>An element can be selected by clicking directly on top of it or in it's very near vicinities. On approach of an element that can be 
+        selected, a <code style="color: aqua;">blue tint</code> will appear surrounding the objected.</li>
+      <li>After clicking an element that could be selected, it will change color to <code style="color: aqua;">blue</code>, indicating that it has 
+        been selected.</li>
+      <li>The 'clickable' elements in the diagram are the Tasks (which are represented by the boxes with activity descriptions); and the Sequence Flows
+        (which are the arrows leading from and to Tasks and Gateways).</li>
+    </ul>
+    <p><b>Selecting a path:</b></p>
+    <ul>
+      <li>During the selection of elements, the user will encounter 'Gateway' elements. These are some diamond shaped 'boxes' with a symbol inside 
+        which have Sequence Flows leading to and from it.</li>
+      <li>Gateways represent decisions in the diagram, meaning that depending on the symbol represented inside the Gateway different actions will be
+        available.</li>
+        <ul>
+          <li><strong>Exclusive Gateways</strong> are the ones represented with an 'X' inside it. In this element, it's only possible to choose one Sequence Flow 
+            leading from it.</li>
+          <li><strong>Inclusive Gateways</strong> are the ones represented with an 'O' inside it. In this element, it's possible to choose one or more Sequence 
+            Flow's leading from it.</li>
+          <li><strong>Parallel Gateways</strong> are the ones represented with an '+' inside it. In this element, it's the user has to choose every Sequence Flow
+            leading from it in order to continue.</li>
+        </ul>
+    </ul>
+    <p><b>Element colors:</b></p>
+    <ul>
+      <li>Uncolored elements are the ones that either haven't been selected yet, or aren't available for selection anymore for being in optional 
+        paths that are no longer accessible upon previous submissions.</li>
+      <li><code style="color: aqua;">Blue</code> elements are the current elements being selected in the ongoing session, and are awaiting a possible
+        submission to turn into 'history' elements and be colored <code style="color: #1CAC78;">green</code>.</li>
+      <li><code style="color: #1CAC78;">Green</code> elements are the elements that were previously submitted and aren't available anymore for 
+        selection. These elements show us the previous paths used in earlier sessions.<code style="color: #1CAC78;">green</code>.</li>
+    </ul>
+    <p><b>Submitting a selection:</b></p>
+    <ul>
+      <li>After doing a task selection, it's possible to click the button <code style="color: #0069d9;">Submit tasks</code> to send the selected tasks 
+        to the server for submission.</li>
+      <li>After clicking the <code style="color: #0069d9;">Submit tasks</code> button the diagram will refresh to either account for the new elements
+        submitted in that action or retrieve the new diagram if the current one has reached it's end.</li>
+    </ul>
+    <p><b>Downloading the Project File:</b></p>
+    <ul>
+      <li>By clicking the download button, a text file is downloaded containing some details relative of the car and all of the of the previously completed
+        tasks.
+      </li>
+    </ul>
+  </div>
+  
   
 </div>

@@ -36,69 +36,46 @@ export class ProjectDetailsComponent implements OnInit {
   private currentBaseUrl: string;
 
   constructor(private http: HttpClient, @Inject('BASE_URL') baseUrl: string, private router: Router, private activatedRoute: ActivatedRoute) {
-    this.project = new Project("-1", "", "", "", false, "", []);
-    this.projectId = this.project.id;
+    this.project = new Project("", "", "", "", false, "", []); // initialize the project with default values
+    this.projectName = "Project name placeholder";
+    this.projectLicencePlate = "000000";
+    this.projectStartDate = "Start date placeholder";
+    this.projectStartTime = "Start time placeholder";
+    this.projectId = "-1";
     this.tasksForApproval = [];
 
     this.currentBaseUrl = baseUrl;
 
     // get the selected Project info
     if (this.router != null && this.router.getCurrentNavigation()?.extras.state) {
-      console.log("by state");
-
       this.project = this.router.getCurrentNavigation()!.extras.state!.project;
+      this.setupPageVariables();
 
     } else { // retrieve the project by id from url
 
-      console.log("by url");
       // get id from url
       this.activatedRoute.paramMap.subscribe(params => {
         var tmpProjectId: string| null = params.get('projectId');
         if (tmpProjectId != null)
           this.projectId = tmpProjectId;
-      })
+      });
 
-      http.get<Project>(baseUrl + 'api/Projects/' + this.projectId).subscribe(result => {
+      http.get<Project>(baseUrl + 'api/Projects/' + this.projectId + '/DTO').subscribe(result => {
         this.project = result;
-      }, error => console.error(error));
+
+      }, error => console.error(error)
+      , () => { 
+        this.setupPageVariables();
+      });
 
     }
 
-    this.projectName = this.project.projectName;
-    this.projectLicencePlate = this.project.licencePlate;
-
-    let startDateTime: string[] = this.project.startDate.split("T");
-    this.projectStartDate = startDateTime[0];
-    this.projectStartTime = startDateTime[1].substring(0, 8);
-
-    console.log(this.project);
-
-    // get the correct diagram for the instance
-    this.diagramUrl = baseUrl + 'api/Projects/' + this.project.caseInstanceId + '/Diagram';
-    console.log(this.diagramUrl);
-
-    // fill the Camunda's caseInstanceId
-    this.camundaCaseInstanceId = this.project.caseInstanceId;
-
-  }
-
-  setDate(): void {
-    alert("it works parent");
   }
 
   ngOnInit() {
   }
 
   ngAfterViewInit() {
-    /*
-    var columnOfDiagram = document.getElementsByTagName("app-diagram")[0];
-    if (columnOfDiagram != null || columnOfDiagram != undefined) {
-      columnOfDiagram.addEventListener("contextmenu", (e) => { 
-        e.preventDefault();
-        alert("hello");
-      });
-    }
-    */
   }
 
   submitTasks() {
@@ -124,9 +101,6 @@ export class ProjectDetailsComponent implements OnInit {
     , () => {
       // auxiliary button to build the file contents and avoid the user having to click x2 times
       var ghostDownload = document.createElement("a");
-
-      // get the button from the diagram
-      //var downloadButton: HTMLAnchorElement =  (document.getElementById("download-history") as HTMLAnchorElement);
 
       var filename = this.camundaCaseInstanceId + "-history.txt";
       var filetype = "text/plain";
@@ -193,6 +167,27 @@ export class ProjectDetailsComponent implements OnInit {
     }
 
     this.importError = error;
+  }
+
+  /**
+   * Auxiliary function to initialize the variables related to the project after the 'Project' object has been fetched.
+   */
+  private setupPageVariables(): void {
+    this.projectName = this.project.projectName;
+    this.projectLicencePlate = this.project.licencePlate;
+
+    let startDateTime: string[] = this.project.startDate.split("T");
+    this.projectStartDate = startDateTime[0];
+    this.projectStartTime = startDateTime[1].substring(0, 8);
+
+    console.log(this.project);
+
+    // get the correct diagram for the instance
+    this.diagramUrl = this.currentBaseUrl + 'api/Projects/' + this.project.caseInstanceId + '/Diagram';
+    console.log(this.diagramUrl);
+
+    // fill the Camunda's caseInstanceId
+    this.camundaCaseInstanceId = this.project.caseInstanceId;
   }
 
 }
