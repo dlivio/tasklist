@@ -7,7 +7,7 @@ namespace tasklist.Models
 {
 	public class AmazonS3SensorInfo
 	{
-		public string BoxId { get; set; }
+		public string DeviceId { get; set; }
 		public string Car { get; set; }
 		public int Location { get; set; }
 		public List<string> Event { get; set; }
