@@ -17,13 +17,11 @@ namespace tasklist.Controllers
     public class ProjectsController : ControllerBase
     {
         private readonly ProjectService _projectService;
-        private readonly TaskService _taskService;
         private readonly CamundaService _camundaService;
 
-        public ProjectsController(ProjectService projectService, TaskService taskService, CamundaService camundaService)
+        public ProjectsController(ProjectService projectService, CamundaService camundaService)
         {
             _projectService = projectService;
-            _taskService = taskService;
             _camundaService = camundaService;
         }
 

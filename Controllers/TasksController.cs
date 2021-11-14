@@ -63,7 +63,8 @@ namespace tasklist.Controllers
 		/// paths in gateways).
 		/// </summary>
 		/// <param name="caseInstanceId"></param>
-		/// <returns>A List with the id's of the tasks completed in the diagram.</returns>
+		/// <returns>A List with the id's of the tasks completed in the diagram, current tasks, and sequence flows in the 
+		/// system.</returns>
 		[HttpGet("{caseInstanceId}/Diagram/History", Name = "GetCurrentDiagramHistory")]
 		public async Task<ActionResult<HistoryTasks>> GetCurrentDiagramHistoryAsync(string caseInstanceId)
 		{
@@ -86,8 +87,6 @@ namespace tasklist.Controllers
 			}
 
 			List<CamundaHistoryVariables> historyVariables = await _camundaService.GetDiagramVariableHistoryAsync(processInstanceId);
-
-			//List<string> historyVars = historyVariables.Where(v => v.Value is string).Select(v => v.Value as string).ToList(); Convert.ToString(t.Value)
 
 			return new HistoryTasks(currentTasksActivityIds, historyTasks.Select(t => t.ActivityId).ToList(), 
 				historyVariables.Select(v => (string)Convert.ToString(v.Value)).ToList());
@@ -144,11 +143,13 @@ namespace tasklist.Controllers
 			return predictionsToReturn;
 		}
 
+		// GET: api/Tasks/invoice:112/History
 		/// <summary>
-		/// 
+		/// Method that retrieves all the tasks that have been completed in Camunda Workflow Engine, joined with their extra
+		/// information objects in our database ('Task' objects) to build the final restoration document.
 		/// </summary>
 		/// <param name="caseInstanceId"></param>
-		/// <returns></returns>
+		/// <returns>A List of 'FullHistoryTaskDTO'.</returns>
 		[HttpGet("{caseInstanceId}/History", Name = "GetFullProjectHistory")]
 		public async Task<ActionResult<List<FullHistoryTaskDTO>>> GetFullProjectHistoryAsync(string caseInstanceId)
 		{
@@ -194,27 +195,6 @@ namespace tasklist.Controllers
 			return history;
 		}
 
-		/*
-        // GET: api/Tasks/ProjectIdActive/5
-        [HttpGet("ProjectIdActive/{projectId:length(24)}", Name = "GetTaskByProjectIdActive")]
-        public ActionResult<List<Task>> GetByProjectIdActive(string projectId) =>
-            _taskService.GetByProjectIdActive(projectId);
-
-        // GET: api/Tasks/ProjectIdActive/5/Count
-        [HttpGet("ProjectIdActive/{projectId:length(24)}/Count", Name = "GetCountTasksByProjectIdActive")]
-        public ActionResult<long> GetCountByProjectIdActive(string projectId) =>
-            _taskService.CountByProjectIdActive(projectId);
-
-        // GET: api/Tasks/ProjectIdComplete/5
-        [HttpGet("ProjectIdComplete/{projectId:length(24)}", Name = "GetTaskByProjectIdComplete")]
-        public ActionResult<List<Task>> GetByProjectIdComplete(string projectId) =>
-            _taskService.GetByProjectIdCompleted(projectId);
-
-        // GET: api/Tasks/ProjectIdComplete/5/Count
-        [HttpGet("ProjectIdComplete/{projectId:length(24)}/Count", Name = "GetCountTasksByProjectIdComplete")]
-        public ActionResult<long> GetCountByProjectIdComplete(string projectId) =>
-            _taskService.CountByProjectIdCompleted(projectId);
-        */
 		// PUT: api/Tasks/5
 		[HttpPut("{id:length(24)}")]
 		public IActionResult Update(string id, Task taskIn)

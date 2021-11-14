@@ -1,7 +1,7 @@
 import { BasicNode } from "./basic-node";
 import { DiagramNode } from "./diagram-node";
 
-export class SubmittedNode extends DiagramNode{
+export class SubmittedNode extends DiagramNode {
 
     constructor(nextNode: DiagramNode| null, id: string) {
         super(nextNode, id, true);
@@ -66,5 +66,5 @@ export class SubmittedNode extends DiagramNode{
         return new Date();
     }
   
-  }
+}
   
