@@ -195,6 +195,61 @@ namespace tasklist.Controllers
 			return history;
 		}
 
+		/// <summary>
+		/// Method to be used to Process Mining purposes that returns all the tasks 
+		/// </summary>
+		/// <returns></returns>
+		[HttpGet("Mining", Name = "GetActivityDataForMining")]
+		public async Task<ActionResult<List<ActivityMiningRow>>> GetActivityDataForMiningAsync()
+		{
+			//Project currentProject = _projectService.GetByCaseInstanceId(caseInstanceId);
+
+			// the list of activity events to return
+			List<ActivityMiningRow> history = new();
+
+			List<Project> projects = _projectService.Get();
+
+			foreach(Project project in projects)
+			{
+				if (project == null) return NotFound();
+				// get the last processDefinitionId from the project with the requested caseInstanceId
+				List<string> processInstanceIds = project.ProcessInstanceIds;
+
+				if (processInstanceIds.Count == 0) return new List<ActivityMiningRow>();
+
+				List<CamundaHistoryTask> historyTasks = new();
+				List<Task> relatedTasks = new();
+
+				// gather the whole history by joining the history of the multiple diagrams
+				foreach (string processInstanceId in processInstanceIds)
+				{
+					List<CamundaHistoryTask> diagramHistoryTasks = await _camundaService.GetDiagramTaskHistoryAsync(processInstanceId);
+					historyTasks = historyTasks.Concat(diagramHistoryTasks).ToList();
+
+					List<Task> diagramRelatedTasks = _taskService.GetByProcessInstanceId(processInstanceId);
+					relatedTasks = relatedTasks.Concat(diagramRelatedTasks).ToList();
+				}
+
+				// organize the entire history by 'StartTime'
+				historyTasks = historyTasks.OrderBy(t => t.StartTime).ToList();
+
+				// remove current tasks if they exist
+				historyTasks = historyTasks.Where(t => t.EndTime != null).ToList();
+
+				// make the connection between the history tasks from camunda and the tasks saved in our database
+				foreach (CamundaHistoryTask historyTask in historyTasks)
+				{
+					Task taskFound = relatedTasks.FirstOrDefault(rt => (rt.ProcessInstanceId == historyTask.ProcessInstanceId
+						&& rt.ActivityId == historyTask.ActivityId));
+
+					history.Add(new ActivityMiningRow(project, historyTask, taskFound));
+
+				}
+			}
+
+			return history;
+		}
+
 		// PUT: api/Tasks/5
 		[HttpPut("{id:length(24)}")]
 		public IActionResult Update(string id, Task taskIn)
