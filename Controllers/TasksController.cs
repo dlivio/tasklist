@@ -196,14 +196,13 @@ namespace tasklist.Controllers
 		}
 
 		/// <summary>
-		/// Method to be used to Process Mining purposes that returns all the tasks 
+		/// Method to be used to Process Mining purposes that returns all the tasks completed in Camunda Workflow Engine, joined
+		/// with their respective 'ProjectName' and 'LicencePlate'
 		/// </summary>
-		/// <returns></returns>
+		/// <returns>A List of 'ActivityMiningRow'.</returns>
 		[HttpGet("Mining", Name = "GetActivityDataForMining")]
 		public async Task<ActionResult<List<ActivityMiningRow>>> GetActivityDataForMiningAsync()
 		{
-			//Project currentProject = _projectService.GetByCaseInstanceId(caseInstanceId);
-
 			// the list of activity events to return
 			List<ActivityMiningRow> history = new();
 
