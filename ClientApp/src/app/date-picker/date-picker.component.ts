@@ -53,8 +53,6 @@ export class DatePickerComponent implements OnInit {
     } 
     
     let newSelectedNode: BasicNode = changes.selectedNode.currentValue;
-    console.log("new node:");
-    console.log(newSelectedNode);
     if (newSelectedNode != null) {
       this.startDatePicker.value = newSelectedNode.startTime!.toISOString().split(".")[0];
       this.completedDatePicker.value = newSelectedNode.completionTime!.toISOString().split(".")[0];

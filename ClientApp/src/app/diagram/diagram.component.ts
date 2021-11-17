@@ -154,18 +154,12 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
       eventBus.on(event, (e: any) => {
         // e.element = the model element
         // e.gfx = the graphical element
-        console.log(event, 'on', e.gfx);
-        console.log(event, 'on', e.element);
-        console.log(this.currentTaskIds);
-        console.log("nodes enableable:");
-        console.log(this.nodesEnableable);
 
         var nodeForEnableFound: DiagramNode| undefined = this.nodesEnableable.find(n => n.id == e.element.id);
 
         var nodeForDisableFound: DiagramNode| undefined = this.nodesDisableable.find(n => n.id == e.element.id);
 
         if (nodeForEnableFound != undefined) {
-          console.log("found it enable");
 
           if (!this.canvas.hasMarker(e.element.id, 'highlight') || !this.canvas.hasMarker(e.element.id, 'highlight-flow')) {
             
@@ -182,19 +176,12 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
 
             this.nodesEnableable = this.currentNode!.canEnable();
 
-            console.log("new nodes enableable:");
-            console.log(this.nodesEnableable);
-
             this.nodesDisableable = this.currentNode!.canDisable();
-
-            console.log("new nodes disableable:");
-            console.log(this.nodesDisableable);
-
           }
         }
 
         if (nodeForDisableFound != undefined) {
-          console.log("found it disable");
+
           if (this.canvas.hasMarker(e.element.id, 'highlight') || this.canvas.hasMarker(e.element.id, 'highlight-flow')) {
             if (nodeForEnableFound instanceof SequenceFlowNode) 
               this.canvas.removeMarker(e.element.id, 'highlight-flow');
@@ -207,19 +194,9 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
             // trigger a function to cleanup colored nodes that have been removed
             this.disableColorCleanup(this.canvas, nodesDisabled);
 
-            console.log("nodes disabled");
-            console.log(nodesDisabled);
-
             this.nodesEnableable = this.currentNode!.canEnable();
 
-            console.log("new nodes enableable:");
-            console.log(this.nodesEnableable);
-
             this.nodesDisableable = this.currentNode!.canDisable();
-
-            console.log("new nodes disableable:");
-            console.log(this.nodesDisableable);
-
           }
         }
 
@@ -251,9 +228,6 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
             }
           }
         }
-
-        console.log(event, 'on', e.element);
-
       });
 
     });
@@ -274,10 +248,6 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
     this.bpmnJS.destroy();
   }
 
-  setDate() {
-    alert("it works");
-  }
-
   /**
    * Method called by the clicking of the button 'Submit tasks' in the parent component.
    * This method sends an object containing all the clicked diagram tasks to the server for them
@@ -292,30 +262,12 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
       return false;
     }
 
-    console.log("inside submit tasks");
 
-    console.log(this.currentNode.canDisable());
-
-    //var nodesSelected: BasicNode[] = this.currentNode.canDisable();
     var nodesSelected: BasicNode[] = this.currentNode.getNodesForSubmission();
 
     var variablesToSend: Map<string, string> = this.currentNode.getVariables();
 
     var startEventTriggers: string[] = this.currentNode.getStartEventTriggers();
-
-    console.log("inside submit tasks variables");
-    console.log(variablesToSend);
-
-    console.log("nodes to submit: ");
-    console.log(nodesSelected);
-
-    console.log("signalNames: ");
-    console.log(startEventTriggers);
-
-    //return; // temp
-
-    console.log("variables map hereeeeee");
-    console.log(variablesToSend);
 
     // if the list to submit is empty do nothing
     if (nodesSelected.length == 0) return false;
@@ -330,16 +282,10 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
       tasks.push(arr);
     });
 
-    console.log(tasks);
-
     var variablesArray = Array.from(variablesToSend.entries());
     //var tasksArray = Array.from(tasks.entries());
 
     var tasksToApprove: TasksToApprove = new TasksToApprove(tasks, variablesArray, startEventTriggers);
-    
-    console.log(tasksToApprove);
-
-    // return; // temp
 
     // send the tasks for approval to the server
     this.http.post<TasksToApprove>(this.currentBaseUrl + 'api/Tasks/' + projectId + '/Approve', tasksToApprove).subscribe(result => {
@@ -445,10 +391,6 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
    * @returns a string containing the Signal Event Name if the node is a Conditional Start Event, empty string otherwise
    */
   private getStartEventSignalRef(node: any): string {
-    console.log("getting signal ref");
-    console.log(node);
-
-
     // get the 'eventDefinitions' child of the node
     var eventDefinitions: any = node.eventDefinitions;
 
@@ -497,25 +439,12 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
     // get the tasks completed in the current diagram
     this.http.get<HistoryTasks>(this.currentBaseUrl + 'api/Tasks/' + this.caseInstanceId + '/Diagram/History').subscribe(result => {
 
-      console.log("history request result");
-      console.log(result);
-
       this.taskHistoryIds = result.historyActivityIds;
 
-      console.log("history");
-      console.log(this.taskHistoryIds);
-
       // remove the current task to be approved from the list and save it
-      this.currentTaskIds = result.currentActivityIds;                               // TODO: needs to be changed to retrieve current tasks hereeeee
-
-      console.log("history variable result");
-      console.log(result);
+      this.currentTaskIds = result.currentActivityIds;
 
       this.sequenceFlowHistoryIds = result.historySequenceFlowIds;
-
-      console.log("current tasks");
-      console.log(this.currentTaskIds);
-      console.log(this.currentTaskIds[0]);
 
     }, error => console.error(error)
       , () => { // on complete this path is activated
@@ -526,32 +455,19 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
       } , error => console.error(error)
       , () => {
         // get the start event of the diagram
-        // var foundEl = elementRegistry.filter(el => el.id == this.currentTaskIds[0])[0];
-        
-        //var foundEl = elementRegistry.filter(el => el.type == "bpmn:StartEvent")[0];
         var foundStartEvents: any[] = elementRegistry.filter((el: any) => el.type == "bpmn:StartEvent");
         // get the main start event of the process
         var foundStart = this.getMainStartEventNode(foundStartEvents);
-        console.log("start node found:");
-        console.log(foundStart);
-        // filter the 'foundStartEvents' array to get only the secondary
-        //var conditionalStartingNodes = foundStartEvents.filter(n => n != foundStart && this.getParentNodeType(n) != "bpmn:SubProcess");
-
+ 
         var conditionalStartingNodes = this.getConditionalStartEventNodes(foundStartEvents);
 
-        // parse the diagram be calling the parseNode on the pseudo-root (first task to approve)
-        //this.currentNode = this.parseNode(foundEl.outgoing[0]);                                                 // change var name
-        //this.currentNode = this.parseNode(foundStart.outgoing[0], null, true, conditionalStartingNodes);
+        // parse the diagram
         this.currentNode = this.parseProcess(foundStart, conditionalStartingNodes[0], conditionalStartingNodes[1]);
-        console.log("Built graph:");
-        console.log(this.currentNode);
 
         var nodesAbleToSelect: Array<DiagramNode> = this.currentNode.canEnable();
-
         nodesAbleToSelect.forEach(n => this.currentTaskIds.push(n.id));
 
         this.nodesEnableable = this.currentNode.canEnable();
-        console.log(this.nodesEnableable);
 
         // filter the elements in the diagram to limit those who are clickable
         var tasksFound = elementRegistry.filter(function (el: any) {
@@ -842,15 +758,6 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
   private parseGateway(node: any, stoppingNode: any = null, gatewayType: string): DiagramNode| null {
     var endGateway = this.getLastGateway(node, this.getNodeType(node));
 
-    // if the gateway found equals the endGateway, the first node of the graph is inside a gateway;
-    // in this case we want to skip the interpretation of the gateway as a gatewayNode and just interpret 
-    // it as a regular node
-    /*
-    if (node.id == endGateway.id) {
-      return this.parseNode(node.outgoing[0], stoppingNode);
-    }
-    */
-
     var branches: Array<SequenceFlowNode> = new Array<SequenceFlowNode>();
     var nextNode: DiagramNode| null;
 
@@ -965,7 +872,7 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
         }
 
       } else {
-        builtNode = new SequenceFlowNode(nextNode, false, node.id, nextObj.id)//""); // WARNING: This may give an error but I can't see it now
+        builtNode = new SequenceFlowNode(nextNode, false, node.id, nextObj.id);
       }
 
     }

@@ -86,8 +86,7 @@ export class ProjectDetailsComponent implements OnInit {
   }
 
   submitTasks() {
-    console.log("Submit tasks was clicked");
-    console.log(this.project.id);
+
     if (this.diagramComponent.submitTasks(this.project.id) ) {
       this.diagramUrl = this.currentBaseUrl + 'api/Projects/' + this.project.caseInstanceId + '/Diagram';
     }
@@ -190,11 +189,8 @@ export class ProjectDetailsComponent implements OnInit {
     this.projectEndDate = endDateTime[0];
     this.projectEndTime = endDateTime[1].substring(0, 8);
 
-    console.log(this.project);
-
     // get the correct diagram for the instance
     this.diagramUrl = this.currentBaseUrl + 'api/Projects/' + this.project.caseInstanceId + '/Diagram';
-    console.log(this.diagramUrl);
 
     // fill the Camunda's caseInstanceId
     this.camundaCaseInstanceId = this.project.caseInstanceId;
