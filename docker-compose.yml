@@ -27,5 +27,7 @@ services:
       ProjectsDatabaseSettings__Host: mongo
       TasksDatabaseSettings__Host: mongo
       SensorTasksDatabaseSettings__Host: mongo
+      CredentialsDatabaseSettings__Host: mongo
+      ActivityMapsDatabaseSettings__Host: mongo
     depends_on:
       - mongo

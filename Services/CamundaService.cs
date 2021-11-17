@@ -17,7 +17,7 @@ namespace tasklist.Services
     /// </summary>
     public class CamundaService
     {
-        private static readonly string BASE_URL = "http://194.210.120.169:591/engine-rest/";
+        private static readonly string BASE_URL = "http://194.210.120.34:591/engine-rest/"; //"http://localhost:591/engine-rest/"
 
         private static readonly HttpClient _client;
 
