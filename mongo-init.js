@@ -5,14 +5,14 @@ db.createCollection('Credentials');
 db.Credentials.insertOne(
 		{
 			username: "s3-processed-data-read-access-user",
-			access_key_id: "AKIA3XRN4IIBWSRT3QOA",
-			secret_access_key: "o3qJdtTGkNCn5QW6rNdTeKB4HgZ5abc40IsCjnT0"
+			access_key_id: "your_access_key_id",
+			secret_access_key: "your_secret_access_key"
 		}
 );
 
 db.createCollection('ActivityMaps');
 
-// ["Electric Sander", "Polisher", "Manual Sander"]
+// ["Electric Sander", "Polisher", "Manual Sander", "Mineral Blast", "Paint"]
 db.ActivityMaps.insertMany([
 	{
 		activityId: "Activity_0tv9fno",
