@@ -2,6 +2,7 @@
 using Amazon.Runtime;
 using Amazon.S3;
 using Amazon.S3.Model;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
@@ -373,6 +374,7 @@ namespace tasklist.Controllers
 		/// <param name="folderName">the name of the folder to get the file from (i.e. 'SensorBox_01')</param>
 		/// <param name="fileName">the name of the file to retrieve (i.e. 'processed_SensorBox_01_data_07_09_2021_1.json')</param>
 		/// <returns>a List containing the parsed SensorInfo objects</returns>
+		[DisableCors]
 		[HttpPost("/Sensor/{folderName}/{fileName}")]
 		public async Task<List<AmazonS3SensorInfo>> NewSensorInformationAvailable(string folderName, string fileName)
 		{
