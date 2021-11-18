@@ -33,7 +33,7 @@ namespace tasklist
                                   {
                                       builder.WithOrigins("http://194.210.120.34*",
                                                           "https://194.210.120.34*",
-                                                          "http://localhost:3000/")
+                                                          "*")
                                                             .AllowAnyHeader()
                                                             .AllowAnyMethod()
                                                             .SetIsOriginAllowedToAllowWildcardSubdomains();

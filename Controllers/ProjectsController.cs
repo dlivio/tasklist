@@ -32,7 +32,6 @@ namespace tasklist.Controllers
         /// Project properties and the name of the next Task awaiting approval.
         /// </summary>
         /// <returns>A list of Projects with the next Task name.</returns>
-        [DisableCors]
         [HttpGet]
         public async Task<ActionResult<IEnumerable<ProjectDTO>>> GetOpenProjectsAsync()
         {
