@@ -21,9 +21,25 @@ namespace tasklist
 
         public IConfiguration Configuration { get; }
 
+        readonly string MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
+
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddCors(options =>
+            {
+                options.AddPolicy(name: MyAllowSpecificOrigins,
+                                  builder =>
+                                  {
+                                      builder.WithOrigins("http://194.210.120.34*",
+                                                          "https://194.210.120.34*",
+                                                          "http://localhost:3000/")
+                                                            .AllowAnyHeader()
+                                                            .AllowAnyMethod()
+                                                            .SetIsOriginAllowedToAllowWildcardSubdomains();
+                                  });
+            });
+
             // requires using Microsoft.Extensions.Options
             services.Configure<ProjectsDatabaseSettings>(
                 Configuration.GetSection(nameof(ProjectsDatabaseSettings)));
@@ -106,6 +122,8 @@ namespace tasklist
             }
 
             app.UseRouting();
+
+            app.UseCors(MyAllowSpecificOrigins);
 
             app.UseEndpoints(endpoints =>
             {
