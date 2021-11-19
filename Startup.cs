@@ -47,12 +47,12 @@ namespace tasklist
             {
                 options.AddPolicy(name: MyAllowSpecificOrigins,
                     builder => builder
-                        .AllowAnyMethod()
-                        .AllowCredentials()
+                        .SetIsOriginAllowedToAllowWildcardSubdomains()
                         .WithOrigins("http://194.210.120.34*",
                                      "https://194.210.120.34*",
                                      "https://o3tbzwf5ek.execute-api.eu-central-1.amazonaws.com/prod")
-                        .SetIsOriginAllowedToAllowWildcardSubdomains()
+                        .AllowAnyMethod()
+                        .AllowCredentials()
                         .AllowAnyHeader());
             });
 
