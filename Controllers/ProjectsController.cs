@@ -1,29 +1,25 @@
-﻿using Microsoft.AspNetCore.Cors;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.Http;
-using System.Net.Http.Json;
-using System.Security.Cryptography;
-using System.Text;
 using System.Threading.Tasks;
 using tasklist.Models;
 using tasklist.Services;
 
 namespace tasklist.Controllers
 {
-    [Route("api/[controller]")]
+	[Route("api/[controller]")]
     [ApiController]
     public class ProjectsController : ControllerBase
     {
         private readonly ProjectService _projectService;
         private readonly CamundaService _camundaService;
-
-        public ProjectsController(ProjectService projectService, CamundaService camundaService)
+        private readonly ERPNextService _erpnextService;
+        public ProjectsController(ProjectService projectService, CamundaService camundaService, ERPNextService erpnextService)
         {
             _projectService = projectService;
             _camundaService = camundaService;
+            _erpnextService = erpnextService;
         }
 
         // GET: api/Projects
@@ -186,7 +182,6 @@ namespace tasklist.Controllers
         public async Task<ActionResult<Project>> CreateAsync(ProjectFormDTO projectForm)
         {
             // make a unique key to use while starting the process in Camunda
-            // string hash = projectForm.ProjectName + "_" + SHA256ToString(projectForm.ProjectName + projectForm.StartDate);
             int noProjects = _projectService.Get().Count;
             string generatedId = projectForm.ProjectName + "_" + noProjects;
 
@@ -198,6 +193,37 @@ namespace tasklist.Controllers
             _projectService.Create(project);
             // start the process in Camunda with the generated ID
             await _camundaService.StartProcessInstanceAsync("restoration_base", generatedId, projectForm);
+
+            return CreatedAtRoute("GetProject", new { id = project.Id.ToString() }, project);
+        }
+
+        // POST: api/Projects
+        [HttpPost("ERPNext")]
+        public async Task<ActionResult<Project>> CreateFromERPNextAsync(ProjectERPNextDTO projectForm)
+        {
+            // make a unique key to use while starting the process in Camunda
+            int noProjects = _projectService.Get().Count;
+            string generatedId = projectForm.ProjectName + "_" + noProjects;
+
+            // clean the string input of licence plate from possible unecessary characters
+            string sanitizedLicencePlate = projectForm.LicencePlate.Replace("-", "").Trim();
+
+            // initialize a creation date
+            DateTime startDate = DateTime.Now;
+
+            Project project = new Project(projectForm.ProjectName, sanitizedLicencePlate, startDate, generatedId);
+            _projectService.Create(project);
+
+            ProjectFormDTO projectFormConverted = new ProjectFormDTO { ProjectName = projectForm.ProjectName, 
+                LicencePlate = projectForm.LicencePlate, ClientExpectation = projectForm.ClientExpectation, 
+                OriginalMaterials = projectForm.OriginalMaterials, CarDocuments = projectForm.CarDocuments, 
+                StartDate = startDate};
+
+            // start the process in Camunda with the generated ID
+            await _camundaService.StartProcessInstanceAsync("restoration_base", generatedId, projectFormConverted);
+
+            // update the object in ERPNext to add the created ProjectID variable
+            await _erpnextService.UpdateProjectDoctype(projectForm.ERPNextProjectId, project.Id.ToString());
 
             return CreatedAtRoute("GetProject", new { id = project.Id.ToString() }, project);
         }
