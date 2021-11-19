@@ -223,7 +223,7 @@ namespace tasklist.Controllers
             await _camundaService.StartProcessInstanceAsync("restoration_base", generatedId, projectFormConverted);
 
             // update the object in ERPNext to add the created ProjectID variable
-            await _erpnextService.UpdateProjectDoctype(projectForm.ERPNextProjectId, project.Id.ToString());
+            await _erpnextService.UpdateProjectDoctype(projectForm.ERPNextProjectId, project.CaseInstanceId);
 
             return CreatedAtRoute("GetProject", new { id = project.Id.ToString() }, project);
         }

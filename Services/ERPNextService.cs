@@ -26,14 +26,14 @@ namespace tasklist.Services
 
         /// <summary>
         /// Method to update a Project doctype in the deployed ERPNext system to add the
-        /// "tasklist_string_id" property with the value of the ID of the Project it created in
+        /// "tasklist_string_id" property with the value of the caseInstanceId of the Project it created in
         /// our system.
         /// </summary>
         /// <param name="erpnextProjectId">the ID of the erpnext Project</param>
-        /// <param name="projectId">the ID of the Project in our database</param>
-        public async Task UpdateProjectDoctype(string erpnextProjectId, string projectId)
+        /// <param name="caseInstanceId">the ID of the Project in our database</param>
+        public async Task UpdateProjectDoctype(string erpnextProjectId, string caseInstanceId)
         {
-            ERPNextProjectIDPut tasklist_project_id = new ERPNextProjectIDPut { Tasklist_string_id = projectId };
+            ERPNextProjectIDPut tasklist_project_id = new ERPNextProjectIDPut { Tasklist_string_id = caseInstanceId };
 
             var erpnextProjectIDPutJson = new StringContent(JsonSerializer.Serialize(tasklist_project_id), 
                 Encoding.UTF8, "application/json");
