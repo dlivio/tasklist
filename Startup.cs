@@ -49,7 +49,9 @@ namespace tasklist
                     builder => builder
                         .AllowAnyMethod()
                         .AllowCredentials()
-                        .SetIsOriginAllowed((host) => true)
+                        .WithOrigins("http://194.210.120.34*",
+                                     "https://194.210.120.34*",
+                                     "https://raimundobranco.netlify.app/")
                         .AllowAnyHeader());
             });
 
