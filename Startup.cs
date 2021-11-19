@@ -51,7 +51,8 @@ namespace tasklist
                         .AllowCredentials()
                         .WithOrigins("http://194.210.120.34*",
                                      "https://194.210.120.34*",
-                                     "https://raimundobranco.netlify.app/")
+                                     "https://o3tbzwf5ek.execute-api.eu-central-1.amazonaws.com/prod")
+                        .SetIsOriginAllowedToAllowWildcardSubdomains()
                         .AllowAnyHeader());
             });
 
