@@ -50,7 +50,8 @@ namespace tasklist
                         .SetIsOriginAllowedToAllowWildcardSubdomains()
                         .WithOrigins("http://194.210.120.34*",
                                      "https://194.210.120.34*",
-                                     "https://o3tbzwf5ek.execute-api.eu-central-1.amazonaws.com/prod")
+                                     "https://o3tbzwf5ek.execute-api.eu-central-1.amazonaws.com/prod",
+                                     "http://0.0.0.0:8000")
                         .AllowAnyMethod()
                         .AllowCredentials()
                         .AllowAnyHeader());
@@ -132,7 +133,7 @@ namespace tasklist
             app.UseSwagger();
             app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "tasklist_api v1"));
 
-            //app.UseHttpsRedirection();
+            app.UseHttpsRedirection();
             app.UseStaticFiles();
             if (!env.IsDevelopment())
             {
