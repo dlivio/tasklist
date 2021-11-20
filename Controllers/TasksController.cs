@@ -383,7 +383,7 @@ namespace tasklist.Controllers
 
 			list.ForEach(si =>
 			{
-				Project p = _projectService.GetByCaseInstanceId(si.Car);
+				Project p = _projectService.GetByLicencePlate(si.Car);
 				if (p != null)
 				{
 					SensorTask st = new SensorTask(si, p.Id);
