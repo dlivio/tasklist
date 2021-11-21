@@ -8,6 +8,7 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using tasklist.Models;
+using Task = System.Threading.Tasks.Task;
 
 namespace tasklist.Services
 {
@@ -110,18 +111,6 @@ namespace tasklist.Services
             var processArgsSerialized = System.Text.Json.JsonSerializer.Serialize(processArgs, serializeOptions);
             var requestContent = new StringContent(processArgsSerialized, Encoding.UTF8, "application/json");
 
-
-            /*
-            var processArgs = new CamundaStartProcess(caseInstanceIdToCreate);
-            var serializeOptions = new JsonSerializerOptions
-            {
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-                WriteIndented = true
-            };
-            var processArgsSerialized = JsonSerializer.Serialize(processArgs, serializeOptions);
-            var requestContent = new StringContent(processArgsSerialized, Encoding.UTF8, "application/json");
-            */
-
             string caseInstanceId = null;
 
             HttpResponseMessage response = await _client.PostAsync(BASE_URL + "process-definition/key/" + processId
@@ -215,11 +204,11 @@ namespace tasklist.Services
         }
 
         /// <summary>
-        /// 
+        /// Method that completes a Task inside Camunda Workflow Engine.
         /// </summary>
-        /// <param name="id"></param>
-        /// <param name="vars"></param>
-        /// <returns></returns>
+        /// <param name="id">the id of the task to complete</param>
+        /// <param name="vars">the variables needed for completion</param>
+        /// <returns>the id of the completed task</returns>
 		public async Task<string> CompleteCamundaTask(string id, string[][] vars)
         {
             Dictionary<string, PairKeyValue> variables = new Dictionary<string, PairKeyValue>();
@@ -327,6 +316,28 @@ namespace tasklist.Services
             return null;
         }
 
+        public async Task TerminateProcess(string processInstanceId)
+        {
+            var processArgs = new CamundaTerminateProcess()
+            {
+                DeleteReason = "Process was cancelled by the Manager.",
+                ProcessInstanceIds = new string[] { processInstanceId },
+                SkipCustomListeners = false,
+                SkipSubprocesses = false
+            };
+            var serializeOptions = new JsonSerializerOptions
+            {
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                WriteIndented = true
+            };
+            var processArgsSerialized = System.Text.Json.JsonSerializer.Serialize(processArgs, serializeOptions);
+            var requestContent = new StringContent(processArgsSerialized, Encoding.UTF8, "application/json");
 
+            HttpResponseMessage response = await _client.PostAsync(BASE_URL + "process-instance/delete", requestContent);
+
+            response.EnsureSuccessStatusCode();
+
+        }
     }
+
 }

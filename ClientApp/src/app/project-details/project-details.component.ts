@@ -18,6 +18,8 @@ export class ProjectDetailsComponent implements OnInit {
   @ViewChild(DiagramComponent, {static: false})
   private diagramComponent!: DiagramComponent;
 
+  public route: Router;
+
   public project: Project;
   public projectName: string;
   public projectLicencePlate: string;
@@ -37,6 +39,8 @@ export class ProjectDetailsComponent implements OnInit {
   private currentBaseUrl: string;
 
   constructor(private http: HttpClient, @Inject('BASE_URL') baseUrl: string, private router: Router, private activatedRoute: ActivatedRoute) {
+    this.route = router;
+    
     // save the base url
     this.currentBaseUrl = baseUrl;
 
@@ -152,6 +156,21 @@ export class ProjectDetailsComponent implements OnInit {
       // delete the element
       ghostDownload.remove();
     });
+
+  }
+
+  deleteProject() {
+    let confirmedDeletion = confirm("Deleting this project removes all the data stored in the system and closes the running instance in the Workflow Engine. Do you want to proceed?");
+  
+    if (confirmedDeletion) {
+      this.http.delete(this.currentBaseUrl + 'api/Projects/' + this.project.id).subscribe(result => {
+        alert("Project deleted successfully.")
+  
+      }, error => console.error(error)
+      , () => {
+        this.route.navigate(['']);
+      });
+    }
 
   }
 

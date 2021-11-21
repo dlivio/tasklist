@@ -29,47 +29,6 @@ namespace tasklist.Services
         public Task Get(string id) =>
             _tasks.Find<Task>(task => task.Id == id).FirstOrDefault();
 
-        /*
-        /// <summary>
-        /// Retrieves the Tasks that have the requested projectId.
-        /// </summary>
-        /// <param name="projectId">The Id of the Project which the task belongs to.</param>
-        /// <returns>A List of Tasks</returns>
-        public List<Task> GetByProjectId(string projectId) =>
-            _tasks.Find<Task>(task => task.ProjectId == projectId).ToList();
-
-        /// <summary>
-        /// Retrieves the Tasks that have the requested projectId and are not completed.
-        /// </summary>
-        /// <param name="projectId">The Id of the Project which the task belongs to.</param>
-        /// <returns>A List of Tasks</returns>
-        public List<Task> GetByProjectIdActive(string projectId) =>
-            _tasks.Find<Task>(task => (task.ProjectId == projectId && task.Completed == false)).ToList();
-
-        /// <summary>
-        /// Returns the number of Tasks that have the requested projectId and are not completed.
-        /// </summary>
-        /// <param name="projectId">The Id of the Project which the task belongs to.</param>
-        /// <returns>A List of Tasks</returns>
-        public long CountByProjectIdActive(string projectId) =>
-            _tasks.CountDocuments<Task>(task => (task.ProjectId == projectId && task.Completed == false));
-
-        /// <summary>
-        /// Retrieves the Tasks that have the requested projectId and are completed.
-        /// </summary>
-        /// <param name="projectId">The Id of the Project which the task belongs to.</param>
-        /// <returns>A List of Tasks</returns>
-        public List<Task> GetByProjectIdCompleted(string projectId) =>
-            _tasks.Find<Task>(task => (task.ProjectId == projectId && task.Completed == true)).ToList();
-
-        /// <summary>
-        /// Returns the number of Tasks that have the requested projectId and are completed.
-        /// </summary>
-        /// <param name="projectId">The Id of the Project which the task belongs to.</param>
-        /// <returns>A List of Tasks</returns>
-        public long CountByProjectIdCompleted(string projectId) =>
-            _tasks.CountDocuments<Task>(task => (task.ProjectId == projectId && task.Completed == true));
-        */
         public Task Create(Task task)
         {
             _tasks.InsertOne(task);
@@ -84,5 +43,8 @@ namespace tasklist.Services
 
         public void Remove(string id) =>
             _tasks.DeleteOne(task => task.Id == id);
+
+        public void RemoveManyByProcessInstanceId(string processInstanceId) =>
+            _tasks.DeleteMany(task => task.ProcessInstanceId == processInstanceId);
     }
 }

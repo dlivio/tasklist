@@ -15,11 +15,14 @@ namespace tasklist.Controllers
         private readonly ProjectService _projectService;
         private readonly CamundaService _camundaService;
         private readonly ERPNextService _erpnextService;
-        public ProjectsController(ProjectService projectService, CamundaService camundaService, ERPNextService erpnextService)
+        private readonly TaskService _taskService;
+        public ProjectsController(ProjectService projectService, CamundaService camundaService, 
+            ERPNextService erpnextService, TaskService taskService)
         {
             _projectService = projectService;
             _camundaService = camundaService;
             _erpnextService = erpnextService;
+            _taskService = taskService;
         }
 
         // GET: api/Projects
@@ -237,14 +240,25 @@ namespace tasklist.Controllers
 
         // DELETE: api/Projects/5
         [HttpDelete("{id:length(24)}")]
-        public IActionResult Delete(string id)
+        public async Task<IActionResult> Delete(string id)
         {
             var project = _projectService.Get(id);
 
             if (project == null)
-            {
                 return NotFound();
+
+
+            List<string> processInstanceIds = project.ProcessInstanceIds;
+
+            // remove the tasks related to the Project
+            foreach (string processInstanceId in processInstanceIds)
+            {
+                _taskService.RemoveManyByProcessInstanceId(processInstanceId);
             }
+
+            // terminate the process in Camunda with the caseInstanceId
+            if (processInstanceIds.Count > 0)
+                await _camundaService.TerminateProcess(processInstanceIds.First());
 
             _projectService.Remove(project.Id);
 
