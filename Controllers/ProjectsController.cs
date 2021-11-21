@@ -208,6 +208,13 @@ namespace tasklist.Controllers
             // clean the string input of licence plate from possible unecessary characters
             string sanitizedLicencePlate = projectForm.LicencePlate.Replace("-", "").Trim();
 
+            Project existingLicencePlate = _projectService.GetByLicencePlate(sanitizedLicencePlate);
+
+            if (existingLicencePlate != null)
+			{
+                return Conflict();
+            }
+
             // initialize a creation date
             DateTime startDate = DateTime.Now;
 

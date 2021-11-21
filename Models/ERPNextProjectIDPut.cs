@@ -7,6 +7,6 @@ namespace tasklist.Models
 {
 	public class ERPNextProjectIDPut
 	{
-		public string Tasklist_string_id { get; set; }
+		public string Tasklist_project_id { get; set; }
 	}
 }
