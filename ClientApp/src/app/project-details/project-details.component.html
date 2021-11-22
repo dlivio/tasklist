@@ -70,13 +70,23 @@
       <li>Gateways represent decisions in the diagram, meaning that depending on the symbol represented inside the Gateway different actions will be
         available.</li>
         <ul>
-          <li><strong>Exclusive Gateways</strong> are the ones represented with an 'X' inside it. In this element, it's only possible to choose one Sequence Flow 
+          <li><strong>Exclusive Gateways</strong> are the ones represented with an 'X' inside it. In this element, it's only possible to <strong>choose one</strong> Sequence Flow 
             leading from it.</li>
-          <li><strong>Inclusive Gateways</strong> are the ones represented with an 'O' inside it. In this element, it's possible to choose one or more Sequence 
+          <li><strong>Inclusive Gateways</strong> are the ones represented with an 'O' inside it. In this element, it's possible to <strong>choose one or more</strong> Sequence 
             Flow's leading from it.</li>
-          <li><strong>Parallel Gateways</strong> are the ones represented with an '+' inside it. In this element, it's the user has to choose every Sequence Flow
+          <li><strong>Parallel Gateways</strong> are the ones represented with an '+' inside it. In this element, it's the user has to <strong>choose every</strong> Sequence Flow
             leading from it in order to continue.</li>
         </ul>
+    </ul>
+    <p><b>Changing the time:</b></p>
+    <ul>
+      <li>After selecting an element, the user can <strong>right click</strong> the element and the date picker side panel will appear. By default, 
+        a start and completion time is generated based on the current time.</li>
+      <li>To <strong>change the start and completion dates</strong>, click on the date inside the field and a calendar will appear. Changing the 
+        information on this calendar updates date on the task.</li>
+      <li>To <strong>change the time</strong>, click on hour, minute or second to update and use the keyboard to change the values.</li>
+      <li>To close the side panel, the user can either click the 'X' located on the top-right corner of the panel or right click an empty section 
+        of the diagram viewer.</li>
     </ul>
     <p><b>Element colors:</b></p>
     <ul>
@@ -85,7 +95,10 @@
       <li><code style="color: aqua;">Blue</code> elements are the current elements being selected in the ongoing session, and are awaiting a possible
         submission to turn into 'history' elements and be colored <code style="color: #1CAC78;">green</code>.</li>
       <li><code style="color: #1CAC78;">Green</code> elements are the elements that were previously submitted and aren't available anymore for 
-        selection. These elements show us the previous paths used in earlier sessions.<code style="color: #1CAC78;">green</code>.</li>
+        selection. These elements show us the previous paths used in earlier sessions.</li>
+      <li><code style="color: #F0E68C;">Yellow</code> elements are the elements which match the activities detected by the sensors. These elements
+        have their start and completion date and time filled automatically according the sensors information, although this can still be changed
+        in the date picker panel after selection.</li>
     </ul>
     <p><b>Submitting a selection:</b></p>
     <ul>
