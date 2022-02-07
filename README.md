@@ -1,2 +1,2 @@
 # tasklist
- Tasklist application to replace the default Camunda Tasklist application with the added functionality of adding media/extra information to be stored in ERPNext. Additionally, it serves as a server to receive treated sensor information from the cloud through a REST interface.
+ Tasklist application to replace the default 'Camunda Tasklist' with the added functionalities of providing an innovative interface to interact with the BPMN diagram itself to approve tasks, communicating with ERPNext, and communicating with a third party hosted on AWS to retrieve activity sensor predictions.
